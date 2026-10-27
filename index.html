@@ -423,6 +423,7 @@ const CHARS=[
  {tab:"권동명",start:{year:513,month:2},name:"정동 팔머",age:15,job:"광대",stage:"극단의 아이",exp:0,loc:"브라켄",place:"브라켄의 작은 마을",stats:{건강:37,정신력:39,재력:23,인맥:47,평판:50},talents:[],skills:{"고대 글자":10},fam:{"고대 글자":"학문"},people:[],marks:[]}
 ];
 function refreshChars(){store.get("extra",[]).forEach(c=>{if(!CHARS.some(x=>x.tab===c.tab))CHARS.push(c)});
+  const rm=store.get("removed",[]);for(let i=CHARS.length-1;i>=0;i--)if(rm.includes(CHARS[i].tab))CHARS.splice(i,1);
   CHARS.forEach(c=>{const g=store.get("grown-"+c.tab,null);if(g){Object.assign(c,g);c.needsGrowth=false}const s=store.get("char-"+c.tab,null);if(s)Object.assign(c,s)})}
 refreshChars();
 const SUB={
@@ -485,6 +486,21 @@ function growthReqFor(c){const L=reqList();let r=L.find(x=>x.targetTab===c.tab&&
 function openCreate(id,role){$("#vtitle").textContent=role==="gm"?"캐릭터 심사":"새로 태어나기";$("#view").classList.remove("hidden");document.body.style.overflow="hidden";
   const V=$("#vcontent");V.innerHTML="";const f=document.createElement("iframe");f.title="캐릭터 만들기";f.srcdoc=decode(CREATE_B64);f.onload=()=>{CLOUD.attach(f.contentWindow);f.contentWindow.postMessage({type:"start",role,id},"*")};V.appendChild(f);
   $("#back").dataset.from=role==="gm"?"gm":"gate"}
+function deleteChar(tab){
+  const c=CHARS.find(x=>x.tab===tab);if(!c)return;
+  const typed=prompt(`정말 「${c.name}」을(를) 지울까요?\n능력치, 기록, 제출, 암호, 스탠딩이 모두 사라지고 되돌릴 수 없어요.\n지우려면 이름을 그대로 적어주세요.`);
+  if(typed==null)return;if(typed.trim()!==c.name){toast("이름이 달라서 지우지 않았어요");return}
+  const tail="-"+tab;
+  Object.keys(localStorage).filter(k=>k.startsWith("jpg-")&&(k.endsWith(tail)&&(k.startsWith("jpg-day-sub-")||k.startsWith("jpg-home-"))||k==="jpg-home-char-"+tab)).forEach(k=>{if(k!=="jpg-home-me")localStorage.removeItem(k)});
+  ["char-","pw-","stand-","grown-","gmhidden-"].forEach(p=>localStorage.removeItem("jpg-home-"+p+tab));
+  const P=store.get("presence",{});if(P[tab]){delete P[tab];store.set("presence",P)}
+  const ex=store.get("extra",[]);if(ex.some(x=>x.tab===tab))store.set("extra",ex.filter(x=>x.tab!==tab));
+  else{const rm=store.get("removed",[]);if(!rm.includes(tab)){rm.push(tab);store.set("removed",rm)}}
+  const L=reqList().filter(r=>!(r.targetTab===tab||"new-"+r.id===tab));reqSave(L);
+  const i=CHARS.findIndex(x=>x.tab===tab);if(i>=0)CHARS.splice(i,1);
+  toast(`「${c.name}」을(를) 지웠어요`);renderGM()}
+function deleteReq(id){const L=reqList(),r=L.find(x=>x.id===id);if(!r)return;if(!confirm(`「${(r.data&&r.data.name)||r.player}」의 요청과 만들던 내용을 지울까요?`))return;reqSave(L.filter(x=>x.id!==id));localStorage.removeItem("jpg-home-gmhidden-req-"+id);toast("요청을 지웠어요");renderGM()}
+function restoreChars(){store.set("removed",[]);toast("기본 열람자를 되살렸어요. 새로고침하면 보여요.")}
 function locOfRegion(r){if(!r)return"황도";if(r.startsWith("성황제국")){const s=r.replace("성황제국 ","");return s==="황도 근방"?"황도":s}return r}
 function finalizeReq(id){const L=reqList(),r=L.find(x=>x.id===id);if(!r||!r.data)return;const S=r.data;
   const base={name:S.name,gender:S.gender,age:15,exp:0,loc:locOfRegion(S.region),place:S.place&&!["도시","농촌·마을","변방·특수"].includes(S.place)?S.place:locOfRegion(S.region),stats:S.stats,talents:S.talents,skills:S.skills,fam:{},
@@ -542,11 +558,14 @@ function renderGM(){
     <div class="card"><h3>🌾 이번 달 대기열</h3><p class="ui">모든 열람자의 제출 현황을 한 화면에서 봐요. 쉬기·기도·평범한 일하기 같은 건 한꺼번에 자동 처리돼요.</p><p><button class="btn" id="gmMonth">대기열 열기</button></p>
       <label class="ui" style="font-size:13px;margin-top:10px;display:block">전투에 들어갈 열람자<select id="gmWho" class="ui" style="width:100%;padding:6px;margin-top:4px">${CHARS.map((c,i)=>`<option value="${i}">${esc(c.name)}</option>`).join("")}</select></label></div>
     <div class="card"><h3>⚔ 전투 방</h3><p class="ui">지금: <b>${battleOpen?"열림":"닫힘"}</b>. 열면 플레이어 서가의 「전투」 책이 풀려요.</p><p><button class="btn" id="gmBattleToggle">${battleOpen?"전투 방 닫기":"전투 방 열기"}</button> <button class="btn ghost" id="gmBattle">GM으로 들어가기</button></p></div>
-    <div class="card"><h3>📮 등록 요청</h3>${(()=>{const L=reqList().filter(r=>!r.targetTab);const w=L.filter(r=>r.status==="wait");return w.length?w.map(r=>`<div class="reqrow"><b>${esc(r.player)}</b> <span class="ui" style="font-size:12px;color:var(--muted)">${esc(r.note||"")}</span><span style="margin-left:auto"><button class="btn ui rq-ok" data-id="${r.id}" style="padding:4px 10px;font-size:13px">승인</button> <button class="btn ghost ui rq-no" data-id="${r.id}" style="padding:4px 10px;font-size:13px">반려</button></span></div>`).join(""):'<p class="ui" style="font-size:13px;color:var(--muted)">새 요청이 없어요.</p>'})()}</div>
-    <div class="card"><h3>📝 캐릭터 심사</h3>${(()=>{const L=reqList().filter(r=>["creating","review"].includes(r.status));return L.length?L.map(r=>`<div class="reqrow"><b>${esc((r.data&&r.data.name)||r.player)}</b> <span class="pill ui">${r.status==="review"?"심사 대기":"만드는 중 · "+esc((r.data&&r.data.step)||"이름")}</span><span style="margin-left:auto"><button class="btn ${r.status==="review"?"":"ghost"} ui rq-view" data-id="${r.id}" style="padding:4px 10px;font-size:13px">${r.status==="review"?"심사하기":"보기"}</button></span></div>`).join(""):'<p class="ui" style="font-size:13px;color:var(--muted)">심사할 캐릭터가 없어요.</p>'})()}</div>
+    <div class="card"><h3>📮 등록 요청</h3>${(()=>{const L=reqList().filter(r=>!r.targetTab);const w=L.filter(r=>r.status==="wait");return w.length?w.map(r=>`<div class="reqrow"><b>${esc(r.player)}</b> <span class="ui" style="font-size:12px;color:var(--muted)">${esc(r.note||"")}</span><span style="margin-left:auto"><button class="btn ui rq-ok" data-id="${r.id}" style="padding:4px 10px;font-size:13px">승인</button> <button class="btn ghost ui rq-no" data-id="${r.id}" style="padding:4px 10px;font-size:13px">반려</button> <button class="btn ghost ui rq-del" data-id="${r.id}" style="padding:4px 8px;font-size:13px" aria-label="요청 지우기">🗑</button></span></div>`).join(""):'<p class="ui" style="font-size:13px;color:var(--muted)">새 요청이 없어요.</p>'})()}</div>
+    <div class="card"><h3>📝 캐릭터 심사</h3>${(()=>{const L=reqList().filter(r=>["creating","review"].includes(r.status));return L.length?L.map(r=>`<div class="reqrow"><b>${esc((r.data&&r.data.name)||r.player)}</b> <span class="pill ui">${r.status==="review"?"심사 대기":"만드는 중 · "+esc((r.data&&r.data.step)||"이름")}</span><span style="margin-left:auto"><button class="btn ${r.status==="review"?"":"ghost"} ui rq-view" data-id="${r.id}" style="padding:4px 10px;font-size:13px">${r.status==="review"?"심사하기":"보기"}</button> <button class="btn ghost ui rq-del" data-id="${r.id}" style="padding:4px 8px;font-size:13px" aria-label="요청 지우기">🗑</button></span></div>`).join(""):'<p class="ui" style="font-size:13px;color:var(--muted)">심사할 캐릭터가 없어요.</p>'})()}</div>
     <div class="card"><h3>🔑 열람증 암호</h3><p class="ui" style="font-size:13px">열람자마다 로그인 암호를 정해 알려주세요. 새로 만든 이방인은 요청할 때 정한 암호를 그대로 써요.</p>
       <label class="ui" style="font-size:13px">누구?<select id="pwWho" class="ui" style="width:100%;padding:6px;margin-top:4px">${CHARS.map((c,i)=>`<option value="${i}">${esc(c.name)}${store.get("pw-"+c.tab,null)?" ✓":" (암호 없음)"}</option>`).join("")}</select></label>
       <label class="ui" style="font-size:13px">새 암호<input id="pwNew" type="text" class="ui" style="width:100%;padding:6px;margin-top:4px" placeholder="4자 이상"></label><p><button class="btn ui" id="pwSet" style="padding:6px 12px">암호 정하기</button></p></div>
+    <div class="card"><h3>🗑 열람자 지우기</h3><p class="ui" style="font-size:13px">시험용으로 만든 캐릭터 등을 지워요. 이름을 그대로 적어야 지워지고, 되돌릴 수 없어요.</p>
+      <select id="delWho" class="ui" style="width:100%;padding:6px">${CHARS.map(c=>`<option value="${esc(c.tab)}">${esc(c.name)}${c.tab.startsWith("new-")?" (새로 만든 이방인)":""}</option>`).join("")}</select>
+      <p style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn ui" id="delGo" style="padding:6px 12px;background:var(--rose);border-color:var(--rose)">지우기</button>${store.get("removed",[]).length?`<button class="btn ghost ui" id="delUndo" style="padding:6px 12px">지운 기본 열람자 되살리기</button>`:""}</p></div>
     <div class="card"><h3>📰 소식지</h3><p class="ui">최신: 월보 제6호 (513년 철쭉의 달)</p><p><a class="btn ghost" href="${notion("3fd8aaa27f2b814bb241d64c694f01c2")}" target="_blank" rel="noopener">허브 열기</a></p></div>
     <div class="card"><h3>🖼 스탠딩 일러스트</h3><p class="ui" style="font-size:13px">배경이 투명한 PNG를 올려주세요. 그림을 누르면 <b>얼굴 위치</b>가 정해지고, 대화창과 명단의 동그란 얼굴은 거기를 잘라 써요.</p>
       <label class="ui" style="font-size:13px">누구의 스탠딩?<select id="pWho" class="ui" style="width:100%;padding:6px;margin-top:4px">${CHARS.map((c,i)=>`<option value="${i}">${esc(c.name)}</option>`).join("")}</select></label>
@@ -563,6 +582,8 @@ function renderGM(){
     try{store.set("stand-"+c.tab,s);localStorage.getItem("jpg-home-stand-"+c.tab)||toast("브라우저 저장 공간이 부족해요")}catch(err){}toast(`${c.name}의 스탠딩을 걸었어요. 얼굴을 눌러 위치를 맞춰주세요.`);const i=CHARS.indexOf(c);renderGM();$("#pWho").value=i;pPrev()};
   $("#pDel").onclick=()=>{const c=CHARS[+$("#pWho").value];localStorage.removeItem("jpg-home-stand-"+c.tab);toast(STAND_DEFAULT[c.tab]?"올린 그림을 내리고 기본 그림으로 돌아갔어요":"스탠딩을 내렸어요");const i=CHARS.indexOf(c);renderGM();$("#pWho").value=i;pPrev()};
   $("#gmMonth").onclick=()=>{openView("month")};
+  $("#delGo").onclick=()=>deleteChar($("#delWho").value);{const u=$("#delUndo");if(u)u.onclick=restoreChars}
+  $$(".rq-del").forEach(b=>b.onclick=()=>deleteReq(b.dataset.id));
   $("#pwSet").onclick=async()=>{const c=CHARS[+$("#pwWho").value],v=$("#pwNew").value;if(v.length<4){toast("4자 이상으로 정해주세요");return}store.set("pw-"+c.tab,await hashPw(v));toast(`${c.name}의 암호를 정했어요. 플레이어에게 알려주세요.`);renderGM()};
   $$(".rq-ok").forEach(b=>b.onclick=()=>{const L=reqList(),r=L.find(x=>x.id===b.dataset.id);r.status="creating";r.data={};reqSave(L);toast(`${r.player}의 캐릭터 만들기를 열었어요`);renderGM()});
   $$(".rq-no").forEach(b=>b.onclick=()=>{const L=reqList(),r=L.find(x=>x.id===b.dataset.id);r.status="rejected";reqSave(L);toast("요청을 반려했어요");renderGM()});
