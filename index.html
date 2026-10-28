@@ -784,7 +784,7 @@ function lifeHTML(L){return `<article class="lifebook"><h2>「${esc(L.name)}의 
   <p class="lb-end">${L.dead?`${esc(L.dead.year)}년 ${esc(MONTHS_H[L.dead.month-1])}, ${esc(L.dead.cause)} 숨을 거두었다.`:""}</p>
   ${L.detail&&L.detail.temper?`<p><b>사람됨</b> ${esc(L.detail.temper)}</p>`:""}${L.detail&&L.detail.quote?`<p class="lb-q">“${esc(L.detail.quote)}”</p>`:""}
   <p><b>재능</b> ${esc(L.talents.join(", "))}${L.revealed?` · ✦ ${esc(L.revealed)}`:""}</p><p><b>익힌 것</b> ${Object.entries(L.skills).map(([k,v])=>`${esc(k)} ${v}`).join(", ")||"없음"}</p>
-  ${L.marks.length?`<p><b>기억</b> ${L.marks.map(esc).join(" ")}</p>`:""}${L.people.length?`<p><b>곁에 있던 사람들</b> ${L.people.map(esc).join(", ")}</p>`:""}
+  ${L.people.length?`<p><b>곁에 있던 사람들</b> ${L.people.map(esc).join(", ")}</p>`:""}
   <h3>지나온 달들</h3>${L.entries.length?`<ol class="lb-list">${L.entries.map(e=>`<li><b>${esc(e.when)}</b> ${esc(e.t)}</li>`).join("")}</ol>`:'<p class="ui" style="color:var(--muted)">이방인으로 지낸 날의 기록이 없다.</p>'}</article>`}
 async function deathScene(){
   const c=ME;let L=store.get("lifebook-"+c.tab,null);
@@ -1223,6 +1223,10 @@ function renderGM(){
       <label class="ui" style="font-size:13px">누구?<select id="stWho" class="ui" style="width:100%;max-width:320px;padding:6px;margin-top:4px">${CHARS.map(c=>`<option value="${esc(c.tab)}">${esc(c.name)}</option>`).join("")}</select></label><p><button class="btn ui" id="stGo" style="padding:6px 12px">고치기</button></p><div id="stGmBox"></div></div>
     <div class="card" style="grid-column:1/-1"><h3>👥 관계 인물</h3><p class="ui" style="font-size:13px">열람자마다 곁의 사람들을 더하고, 관계·친밀·설정을 고쳐요. 「숨김」을 켜면 플레이어에게는 아직 보이지 않아요. GM 메모는 GM만 봐요.</p>
       <label class="ui" style="font-size:13px">누구의 사람들?<select id="pplWho" class="ui" style="width:100%;max-width:320px;padding:6px;margin-top:4px">${CHARS.map(c=>`<option value="${esc(c.tab)}">${esc(c.name)}</option>`).join("")}</select></label><div id="pplBox"></div></div>
+    <div class="card"><h3>✨ 재능</h3><p class="ui" style="font-size:13px">열람자의 재능을 고쳐요. 전투(힘·민첩 등)와 판정에 바로 쓰여요.</p>
+      <label class="ui" style="font-size:13px">누구?<select id="tlWho" class="ui" style="width:100%;padding:6px;margin-top:4px">${CHARS.map(c=>`<option value="${esc(c.tab)}">${esc(c.name)}</option>`).join("")}</select></label>
+      <div id="tlBox" class="ui" style="font-size:13px;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
+      <div class="row-b"><input id="tlNew" class="ui" placeholder="목록에 없는 재능" style="padding:6px;flex:1"><button class="btn ghost ui sm" id="tlAdd">더하기</button></div><p><button class="btn ui" id="tlSave" style="padding:6px 12px">저장</button></p></div>
     <div class="card"><h3>🔮 숨은 재능</h3><p class="ui" style="font-size:13px">GM만 보는 칸이에요. 플레이어가 처음 그 일을 해서 재능이 드러나면 「드러남」을 켜요. 그때부터 플레이어의 기록에도 보여요.</p>
       <label class="ui" style="font-size:13px">누구?<select id="hdWho" class="ui" style="width:100%;padding:6px;margin-top:4px">${CHARS.map(c=>`<option value="${esc(c.tab)}">${esc(c.name)} — ${esc(store.get("gmhidden-"+c.tab,"정하지 않음"))}</option>`).join("")}</select></label>
       <label class="ui" style="font-size:13px">숨은 재능<select id="hdVal" class="ui" style="width:100%;padding:6px;margin-top:4px"><option>없음</option>${HIDDEN_LIST.map(([n,r])=>`<option value="${n} (${r})">${n} (${r})</option>`).join("")}</select></label>
@@ -1259,6 +1263,11 @@ function renderGM(){
   $("#pDel").onclick=()=>{const c=CHARS[+$("#pWho").value];localStorage.removeItem("jpg-home-stand-"+c.tab);toast(STAND_DEFAULT[c.tab]?"올린 그림을 내리고 기본 그림으로 돌아갔어요":"스탠딩을 내렸어요");const i=CHARS.indexOf(c);renderGM();$("#pWho").value=i;pPrev()};
   $("#gmMonth").onclick=()=>{openView("month")};$("#gmTown").onclick=()=>openView("town");
   $("#delGo").onclick=()=>deleteChar($("#delWho").value);
+  const TL=["힘","민첩","강건","예민한 감각","학식","기억력","직관","손재주","언변","매력","목소리","눈치"];let tlExtra=[];
+  const tlDraw=()=>{const c=CHARS.find(x=>x.tab===$("#tlWho").value);if(!c)return;const cur=c.talents||[];const all=[...new Set(TL.concat(cur).concat(tlExtra))];$("#tlBox").innerHTML=all.map(t=>`<label style="border:1px solid var(--line);border-radius:6px;padding:3px 8px"><input type="checkbox" class="tlC" value="${esc(t)}" ${cur.includes(t)?"checked":""}> ${esc(t)}</label>`).join("")};
+  $("#tlWho").onchange=()=>{tlExtra=[];tlDraw()};tlDraw();
+  $("#tlAdd").onclick=()=>{const v=$("#tlNew").value.trim();if(!v)return;tlExtra.push(v);$("#tlNew").value="";tlDraw();const cb=[...$$(".tlC")].find(x=>x.value===v);if(cb)cb.checked=true};
+  $("#tlSave").onclick=()=>{const c=CHARS.find(x=>x.tab===$("#tlWho").value);if(!c)return;const tl=$$(".tlC:checked").map(x=>x.value);const s=store.get("char-"+c.tab,{})||{};s.talents=tl;store.set("char-"+c.tab,s);c.talents=tl;toast(`${c.name}의 재능: ${tl.join(", ")||"없음"}`)};
   $("#clGo").onclick=()=>{const to=$$(".clTo:checked").map(x=>x.value),t=$("#clT").value.trim(),xx=$("#clX").value.trim();if(!to.length||!(t||xx))return toast("받을 사람과 단서를 적어주세요");to.forEach(tb=>giveClue(tb,{title:t,text:xx},"GM"));$("#clT").value="";$("#clX").value="";toast("단서를 건넸어요")};
   $("#stGo").onclick=()=>{const c=CHARS.find(x=>x.tab===$("#stWho").value);if(!c)return;storyEditor($("#stGmBox"),c,()=>{$("#stGmBox").innerHTML=""})};
   $("#gmSkill").onclick=()=>openView("skilldef");
@@ -1337,7 +1346,6 @@ function openView(k,opt){opt=opt||{};if(!ROLE&&k==="guide"){$("#back").dataset.f
     ${standOf(c.tab)?`<figure class="stand" style="position:relative;top:0;height:460px;min-height:0;grid-row:span 3"><img src="${standOf(c.tab).img}" alt="${esc(c.name)}"></figure>`:""}<div class="card"><h3>${esc(c.name)}</h3><p class="ui">${c.age}세 · ${esc(c.job||"직업 없음")} ${esc(c.stage||"")}<br>📍 ${esc(c.place)}</p><p>${Object.entries(c.stats).map(([k,v])=>`<span class="tag">${k} <b>${v}</b></span>`).join("")}</p></div>
     <div class="card"><h3>재능</h3><p>${c.talents.length?c.talents.map(t=>`<span class="tag">${esc(t)}</span>`).join(""):'<span class="ui" style="color:var(--muted)">시트에서 확인</span>'}${store.get("revealed-"+c.tab,null)?`<span class="tag" style="border-color:var(--gold);color:var(--gold)">✦ ${esc(store.get("revealed-"+c.tab,""))} <small>드러난 숨은 재능</small></span>`:""}</p></div>
     <div class="card"><h3>기술</h3><p>${Object.keys(c.skills).length?Object.entries(c.skills).map(([k,v])=>`<span class="tag">${esc(k)} <b>${v}</b> <small>${esc((c.fam||{})[k]||famOfSkill(k))}</small></span>`).join(""):'<span class="ui" style="color:var(--muted)">아직 익힌 기술이 없어요</span>'}</p></div>
-    <div class="card"><h3>기억 표시</h3><p>${c.marks.length?c.marks.map(m=>`<span class="tag">${esc(m)}</span>`).join(""):'<span class="ui" style="color:var(--muted)">성장기를 마치면 채워져요</span>'}</p></div>
     <div class="card" style="grid-column:1/-1"><h3>🔎 단서 수첩</h3>${cluesHTML(c)}</div>
     <div class="card" style="grid-column:1/-1"><div class="sthead"><h3>📖 나의 이야기</h3><button class="btn ghost ui sm" id="storyEdit">✏ 고치기</button></div><div id="storyBox">${storyView(c)}</div></div>
     <div class="card" style="grid-column:1/-1"><h3>⚔ 전투 준비</h3><div id="loadout"></div></div>
