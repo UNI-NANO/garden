@@ -42,6 +42,16 @@ describe("실제 정의 데이터 (data/defs)", () => {
       expect(numbers("sword.riposte").totalPower).toBeCloseTo(11, 10);
       expect(numbers("sword.cut")).toMatchObject({ totalPower: 6, cooldown: 0, energy: 0 });
     });
+    it("연계 역할이 갈림길에서 바뀐다", () => {
+      const roleOf = (id: string) => {
+        const node = sword?.nodes.find((n) => n.id === id);
+        return node?.skill?.role ?? node?.overrides?.role;
+      };
+      expect([roleOf("sword.combo"), roleOf("sword.combo.b")]).toEqual(["잇는", "끝내는"]);
+      expect([roleOf("sword.gale.a"), roleOf("sword.gale.b")]).toEqual(["여는", "잇는"]);
+      expect([roleOf("sword.riposte.a"), roleOf("sword.riposte.b")]).toEqual(["끝내는", "잇는"]);
+      expect([roleOf("sword.charge.a"), roleOf("sword.charge.b")]).toEqual(["여는", "끝내는"]);
+    });
     it("연속 베기: 1단계 · 약함 · 3타 · 출혈(가벼운 효과 하나)", () => {
       const combo = numbers("sword.combo");
       expect(combo.totalPower).toBeCloseTo(8 * 0.75 * 1.2 * 0.9, 10);

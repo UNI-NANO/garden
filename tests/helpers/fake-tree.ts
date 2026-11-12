@@ -30,7 +30,10 @@ export function makeTree(id = "t"): FakeTree {
     const s2 = node(`${base}.s2`, "보완", node(`${base}.s1`, "보완", base));
     const forkAxis = axes[axisIndex++];
     for (const side of ["a", "b"]) {
-      const fork = node(`${base}.${side}`, "갈림길", s2, { axis: forkAxis });
+      const fork = node(`${base}.${side}`, "갈림길", s2, {
+        axis: forkAxis,
+        overrides: { role: side === "a" ? "잇는" : "끝내는" },
+      });
       const fs2 = node(`${fork}.s2`, "보완", node(`${fork}.s1`, "보완", fork));
       const endAxis = axes[axisIndex++];
       for (const n of ["1", "2"]) {

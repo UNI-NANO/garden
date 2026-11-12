@@ -1,7 +1,7 @@
 {
   "id": "skill-table",
   "name": "기술 기준표",
-  "version": 1,
+  "version": 2,
   "tiers": {
     "기본 공격": { "power": 6, "cooldown": 0, "energy": 0 },
     "1단계": { "power": 8, "cooldown": 1, "energy": 1 },
@@ -19,6 +19,7 @@
     "2": 1.1,
     "3": 1.2
   },
+  "hitsBeyond": { "addPerHit": 0.05 },
   "range": {
     "단일": { "multiplier": 1.0, "cooldownAdd": 0 },
     "휩쓸기": { "multiplier": 0.9, "cooldownAdd": 1 },
@@ -38,6 +39,8 @@
   "tree": {
     "stemThresholds": [1, 10, 30, 50],
     "basicsPerTree": 4,
+    "equippedBasics": 3,
+    "roles": ["여는", "잇는", "끝내는"],
     "rootsPerTree": 4,
     "slotsPerRoot": 4,
     "routePattern": ["기본기", "보완", "보완", "갈림길", "보완", "보완", "끝갈래", "보완", "궁극기"],

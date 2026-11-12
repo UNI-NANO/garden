@@ -93,10 +93,58 @@ describe("연결 오류", () => {
     });
     expect(result.some((m) => m.includes("돌고 돈다"))).toBe(true);
   });
-  it("기준표에 없는 타수", () => {
-    expect(broken((t) => void ((find(t, "t.b1")["skill"] as { hits: number }).hits = 8))).toEqual([
-      "t.b1: 기준표에 8타의 배율이 없다",
-    ]);
+  it("3타보다 많은 타수도 규칙으로 계산되므로 통과한다", () => {
+    expect(broken((t) => void ((find(t, "t.b1")["skill"] as { hits: number }).hits = 8))).toEqual([]);
+  });
+});
+
+describe("연계 역할", () => {
+  const setRole = (t: FakeTree, id: string, role: string | undefined) => {
+    const node = find(t, id);
+    if (node.kind === "기본기") (node["skill"] as { role: string }).role = role ?? "여는";
+    else if (role === undefined) delete node["overrides"];
+    else node["overrides"] = { role };
+  };
+  it("갈림길에서 바뀌는 역할로 셋을 갖추면 통과한다", () => {
+    expect(broken(() => undefined)).toEqual([]);
+  });
+  it("어떤 갈래를 골라도 한 역할이 빠지는 기본기 셋을 잡는다", () => {
+    // b1만 「잇는」이 될 수 있게 만든다 → b1을 뺀 셋(b2+b3+b4)은 잇는 기술이 없다
+    const result = broken((t) => {
+      for (const b of ["t.b2", "t.b3", "t.b4"]) setRole(t, `${b}.a`, "끝내는");
+    });
+    expect(result).toEqual(["t.b2 + t.b3 + t.b4: 이 기본기 3개로는 어떤 갈래를 골라도 여는·잇는·끝내는을 모두 갖출 수 없다"]);
+  });
+  it("갈래가 역할을 바꾸지 않으면 기본기의 역할이 그대로 간다", () => {
+    const result = broken((t) => {
+      for (const node of t.nodes) if (node.kind === "갈림길") delete node["overrides"];
+    });
+    expect(result).toHaveLength(4);
+  });
+  it("기본기 역할만으로 셋을 갖춰도 통과한다", () => {
+    const result = broken((t) => {
+      for (const node of t.nodes) if (node.kind === "갈림길") delete node["overrides"];
+      setRole(t, "t.b1", "여는");
+      setRole(t, "t.b2", "잇는");
+      setRole(t, "t.b3", "끝내는");
+      setRole(t, "t.b4", "잇는");
+      setRole(t, "t.b4.a", "여는");
+      setRole(t, "t.b4.b", "끝내는");
+      setRole(t, "t.b1.a", "잇는");
+      setRole(t, "t.b1.b", "끝내는");
+    });
+    expect(result).toEqual([]);
+  });
+  it("숨은 갈래의 역할은 세지 않는다", () => {
+    const result = broken((t) => {
+      for (const b of ["t.b2", "t.b3", "t.b4"]) setRole(t, `${b}.a`, "끝내는");
+      t.nodes.push(
+        { id: "t.b2.ax", kind: "끝갈래", name: "숨은", prev: "t.b2.a.s2", description: "설명", hidden: true, overrides: { role: "잇는" } },
+        { id: "t.b2.ax.s", kind: "보완", name: "보완", prev: "t.b2.ax", description: "설명" },
+        { id: "t.b2.ax.u", kind: "궁극기", name: "궁극기", prev: "t.b2.ax.s", description: "설명" },
+      );
+    });
+    expect(result).toHaveLength(1);
   });
 });
 

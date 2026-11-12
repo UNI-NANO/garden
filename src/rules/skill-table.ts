@@ -27,25 +27,36 @@ export class SkillTableError extends Error {
   override name = "SkillTableError";
 }
 
-/** 기준표에 그 타수의 배율이 있는지. 자세는 1타로 본다. */
+/** 자세는 1타로 본다. */
 export function hitCountOf(hits: number | "자세"): number {
   return hits === "자세" ? 1 : hits;
 }
 
-export function hasHitMultiplier(table: SkillTable, hits: number | "자세"): boolean {
-  return String(hitCountOf(hits)) in table.hits;
+/**
+ * 타수 배율. 기준표에 적힌 타수는 그 값, 그보다 많으면 마지막 값에 1타마다 addPerHit을 더한다.
+ * 타수가 1 이상의 정수가 아니면 undefined.
+ */
+export function hitMultiplierOf(table: SkillTable, hitCount: number): number | undefined {
+  if (!Number.isInteger(hitCount) || hitCount < 1) return undefined;
+  const listed = table.hits[String(hitCount)];
+  if (listed !== undefined) return listed;
+  const last = Object.keys(table.hits).length;
+  const lastMultiplier = table.hits[String(last)];
+  if (lastMultiplier === undefined || hitCount < last) return undefined;
+  return lastMultiplier + (hitCount - last) * table.hitsBeyond.addPerHit;
 }
 
 /**
  * 기준표로 기술의 숫자를 계산한다.
+ * 타수 배율은 3타까지 기준표, 그 뒤로는 1타마다 더한다(hitMultiplierOf).
  * 총 위력 = 단계 위력 × 위력 성격 × 타수 배율 × 범위 × (1 − 효과 예산 합) × 개성 보정
  * 쿨다운 = 단계 쿨다운 + 위력 성격 가산 + 범위 가산
  */
 export function computeSkillNumbers(table: SkillTable, input: SkillNumbersInput): SkillNumbers {
   const hitCount = hitCountOf(input.hits);
-  const hitMultiplier = table.hits[String(hitCount)];
-  if (!Number.isInteger(hitCount) || hitCount < 1 || hitMultiplier === undefined) {
-    throw new SkillTableError(`기준표에 ${String(input.hits)}타의 배율이 없다`);
+  const hitMultiplier = hitMultiplierOf(table, hitCount);
+  if (hitMultiplier === undefined) {
+    throw new SkillTableError(`타수는 1 이상의 정수여야 한다 (${String(input.hits)})`);
   }
   const personality = input.personality ?? 1;
   if (!(personality > 0)) {

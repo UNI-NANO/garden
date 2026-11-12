@@ -1,9 +1,8 @@
 import type { z } from "zod";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
-import type { SkillSpec } from "../schema/defs/skill";
+import type { Role, SkillSpec } from "../schema/defs/skill";
 import { SkillTableSchema, type SkillTable } from "../schema/defs/skill-table";
 import { TreeSchema, type Tree, type TreeNode } from "../schema/defs/tree";
-import { hasHitMultiplier } from "./skill-table";
 
 /** 검사에서 나온 문제 하나: 어느 파일의 어느 칸이 왜 */
 export interface DefIssue {
@@ -95,7 +94,6 @@ function validateLinks(table: SkillTable, effects: EffectList, trees: { file: st
     for (const node of tree.nodes) claim(file, node.id);
 
     const checkSkill = (where: string, skill: SkillSpec) => {
-      if (!hasHitMultiplier(table, skill.hits)) add(where, `기준표에 ${String(skill.hits)}타의 배율이 없다`);
       for (const id of skill.effects) if (!effectIds.has(id)) add(where, `없는 효과를 가리킨다: ${id}`);
     };
 
@@ -191,9 +189,19 @@ function validateNodes(
   const reached = new Set<string>();
   const pattern = table.tree.routePattern;
   const usedAxes = new Map<string, string>();
+  /** 기본기 ID → 갈래를 어떻게 찍느냐에 따라 가질 수 있는 연계 역할 (숨은 갈래 제외) */
+  const rolesByBasic = new Map<string, Set<Role>>();
 
-  const walk = (node: TreeNode, depth: number) => {
+  const walk = (node: TreeNode, depth: number, basicId: string, roleBefore: Role | undefined, underHidden: boolean) => {
     reached.add(node.id);
+    // 숨은 갈래와 그 아래는 누구나 갈 수 있는 길이 아니므로 역할 계산에서 뺀다
+    const hiddenPath = underHidden || node.hidden === true;
+    const role = node.skill?.role ?? node.overrides?.role ?? roleBefore;
+    if (role !== undefined && !hiddenPath) {
+      const roles = rolesByBasic.get(basicId) ?? new Set<Role>();
+      roles.add(role);
+      rolesByBasic.set(basicId, roles);
+    }
     const expected = pattern[depth];
     if (expected === undefined) {
       add(node.id, `루트가 ${pattern.length}칸보다 길다`);
@@ -225,13 +233,57 @@ function validateNodes(
         else usedAxes.set(axis, node.id);
       }
     }
-    for (const child of next) walk(child, depth + 1);
+    for (const child of next) walk(child, depth + 1, basicId, role, hiddenPath);
   };
-  for (const basic of basics) walk(basic, 0);
+  for (const basic of basics) walk(basic, 0, basic.id, undefined, false);
 
   for (const node of tree.nodes) {
     if (!reached.has(node.id)) add(node.id, "어느 기본기에서도 닿지 않는 칸이다 (앞 칸이 돌고 돈다)");
   }
+
+  if (issues.length === 0) issues.push(...validateRoleCoverage(file, basics, rolesByBasic, table));
+  return issues;
+}
+
+/** 어떤 기본기 묶음(전투에 드는 수만큼)을 골라도 연계 역할을 모두 갖출 갈래 조합이 있는지 */
+function validateRoleCoverage(
+  file: string,
+  basics: TreeNode[],
+  rolesByBasic: Map<string, Set<Role>>,
+  table: SkillTable,
+): DefIssue[] {
+  const issues: DefIssue[] = [];
+  const need = table.tree.roles;
+  const size = table.tree.equippedBasics;
+
+  /** 고른 기본기마다 역할 하나씩 정해서 need를 모두 채울 수 있는가 */
+  const canCover = (picked: TreeNode[], index: number, have: ReadonlySet<Role>): boolean => {
+    if (need.every((role) => have.has(role))) return true;
+    const basic = picked[index];
+    if (basic === undefined) return false;
+    for (const role of rolesByBasic.get(basic.id) ?? []) {
+      if (canCover(picked, index + 1, new Set([...have, role]))) return true;
+    }
+    return false;
+  };
+
+  const pick = (start: number, picked: TreeNode[]) => {
+    if (picked.length === size) {
+      if (!canCover(picked, 0, new Set())) {
+        issues.push({
+          file,
+          where: picked.map((b) => b.id).join(" + "),
+          message: `이 기본기 ${size}개로는 어떤 갈래를 골라도 ${need.join("·")}을 모두 갖출 수 없다`,
+        });
+      }
+      return;
+    }
+    for (let i = start; i < basics.length; i++) {
+      const basic = basics[i];
+      if (basic !== undefined) pick(i + 1, [...picked, basic]);
+    }
+  };
+  pick(0, []);
   return issues;
 }
 

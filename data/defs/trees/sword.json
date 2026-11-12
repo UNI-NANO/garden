@@ -1,7 +1,7 @@
 {
   "id": "sword",
   "name": "검술",
-  "version": 1,
+  "version": 2,
   "description": "한손 장검. 가장 기본이 되는 균형형 나무로, 넓게 베기·받아치기·연계·진형 다루기를 고루 쓴다. 피해는 자상이 기본이고, 관통은 돌진 베기의 찌르기 루트와 밀어붙이기 택1에서만. 가문 갈래 자리는 비어 있다.",
   "basicAttack": {
     "id": "sword.cut",
@@ -379,7 +379,10 @@
       "name": "넓게",
       "prev": "sword.gale.s2",
       "description": "나머지 대상도 80%.",
-      "axis": "넓게 / 깊게"
+      "axis": "넓게 / 깊게",
+      "overrides": {
+        "role": "여는"
+      }
     },
     {
       "id": "sword.gale.a.s1",
@@ -458,6 +461,7 @@
       "description": "단일기로, 위력 ×1.4, 흐트러짐 크게.",
       "axis": "넓게 / 깊게",
       "overrides": {
+        "role": "잇는",
         "range": "단일"
       }
     },
@@ -591,7 +595,10 @@
       "name": "받아치기",
       "prev": "sword.riposte.s2",
       "description": "칸이 더 넓어짐.",
-      "axis": "받아치기 / 밀어붙이기"
+      "axis": "받아치기 / 밀어붙이기",
+      "overrides": {
+        "role": "끝내는"
+      }
     },
     {
       "id": "sword.riposte.a.s1",
@@ -665,7 +672,10 @@
       "name": "밀어붙이기",
       "prev": "sword.riposte.s2",
       "description": "자세를 잡으면서 약하게 한 번 찌름.",
-      "axis": "받아치기 / 밀어붙이기"
+      "axis": "받아치기 / 밀어붙이기",
+      "overrides": {
+        "role": "잇는"
+      }
     },
     {
       "id": "sword.riposte.b.s1",
@@ -772,7 +782,10 @@
       "name": "뚫기",
       "prev": "sword.charge.s2",
       "description": "맞은 적을 뒷줄로 밀어내고 그 뒤 적을 앞으로 끌어냄.",
-      "axis": "뚫기 / 노리기"
+      "axis": "뚫기 / 노리기",
+      "overrides": {
+        "role": "여는"
+      }
     },
     {
       "id": "sword.charge.a.s1",
@@ -851,6 +864,7 @@
       "description": "관통으로 바뀜. 이번 턴만 뒷줄까지 닿음.",
       "axis": "뚫기 / 노리기",
       "overrides": {
+        "role": "끝내는",
         "damageType": "관통"
       }
     },

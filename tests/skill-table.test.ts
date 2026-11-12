@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import rawTable from "../data/defs/skill-table.json";
-import { computeSkillNumbers, SkillTableError, type SkillNumbersInput } from "../src/rules/skill-table";
+import { computeSkillNumbers, hitMultiplierOf, SkillTableError, type SkillNumbersInput } from "../src/rules/skill-table";
 import { SkillTableSchema } from "../src/schema/defs/skill-table";
 
 const table = SkillTableSchema.parse(rawTable);
@@ -81,10 +81,24 @@ describe("항목별 규칙", () => {
 });
 
 describe("경계", () => {
-  it("기준표에 없는 타수는 거부한다", () => {
-    expect(() => calc({ hits: 4 })).toThrow(SkillTableError);
+  it("타수 배율: 3타까지는 기준표, 그 뒤로 1타마다 +0.05", () => {
+    const expected: [number, number][] = [[1, 1], [2, 1.1], [3, 1.2], [4, 1.25], [5, 1.3], [6, 1.35], [8, 1.45]];
+    for (const [hits, multiplier] of expected) {
+      expect(hitMultiplierOf(table, hits), `${hits}타`).toBeCloseTo(multiplier, 10);
+      expect(calc({ hits }).totalPower).toBeCloseTo(8 * multiplier, 10);
+    }
+  });
+  it("늘어나는 폭도 기준값에서 읽는다", () => {
+    const changed = SkillTableSchema.parse({ ...rawTable, hitsBeyond: { addPerHit: 0.1 } });
+    expect(hitMultiplierOf(changed, 5)).toBeCloseTo(1.4, 10);
+  });
+  it("1 이상의 정수가 아닌 타수는 거부한다", () => {
     expect(() => calc({ hits: 0 })).toThrow(SkillTableError);
     expect(() => calc({ hits: 1.5 })).toThrow(SkillTableError);
+    expect(() => calc({ hits: -2 })).toThrow(SkillTableError);
+  });
+  it("타수 배율이 중간에 빠진 기준표는 거부한다", () => {
+    expect(SkillTableSchema.safeParse({ ...rawTable, hits: { "1": 1, "3": 1.2 } }).success).toBe(false);
   });
   it("0 이하의 개성 보정은 거부한다", () => {
     expect(() => calc({ personality: 0 })).toThrow(SkillTableError);

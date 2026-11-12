@@ -31,10 +31,15 @@ export const SkillTableSchema = z.strictObject({
     z.strictObject({ power: z.number().min(0), cooldown: turns, energy: z.number().int().min(0) }),
   ),
   potency: z.record(PotencySchema, modifier),
-  /** 타수 → 총 위력 배율. 여기 없는 타수는 기준이 없는 것이다. */
-  hits: z.record(z.string().regex(/^[1-9][0-9]*$/), multiplier).refine((hits) => "1" in hits, {
-    message: "1타의 배율은 꼭 있어야 한다",
-  }),
+  /** 타수 → 총 위력 배율. 1타부터 빠짐없이 적는다. 여기 적힌 것보다 많은 타수는 hitsBeyond 규칙으로 계산한다. */
+  hits: z
+    .record(z.string().regex(/^[1-9][0-9]*$/), multiplier)
+    .refine((hits) => Object.keys(hits).every((_, i) => String(i + 1) in hits), {
+      message: "타수 배율은 1타부터 빠짐없이 이어져야 한다",
+    })
+    .refine((hits) => "1" in hits, { message: "1타의 배율은 꼭 있어야 한다" }),
+  /** 표에 적힌 마지막 타수 뒤로, 1타 늘 때마다 배율에 더하는 값 */
+  hitsBeyond: z.strictObject({ addPerHit: z.number().min(0).max(1) }),
   range: z.record(RangeSchema, modifier),
   /** 효과 하나가 깎는 위력의 비율. 여러 개면 더한다. */
   effectBudget: z.record(EffectWeightSchema, z.number().min(0).max(1)),
@@ -47,6 +52,10 @@ export const SkillTableSchema = z.strictObject({
   tree: z.strictObject({
     stemThresholds: z.array(z.number().int().min(0).max(100)).min(1),
     basicsPerTree: z.number().int().min(1),
+    /** 전투에 들고 가는 기본기 수 */
+    equippedBasics: z.number().int().min(1),
+    /** 연계 역할. 들고 가는 기본기들로 이 역할을 모두 갖출 수 있어야 한다 */
+    roles: z.array(z.enum(["여는", "잇는", "끝내는"])).min(1),
     rootsPerTree: z.number().int().min(0),
     slotsPerRoot: z.number().int().min(1),
     /** 기본기에서 궁극기까지 한 루트의 칸 종류 순서 */
