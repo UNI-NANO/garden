@@ -1,5 +1,7 @@
 import type { z } from "zod";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
+import { ItemListSchema, type ItemList } from "../schema/defs/item";
+import { LimitsSchema, type Limits } from "../schema/defs/limits";
 import type { Role, SkillSpec } from "../schema/defs/skill";
 import { SkillTableSchema, type SkillTable } from "../schema/defs/skill-table";
 import { TreeSchema, type Tree, type TreeNode } from "../schema/defs/tree";
@@ -14,6 +16,8 @@ export interface DefIssue {
 export interface RawDefs {
   skillTable: unknown;
   effects: unknown;
+  limits: unknown;
+  items: unknown;
   /** 파일 이름 → 내용 */
   trees: Record<string, unknown>;
 }
@@ -21,6 +25,8 @@ export interface RawDefs {
 export interface Defs {
   skillTable: SkillTable;
   effects: EffectList;
+  limits: Limits;
+  items: ItemList;
   trees: Tree[];
 }
 
@@ -28,6 +34,8 @@ export type CheckResult = { ok: true; defs: Defs } | { ok: false; issues: DefIss
 
 const SKILL_TABLE_FILE = "skill-table.json";
 const EFFECTS_FILE = "effects.json";
+const LIMITS_FILE = "limits.json";
+const ITEMS_FILE = "items.json";
 
 function schemaIssues(file: string, error: z.ZodError): DefIssue[] {
   return error.issues.map((issue) => ({
@@ -50,6 +58,12 @@ export function checkDefs(raw: RawDefs): CheckResult {
   const effects = EffectListSchema.safeParse(raw.effects);
   if (!effects.success) issues.push(...schemaIssues(EFFECTS_FILE, effects.error));
 
+  const limits = LimitsSchema.safeParse(raw.limits);
+  if (!limits.success) issues.push(...schemaIssues(LIMITS_FILE, limits.error));
+
+  const items = ItemListSchema.safeParse(raw.items);
+  if (!items.success) issues.push(...schemaIssues(ITEMS_FILE, items.error));
+
   const trees: { file: string; tree: Tree }[] = [];
   for (const file of Object.keys(raw.trees).sort()) {
     const tree = TreeSchema.safeParse(raw.trees[file]);
@@ -57,14 +71,29 @@ export function checkDefs(raw: RawDefs): CheckResult {
     else issues.push(...schemaIssues(file, tree.error));
   }
 
-  if (!table.success || !effects.success || issues.length > 0) return { ok: false, issues };
+  if (!table.success || !effects.success || !limits.success || !items.success || issues.length > 0) {
+    return { ok: false, issues };
+  }
 
-  issues.push(...validateLinks(table.data, effects.data, trees));
+  issues.push(...validateLinks(table.data, effects.data, limits.data, items.data, trees));
   if (issues.length > 0) return { ok: false, issues };
-  return { ok: true, defs: { skillTable: table.data, effects: effects.data, trees: trees.map((t) => t.tree) } };
+  return { ok: true, defs: {
+      skillTable: table.data,
+      effects: effects.data,
+      limits: limits.data,
+      items: items.data,
+      trees: trees.map((t) => t.tree),
+    },
+  };
 }
 
-function validateLinks(table: SkillTable, effects: EffectList, trees: { file: string; tree: Tree }[]): DefIssue[] {
+function validateLinks(
+  table: SkillTable,
+  effects: EffectList,
+  limits: Limits,
+  items: ItemList,
+  trees: { file: string; tree: Tree }[],
+): DefIssue[] {
   const issues: DefIssue[] = [];
   const seen = new Map<string, string>();
   const claim = (file: string, id: string) => {
@@ -75,6 +104,27 @@ function validateLinks(table: SkillTable, effects: EffectList, trees: { file: st
 
   claim(SKILL_TABLE_FILE, table.id);
   claim(EFFECTS_FILE, effects.id);
+  claim(LIMITS_FILE, limits.id);
+  claim(ITEMS_FILE, items.id);
+  for (const item of items.items) claim(ITEMS_FILE, item.id);
+
+  const add = (file: string, where: string, message: string) => issues.push({ file, where, message });
+  const { abilities, month, exchange } = limits;
+  if (abilities.min > abilities.max) add(LIMITS_FILE, "abilities", "min이 max보다 크다");
+  if (abilities.initial < abilities.min || abilities.initial > abilities.max) {
+    add(LIMITS_FILE, "abilities.initial", "처음 값이 범위 밖이다");
+  }
+  if (month.savedActionsMax < 0 || month.mainActions < 0) add(LIMITS_FILE, "month", "행동 수는 0 이상이어야 한다");
+  if (exchange.maxWalletGainPerChange > exchange.walletMax) {
+    add(LIMITS_FILE, "exchange.maxWalletGainPerChange", "한 번에 느는 양이 지갑 최대보다 크다");
+  }
+  if (exchange.maxQuantityGainPerChange > exchange.maxStackQuantity) {
+    add(LIMITS_FILE, "exchange.maxQuantityGainPerChange", "한 번에 느는 양이 묶음 최대보다 크다");
+  }
+  if (limits.loadout.basics !== table.tree.equippedBasics) {
+    add(LIMITS_FILE, "loadout.basics", `기준표의 들고 가는 기본기 수(${table.tree.equippedBasics})와 다르다`);
+  }
+
   const effectIds = new Set<string>();
   for (const effect of effects.effects) {
     claim(EFFECTS_FILE, effect.id);

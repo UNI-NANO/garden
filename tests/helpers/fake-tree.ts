@@ -1,3 +1,4 @@
+import rawLimits from "../../data/defs/limits.json";
 import rawTable from "../../data/defs/skill-table.json";
 
 type Json = Record<string, unknown>;
@@ -83,3 +84,16 @@ export const fakeEffects = () => ({
 });
 
 export const fakeTable = () => structuredClone(rawTable);
+
+export const fakeLimits = () => structuredClone(rawLimits);
+
+export const fakeItems = () => ({
+  id: "items",
+  name: "물건",
+  version: 1,
+  items: [
+    { id: "herb", name: "약초", kind: "묶음", weight: 1 },
+    { id: "ore", name: "철광석", kind: "묶음", weight: 5 },
+    { id: "sword.iron", name: "철검", kind: "낱개", weight: 10 },
+  ],
+});

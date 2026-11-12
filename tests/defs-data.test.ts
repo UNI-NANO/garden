@@ -8,7 +8,13 @@ const root = join(import.meta.dirname, "..", "data", "defs");
 const read = (file: string): unknown => JSON.parse(readFileSync(join(root, file), "utf8"));
 const trees: Record<string, unknown> = {};
 for (const name of readdirSync(join(root, "trees"))) trees[`trees/${name}`] = read(`trees/${name}`);
-const result = checkDefs({ skillTable: read("skill-table.json"), effects: read("effects.json"), trees });
+const result = checkDefs({
+  skillTable: read("skill-table.json"),
+  effects: read("effects.json"),
+  limits: read("limits.json"),
+  items: read("items.json"),
+  trees,
+});
 
 describe("실제 정의 데이터 (data/defs)", () => {
   it("검사를 통과한다", () => {

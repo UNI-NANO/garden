@@ -20,13 +20,19 @@ const trees: Record<string, unknown> = {};
 for (const name of readdirSync(join(root, "trees")).sort()) {
   if (name.endsWith(".json")) trees[`trees/${name}`] = readJson(`trees/${name}`);
 }
-const raw = { skillTable: readJson("skill-table.json"), effects: readJson("effects.json"), trees };
+const raw = {
+  skillTable: readJson("skill-table.json"),
+  effects: readJson("effects.json"),
+  limits: readJson("limits.json"),
+  items: readJson("items.json"),
+  trees,
+};
 
 if (issues.length === 0) {
   const result = checkDefs(raw);
   if (result.ok) {
     const nodes = result.defs.trees.reduce((sum, tree) => sum + tree.nodes.length, 0);
-    console.log(`정의 데이터 통과: 나무 ${result.defs.trees.length}그루, 칸 ${nodes}개, 효과 ${result.defs.effects.effects.length}개`);
+    console.log(`정의 데이터 통과: 나무 ${result.defs.trees.length}그루, 칸 ${nodes}개, 효과 ${result.defs.effects.effects.length}개, 물건 ${result.defs.items.items.length}개`);
   } else {
     issues.push(...result.issues);
   }

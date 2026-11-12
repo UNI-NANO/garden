@@ -1,0 +1,16 @@
+{
+  "id": "limits",
+  "name": "범위와 상한",
+  "version": 1,
+  "abilities": { "min": 0, "max": 100, "initial": 50 },
+  "talents": { "chosen": 3 },
+  "loadout": { "basics": 3 },
+  "month": { "mainActions": 4, "minorActions": 2, "savedActionsMax": 4, "careerMax": 2 },
+  "exchange": {
+    "walletMax": 1000000000,
+    "maxWalletGainPerChange": 10000000,
+    "maxStackQuantity": 99999,
+    "maxQuantityGainPerChange": 9999,
+    "mailboxDays": 7
+  }
+}

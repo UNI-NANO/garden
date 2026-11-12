@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { checkDefs, type RawDefs } from "../src/rules/validate-defs";
-import { fakeEffects, fakeTable, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
+import { fakeEffects, fakeItems, fakeLimits, fakeTable, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
 
 const raw = (tree: unknown = makeTree(), over: Partial<RawDefs> = {}): RawDefs => ({
   skillTable: fakeTable(),
   effects: fakeEffects(),
+  limits: fakeLimits(),
+  items: fakeItems(),
   trees: { "trees/t.json": tree },
   ...over,
 });
@@ -242,5 +244,27 @@ describe("줄기 오류", () => {
     expect(broken((t) => void t.stem[0]!.unlocks.push("t.b1.s1"))).toEqual([
       "stem.1: 줄기에서 열 수 없는 것을 가리킨다: t.b1.s1",
     ]);
+  });
+});
+
+describe("범위와 물건", () => {
+  it("범위 파일이 틀리면 잡는다", () => {
+    const limits = fakeLimits();
+    limits.abilities.initial = 500;
+    limits.exchange.maxWalletGainPerChange = limits.exchange.walletMax + 1;
+    limits.loadout.basics = 2;
+    expect(messages(raw(undefined, { limits }))).toEqual([
+      "abilities.initial: 처음 값이 범위 밖이다",
+      "exchange.maxWalletGainPerChange: 한 번에 느는 양이 지갑 최대보다 크다",
+      "loadout.basics: 기준표의 들고 가는 기본기 수(3)와 다르다",
+    ]);
+  });
+  it("물건 ID가 겹치거나 모양이 틀리면 잡는다", () => {
+    const items = fakeItems();
+    items.items.push({ id: "herb", name: "또 약초", kind: "묶음", weight: 1 });
+    expect(messages(raw(undefined, { items })).some((m) => m.includes("ID가 겹친다"))).toBe(true);
+    const bad = fakeItems();
+    bad.items[0]!.kind = "더미";
+    expect(messages(raw(undefined, { items: bad })).length).toBeGreaterThan(0);
   });
 });
