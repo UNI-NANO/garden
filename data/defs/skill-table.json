@@ -1,0 +1,59 @@
+{
+  "id": "skill-table",
+  "name": "기술 기준표",
+  "version": 1,
+  "tiers": {
+    "기본 공격": { "power": 6, "cooldown": 0, "energy": 0 },
+    "1단계": { "power": 8, "cooldown": 1, "energy": 1 },
+    "2단계": { "power": 11, "cooldown": 2, "energy": 2 },
+    "3단계": { "power": 15, "cooldown": 3, "energy": 3 },
+    "궁극기": { "power": 24, "cooldown": 5, "energy": 5 }
+  },
+  "potency": {
+    "약함": { "multiplier": 0.75, "cooldownAdd": 0 },
+    "보통": { "multiplier": 1.0, "cooldownAdd": 0 },
+    "강함": { "multiplier": 1.3, "cooldownAdd": 1 }
+  },
+  "hits": {
+    "1": 1.0,
+    "2": 1.1,
+    "3": 1.2
+  },
+  "range": {
+    "단일": { "multiplier": 1.0, "cooldownAdd": 0 },
+    "휩쓸기": { "multiplier": 0.9, "cooldownAdd": 1 },
+    "전체": { "multiplier": 0.8, "cooldownAdd": 2 }
+  },
+  "effectBudget": {
+    "가벼운": 0.1,
+    "무거운": 0.2
+  },
+  "judgement": {
+    "빗나감": 0,
+    "보통": 0.7,
+    "좋음": 1.0,
+    "완벽": 1.3
+  },
+  "energy": { "max": 10, "perTurn": 2, "onGuardOrDodge": 1 },
+  "tree": {
+    "stemThresholds": [1, 10, 30, 50],
+    "basicsPerTree": 4,
+    "rootsPerTree": 4,
+    "slotsPerRoot": 4,
+    "routePattern": ["기본기", "보완", "보완", "갈림길", "보완", "보완", "끝갈래", "보완", "궁극기"],
+    "axes": [
+      "쌓기 / 터뜨리기",
+      "넓게 / 깊게",
+      "빠르게 / 무겁게",
+      "연타 / 일격",
+      "받아치기 / 밀어붙이기",
+      "뚫기 / 노리기",
+      "나 / 동료",
+      "확실 / 도박",
+      "흐름 / 홀로",
+      "조건 / 상시",
+      "깎기 / 키우기",
+      "끈질김 / 마무리"
+    ]
+  }
+}
