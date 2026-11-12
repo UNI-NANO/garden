@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>장터와 가방</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&amp;family=Gowun+Dodum&amp;display=swap">
+<style>
+body{margin:0;background:#0b0c0f}
+a{color:#d9b46a}a:hover{color:#f0d08e}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif; color: #24201c; background: #10131a">
+  <div aria-hidden="true" style="position: absolute; inset: 0; background-image: repeating-linear-gradient(115deg, rgba(233,226,208,0.04) 0 1px, transparent 1px 7px), linear-gradient(180deg, #14171d, #0f1216)"></div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: radial-gradient(ellipse 60% 60% at 45% 55%, rgba(216,170,90,0.12), transparent 70%), radial-gradient(ellipse 120% 90% at 50% 50%, transparent 40%, rgba(5,6,9,0.8) 100%)"></div>
+
+  <div style="position: absolute; left: 14px; right: 14px; top: 8px; height: 84px; z-index: 2">
+    <div aria-hidden="true" style="position: absolute; inset: 0; background-color: #e9e2d0; background-image: linear-gradient(rgba(70,62,52,0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(70,62,52,0.13) 1px, transparent 1px); background-size: 20px 20px; background-position: 0 4px; clip-path: polygon(0.0% 5.8%, 2.5% 2.7%, 5.0% 11.7%, 7.5% 1.3%, 10.0% 9.6%, 12.5% 6.6%, 15.0% 1.0%, 17.5% 9.1%, 20.0% 0.7%, 22.5% 7.8%, 25.0% 1.3%, 27.5% 1.6%, 30.0% 7.6%, 32.5% 14.9%, 35.0% 2.2%, 37.5% 4.0%, 40.0% 11.3%, 42.5% 17.1%, 45.0% 10.4%, 47.5% 7.1%, 50.0% 17.6%, 52.5% 0.8%, 55.0% 15.5%, 57.5% 5.2%, 60.0% 2.6%, 62.5% 2.1%, 65.0% 5.6%, 67.5% 14.7%, 70.0% 3.3%, 72.5% 10.5%, 75.0% 11.5%, 77.5% 6.7%, 80.0% 9.9%, 82.5% 1.1%, 85.0% 1.1%, 87.5% 3.7%, 90.0% 12.2%, 92.5% 7.7%, 95.0% 5.7%, 97.5% 10.5%, 100.0% 8.2%, 100.0% 93.4%, 97.5% 82.5%, 95.0% 84.6%, 92.5% 94.6%, 90.0% 87.4%, 87.5% 88.4%, 85.0% 80.7%, 82.5% 84.0%, 80.0% 93.7%, 77.5% 78.4%, 75.0% 97.4%, 72.5% 90.8%, 70.0% 83.3%, 67.5% 96.7%, 65.0% 89.2%, 62.5% 99.1%, 60.0% 85.3%, 57.5% 83.2%, 55.0% 87.4%, 52.5% 80.7%, 50.0% 93.1%, 47.5% 84.7%, 45.0% 86.9%, 42.5% 87.2%, 40.0% 90.0%, 37.5% 81.5%, 35.0% 79.2%, 32.5% 89.6%, 30.0% 85.4%, 27.5% 98.7%, 25.0% 84.6%, 22.5% 85.8%, 20.0% 78.2%, 17.5% 81.9%, 15.0% 93.7%, 12.5% 91.5%, 10.0% 85.3%, 7.5% 99.5%, 5.0% 89.8%, 2.5% 96.3%, 0.0% 97.4%)"></div>
+    <div style="position: absolute; left: 48px; right: 48px; top: 21px; height: 40px; border-top: 1.5px solid #3a342d; border-bottom: 1.5px solid #3a342d; display: flex; align-items: center; justify-content: space-between; color: #2b2723">
+      <div style="display: flex; align-items: stretch; height: 100%">
+        <button aria-label="돌아가기" style="width: 46px; height: 40px; border: 0; border-left: 1px solid #3a342d; border-right: 1px solid #3a342d; background: transparent; color: #2b2723; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+        <button style="padding: 0 14px; height: 40px; border: 0; border-right: 1px solid #3a342d; background: #2b2723; color: #e9e2d0; cursor: pointer; font-size: 13px">장터</button>
+        <button style="padding: 0 14px; height: 40px; border: 0; border-right: 1px solid #3a342d; background: transparent; color: #2b2723; cursor: pointer; font-size: 13px">장터 게시판</button>
+        <button style="padding: 0 14px; height: 40px; border: 0; border-right: 1px solid #3a342d; background: transparent; color: #2b2723; cursor: pointer; font-size: 13px">시세표</button>
+      </div>
+      <div style="font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 17px; letter-spacing: 0.12em; white-space: nowrap">뮈르가스트 — 베스트하펜 · 부두 장터</div>
+      <div style="display: flex; align-items: stretch; height: 100%">
+        <div title="지갑" style="display: flex; align-items: center; gap: 10px; padding: 0 14px; border-left: 1px solid #3a342d; border-right: 1px solid #3a342d">
+          <span style="font-size: 11px; color: #5a5249">지갑</span>
+          <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">2 <span style="font-size: 10px; font-weight: 400">베아트</span> 7 <span style="font-size: 10px; font-weight: 400">성은</span> 4 <span style="font-size: 10px; font-weight: 400">잎전</span></span>
+        </div>
+        <div title="신용" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 52px; padding: 0 8px; border-right: 1px solid #3a342d; line-height: 1"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 16px">41</span><span style="font-size: 9px; color: #5a5249; margin-top: 2px">신용</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 장터 물건 -->
+  <div style="position: absolute; left: 40px; top: 110px; width: 400px; height: 590px">
+    <div aria-hidden="true" style="position: absolute; inset: 0; background-color: #ece5d3; background-image: linear-gradient(rgba(70,62,52,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(70,62,52,0.11) 1px, transparent 1px); background-size: 24px 24px; background-position: 12px 12px; clip-path: polygon(0.0% 1.0%, 7.1% 1.2%, 14.3% 2.0%, 21.4% 1.0%, 28.6% 1.1%, 35.7% 1.3%, 42.9% 0.4%, 50.0% 1.1%, 57.1% 1.4%, 64.3% 1.7%, 71.4% 0.2%, 78.6% 0.7%, 85.7% 0.2%, 92.9% 1.8%, 100.0% 1.5%, 99.9% 7.1%, 97.8% 14.3%, 97.9% 21.4%, 98.6% 28.6%, 98.6% 35.7%, 99.7% 42.9%, 100.0% 50.0%, 98.8% 57.1%, 99.9% 64.3%, 99.6% 71.4%, 99.5% 78.6%, 99.9% 85.7%, 99.0% 92.9%, 100.0% 99.0%, 92.9% 98.1%, 85.7% 98.9%, 78.6% 98.6%, 71.4% 98.9%, 64.3% 98.5%, 57.1% 99.0%, 50.0% 99.4%, 42.9% 97.8%, 35.7% 97.8%, 28.6% 98.2%, 21.4% 98.4%, 14.3% 99.3%, 7.1% 99.5%, 0.0% 99.4%, 0.2% 92.9%, 1.7% 85.7%, 0.9% 78.6%, 1.9% 71.4%, 0.9% 64.3%, 2.1% 57.1%, 1.9% 50.0%, 0.0% 42.9%, 0.5% 35.7%, 2.0% 28.6%, 1.0% 21.4%, 2.2% 14.3%, 0.9% 7.1%)"></div>
+    <div style="position: absolute; left: 16px; right: 16px; top: 18px; display: flex; flex-direction: column">
+      <div style="display: grid; grid-template-columns: 1fr 70px 64px 56px; gap: 8px; padding: 0 10px 8px; font-size: 11px; color: #5a5249; border-bottom: 1.5px solid #3a342d"><span>물건</span><span>이레</span><span style="text-align: right">오늘 값</span><span style="text-align: right">어제보다</span></div>
+      <button style="display: grid; grid-template-columns: 1fr 70px 64px 56px; align-items: center; gap: 8px; text-align: left; border: 0; border-bottom: 1px solid rgba(58,52,45,0.3); background: #24201c; color: #ece5d3; padding: 9px 10px; cursor: pointer"><span style="display: flex; flex-direction: column"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">말린 약초</span><span style="font-size: 10px; opacity: 0.7">약초</span></span><svg width="60" height="18" viewBox="0 0 60 18" aria-hidden="true"><polyline points="0.0,18.0 10.0,17.5 20.0,16.6 30.0,13.1 40.0,9.8 50.0,7.1 60.0,0.0" fill="none" stroke="#ece5d3" stroke-width="1.4"></polyline></svg><span style="text-align: right; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">96<span style="font-size: 10px; font-weight: 400"> 잎</span></span><span style="text-align: right; font-size: 12px; color: #f0d08e">+38%</span></button><button style="display: grid; grid-template-columns: 1fr 70px 64px 56px; align-items: center; gap: 8px; text-align: left; border: 0; border-bottom: 1px solid rgba(58,52,45,0.3); background: transparent; color: #24201c; padding: 9px 10px; cursor: pointer"><span style="display: flex; flex-direction: column"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">소금</span><span style="font-size: 10px; opacity: 0.7">생필품</span></span><svg width="60" height="18" viewBox="0 0 60 18" aria-hidden="true"><polyline points="0.0,18.0 10.0,18.0 20.0,0.0 30.0,0.0 40.0,18.0 50.0,0.0 60.0,0.0" fill="none" stroke="#24201c" stroke-width="1.4"></polyline></svg><span style="text-align: right; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">12<span style="font-size: 10px; font-weight: 400"> 잎</span></span><span style="text-align: right; font-size: 12px; color: #8a6420">+2%</span></button><button style="display: grid; grid-template-columns: 1fr 70px 64px 56px; align-items: center; gap: 8px; text-align: left; border: 0; border-bottom: 1px solid rgba(58,52,45,0.3); background: transparent; color: #24201c; padding: 9px 10px; cursor: pointer"><span style="display: flex; flex-direction: column"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">곡식</span><span style="font-size: 10px; opacity: 0.7">생필품</span></span><svg width="60" height="18" viewBox="0 0 60 18" aria-hidden="true"><polyline points="0.0,0.0 10.0,0.0 20.0,18.0 30.0,18.0 40.0,0.0 50.0,18.0 60.0,18.0" fill="none" stroke="#24201c" stroke-width="1.4"></polyline></svg><span style="text-align: right; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">9<span style="font-size: 10px; font-weight: 400"> 잎</span></span><span style="text-align: right; font-size: 12px; color: #3e372f">−4%</span></button><button style="display: grid; grid-template-columns: 1fr 70px 64px 56px; align-items: center; gap: 8px; text-align: left; border: 0; border-bottom: 1px solid rgba(58,52,45,0.3); background: transparent; color: #24201c; padding: 9px 10px; cursor: pointer"><span style="display: flex; flex-direction: column"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">늪 갈대</span><span style="font-size: 10px; opacity: 0.7">재료</span></span><svg width="60" height="18" viewBox="0 0 60 18" aria-hidden="true"><polyline points="0.0,0.0 10.0,0.0 20.0,9.0 30.0,9.0 40.0,9.0 50.0,18.0 60.0,18.0" fill="none" stroke="#24201c" stroke-width="1.4"></polyline></svg><span style="text-align: right; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">4<span style="font-size: 10px; font-weight: 400"> 잎</span></span><span style="text-align: right; font-size: 12px; color: #3e372f">−10%</span></button><button style="display: grid; grid-template-columns: 1fr 70px 64px 56px; align-items: center; gap: 8px; text-align: left; border: 0; border-bottom: 1px solid rgba(58,52,45,0.3); background: transparent; color: #24201c; padding: 9px 10px; cursor: pointer"><span style="display: flex; flex-direction: column"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">등불 기름</span><span style="font-size: 10px; opacity: 0.7">재료</span></span><svg width="60" height="18" viewBox="0 0 60 18" aria-hidden="true"><polyline points="0.0,18.0 10.0,15.4 20.0,12.9 30.0,7.7 40.0,7.7 50.0,5.1 60.0,0.0" fill="none" stroke="#24201c" stroke-width="1.4"></polyline></svg><span style="text-align: right; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">22<span style="font-size: 10px; font-weight: 400"> 잎</span></span><span style="text-align: right; font-size: 12px; color: #8a6420">+12%</span></button><button style="display: grid; grid-template-columns: 1fr 70px 64px 56px; align-items: center; gap: 8px; text-align: left; border: 0; border-bottom: 1px solid rgba(58,52,45,0.3); background: transparent; color: #24201c; padding: 9px 10px; cursor: pointer"><span style="display: flex; flex-direction: column"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">생선</span><span style="font-size: 10px; opacity: 0.7">신선</span></span><svg width="60" height="18" viewBox="0 0 60 18" aria-hidden="true"><polyline points="0.0,9.0 10.0,0.0 20.0,9.0 30.0,9.0 40.0,18.0 50.0,9.0 60.0,9.0" fill="none" stroke="#24201c" stroke-width="1.4"></polyline></svg><span style="text-align: right; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">7<span style="font-size: 10px; font-weight: 400"> 잎</span></span><span style="text-align: right; font-size: 12px; color: #5a5249">+0%</span></button><button style="display: grid; grid-template-columns: 1fr 70px 64px 56px; align-items: center; gap: 8px; text-align: left; border: 0; border-bottom: 1px solid rgba(58,52,45,0.3); background: transparent; color: #24201c; padding: 9px 10px; cursor: pointer"><span style="display: flex; flex-direction: column"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">철</span><span style="font-size: 10px; opacity: 0.7">재료</span></span><svg width="60" height="18" viewBox="0 0 60 18" aria-hidden="true"><polyline points="0.0,18.0 10.0,12.0 20.0,12.0 30.0,6.0 40.0,6.0 50.0,6.0 60.0,0.0" fill="none" stroke="#24201c" stroke-width="1.4"></polyline></svg><span style="text-align: right; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 15px">30<span style="font-size: 10px; font-weight: 400"> 잎</span></span><span style="text-align: right; font-size: 12px; color: #8a6420">+5%</span></button>
+    </div>
+    <div style="position: absolute; left: 26px; right: 26px; bottom: 20px; font-size: 11px; color: #5a5249; line-height: 1.6">동쪽 길이 안개로 막혀 약초 값이 크게 올랐다. 장터 상인의 몫이 붙은 값이다.</div>
+  </div>
+
+  <!-- 사고팔기 -->
+  <div style="position: absolute; left: 464px; top: 110px; width: 380px; height: 590px">
+    <div aria-hidden="true" style="position: absolute; inset: 0; background-color: #ece5d3; background-image: linear-gradient(rgba(70,62,52,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(70,62,52,0.11) 1px, transparent 1px); background-size: 24px 24px; background-position: 12px 12px; clip-path: polygon(0.0% 1.0%, 7.1% 1.2%, 14.3% 2.0%, 21.4% 1.0%, 28.6% 1.1%, 35.7% 1.3%, 42.9% 0.4%, 50.0% 1.1%, 57.1% 1.4%, 64.3% 1.7%, 71.4% 0.2%, 78.6% 0.7%, 85.7% 0.2%, 92.9% 1.8%, 100.0% 1.5%, 99.9% 7.1%, 97.8% 14.3%, 97.9% 21.4%, 98.6% 28.6%, 98.6% 35.7%, 99.7% 42.9%, 100.0% 50.0%, 98.8% 57.1%, 99.9% 64.3%, 99.6% 71.4%, 99.5% 78.6%, 99.9% 85.7%, 99.0% 92.9%, 100.0% 99.0%, 92.9% 98.1%, 85.7% 98.9%, 78.6% 98.6%, 71.4% 98.9%, 64.3% 98.5%, 57.1% 99.0%, 50.0% 99.4%, 42.9% 97.8%, 35.7% 97.8%, 28.6% 98.2%, 21.4% 98.4%, 14.3% 99.3%, 7.1% 99.5%, 0.0% 99.4%, 0.2% 92.9%, 1.7% 85.7%, 0.9% 78.6%, 1.9% 71.4%, 0.9% 64.3%, 2.1% 57.1%, 1.9% 50.0%, 0.0% 42.9%, 0.5% 35.7%, 2.0% 28.6%, 1.0% 21.4%, 2.2% 14.3%, 0.9% 7.1%)"></div>
+    <div style="position: absolute; left: 28px; right: 28px; top: 26px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid #24201c">
+        <button style="height: 40px; border: 0; background: transparent; color: #24201c; cursor: pointer; font-size: 14px">사기</button>
+        <button style="height: 40px; border: 0; background: #24201c; color: #ece5d3; cursor: pointer; font-size: 14px">팔기</button>
+      </div>
+      <div>
+        <span style="font-size: 11px; letter-spacing: 0.2em; color: #5a5249">약초 · 품질 상 · 가방에 8</span>
+        <div style="margin-top: 4px; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 28px">말린 약초</div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <span style="font-size: 13px; color: #3e372f">수량</span>
+        <div style="display: flex; align-items: center; border: 1.5px solid #24201c">
+          <button aria-label="하나 줄이기" style="width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; font-size: 20px">−</button>
+          <span style="width: 56px; text-align: center; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 20px">6</span>
+          <button aria-label="하나 늘리기" style="width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; font-size: 20px">+</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; border-top: 1px solid rgba(58,52,45,0.5); padding-top: 12px">
+        <span style="font-size: 11px; letter-spacing: 0.2em; color: #5a5249">많이 팔수록 값이 내려간다</span>
+        <div style="display: flex; align-items: flex-end; gap: 4px; height: 54px">
+          <span style="flex: 1; height: 100%; background: #24201c"></span><span style="flex: 1; height: 94%; background: #24201c"></span><span style="flex: 1; height: 88%; background: #24201c"></span><span style="flex: 1; height: 83%; background: #24201c"></span><span style="flex: 1; height: 78%; background: #24201c"></span><span style="flex: 1; height: 74%; background: #24201c"></span><span style="flex: 1; height: 70%; background: #d6cdb7"></span><span style="flex: 1; height: 66%; background: #d6cdb7"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5a5249"><span>첫 개 82잎</span><span>여섯째 61잎</span></div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr auto; row-gap: 8px; font-size: 13px; border-top: 1px solid rgba(58,52,45,0.5); padding-top: 12px">
+        <span style="color: #5a5249">값의 합</span><span>427잎</span>
+        <span style="color: #5a5249">품질 상</span><span>+10%</span>
+        <span style="color: #5a5249">입항 물건 세금</span><span>−12잎</span>
+        <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 16px">받는 돈</span><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 16px">4 베아트 5 성은 8 잎</span>
+      </div>
+    </div>
+    <button style="position: absolute; left: 28px; right: 28px; bottom: 26px; height: 52px; border: 0; background: #1c1814; color: #f0d08e; cursor: pointer; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; letter-spacing: 0.3em">팔기</button>
+  </div>
+
+  <!-- 가방 -->
+  <div style="position: absolute; right: 40px; top: 110px; width: 372px; height: 590px">
+    <div aria-hidden="true" style="position: absolute; inset: 0; background-color: #ece5d3; background-image: linear-gradient(rgba(70,62,52,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(70,62,52,0.11) 1px, transparent 1px); background-size: 24px 24px; background-position: 12px 12px; clip-path: polygon(0.0% 1.0%, 7.1% 1.2%, 14.3% 2.0%, 21.4% 1.0%, 28.6% 1.1%, 35.7% 1.3%, 42.9% 0.4%, 50.0% 1.1%, 57.1% 1.4%, 64.3% 1.7%, 71.4% 0.2%, 78.6% 0.7%, 85.7% 0.2%, 92.9% 1.8%, 100.0% 1.5%, 99.9% 7.1%, 97.8% 14.3%, 97.9% 21.4%, 98.6% 28.6%, 98.6% 35.7%, 99.7% 42.9%, 100.0% 50.0%, 98.8% 57.1%, 99.9% 64.3%, 99.6% 71.4%, 99.5% 78.6%, 99.9% 85.7%, 99.0% 92.9%, 100.0% 99.0%, 92.9% 98.1%, 85.7% 98.9%, 78.6% 98.6%, 71.4% 98.9%, 64.3% 98.5%, 57.1% 99.0%, 50.0% 99.4%, 42.9% 97.8%, 35.7% 97.8%, 28.6% 98.2%, 21.4% 98.4%, 14.3% 99.3%, 7.1% 99.5%, 0.0% 99.4%, 0.2% 92.9%, 1.7% 85.7%, 0.9% 78.6%, 1.9% 71.4%, 0.9% 64.3%, 2.1% 57.1%, 1.9% 50.0%, 0.0% 42.9%, 0.5% 35.7%, 2.0% 28.6%, 1.0% 21.4%, 2.2% 14.3%, 0.9% 7.1%)"></div>
+    <div style="position: absolute; left: 24px; right: 24px; top: 24px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1.5px solid #3a342d; padding-bottom: 8px">
+        <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; letter-spacing: 0.2em">가방</span>
+        <span style="font-size: 11px; color: #5a5249">노새 · 짐 무게</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="height: 10px; background: #d6cdb7"><div style="width: 61%; height: 100%; background: #24201c"></div></div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #5a5249"><span>18.4 / 30</span><span>넘으면 출발할 수 없음</span></div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 34px 60px 40px; gap: 8px; font-size: 10px; color: #5a5249; padding-top: 6px"><span>물건 · 품질</span><span style="text-align: right">수량</span><span>신선도</span><span style="text-align: right">무게</span></div>
+      <div style="display: grid; grid-template-columns: 1fr 34px 60px 40px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(58,52,45,0.25); font-size: 13px"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 700">말린 약초 · 상</span><span style="text-align: right">×8</span><span style="font-size: 10px; color: #5a5249">안 상함</span><span style="text-align: right; font-size: 11px; color: #5a5249">2.0</span></div><div style="display: grid; grid-template-columns: 1fr 34px 60px 40px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(58,52,45,0.25); font-size: 13px"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 700">생선 · 중</span><span style="text-align: right">×3</span><div title="신선도 35" style="height: 5px; background: #d6cdb7"><div style="width: 35%; height: 100%; background: #8a6420"></div></div><span style="text-align: right; font-size: 11px; color: #5a5249">1.5</span></div><div style="display: grid; grid-template-columns: 1fr 34px 60px 40px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(58,52,45,0.25); font-size: 13px"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 700">늪 이끼풀 · 중</span><span style="text-align: right">×5</span><div title="신선도 80" style="height: 5px; background: #d6cdb7"><div style="width: 80%; height: 100%; background: #24201c"></div></div><span style="text-align: right; font-size: 11px; color: #5a5249">0.5</span></div><div style="display: grid; grid-template-columns: 1fr 34px 60px 40px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(58,52,45,0.25); font-size: 13px"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 700">해독제 · 상</span><span style="text-align: right">×2</span><span style="font-size: 10px; color: #5a5249">안 상함</span><span style="text-align: right; font-size: 11px; color: #5a5249">0.4</span></div><div style="display: grid; grid-template-columns: 1fr 34px 60px 40px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(58,52,45,0.25); font-size: 13px"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 700">소금</span><span style="text-align: right">×4</span><span style="font-size: 10px; color: #5a5249">안 상함</span><span style="text-align: right; font-size: 11px; color: #5a5249">2.0</span></div><div style="display: grid; grid-template-columns: 1fr 34px 60px 40px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(58,52,45,0.25); font-size: 13px"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 700">들개 가죽 · 중</span><span style="text-align: right">×2</span><span style="font-size: 10px; color: #5a5249">안 상함</span><span style="text-align: right; font-size: 11px; color: #5a5249">1.2</span></div>
+      <div style="margin-top: 6px; padding: 9px 12px; background: #1c1814; color: #f0d08e; font-size: 12px">생선이 빨리 상하고 있어요. 오늘 안에 팔거나 소금에 절이세요.</div>
+    </div>
+    <div style="position: absolute; left: 24px; right: 24px; bottom: 24px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <button style="height: 40px; border: 1.5px solid #3a342d; background: transparent; cursor: pointer; font-size: 13px; color: #24201c">쓰기</button>
+      <button style="height: 40px; border: 1.5px solid #3a342d; background: transparent; cursor: pointer; font-size: 13px; color: #24201c">우편함 1</button>
+      <button style="height: 40px; border: 1.5px solid #3a342d; background: transparent; cursor: pointer; font-size: 13px; color: #24201c">버리기</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

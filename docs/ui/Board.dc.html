@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>의뢰 게시판</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&amp;family=Gowun+Dodum&amp;display=swap">
+<style>
+body{margin:0;background:#0b0c0f}
+a{color:#d9b46a}a:hover{color:#f0d08e}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; font-family: 'Gowun Dodum', 'Noto Sans KR', sans-serif; color: #24201c; background: #10131a">
+  <div aria-hidden="true" style="position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, #1a1e28 0 16px, #232937 16px 20px, #161a22 20px 38px, #283041 38px 43px, #1d222d 43px 66px, #141820 66px 70px); opacity: 0.55"></div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: radial-gradient(ellipse 55% 60% at 45% 55%, rgba(216,170,90,0.13), transparent 70%), radial-gradient(ellipse 120% 90% at 50% 50%, transparent 40%, rgba(5,6,9,0.85) 100%)"></div>
+  <div style="position: absolute; left: 14px; right: 14px; top: 8px; height: 84px; z-index: 2">
+    <div aria-hidden="true" style="position: absolute; inset: 0; background-color: #e9e2d0; background-image: linear-gradient(rgba(70,62,52,0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(70,62,52,0.13) 1px, transparent 1px); background-size: 20px 20px; background-position: 0 4px; clip-path: polygon(0.0% 5.8%, 2.5% 2.7%, 5.0% 11.7%, 7.5% 1.3%, 10.0% 9.6%, 12.5% 6.6%, 15.0% 1.0%, 17.5% 9.1%, 20.0% 0.7%, 22.5% 7.8%, 25.0% 1.3%, 27.5% 1.6%, 30.0% 7.6%, 32.5% 14.9%, 35.0% 2.2%, 37.5% 4.0%, 40.0% 11.3%, 42.5% 17.1%, 45.0% 10.4%, 47.5% 7.1%, 50.0% 17.6%, 52.5% 0.8%, 55.0% 15.5%, 57.5% 5.2%, 60.0% 2.6%, 62.5% 2.1%, 65.0% 5.6%, 67.5% 14.7%, 70.0% 3.3%, 72.5% 10.5%, 75.0% 11.5%, 77.5% 6.7%, 80.0% 9.9%, 82.5% 1.1%, 85.0% 1.1%, 87.5% 3.7%, 90.0% 12.2%, 92.5% 7.7%, 95.0% 5.7%, 97.5% 10.5%, 100.0% 8.2%, 100.0% 93.4%, 97.5% 82.5%, 95.0% 84.6%, 92.5% 94.6%, 90.0% 87.4%, 87.5% 88.4%, 85.0% 80.7%, 82.5% 84.0%, 80.0% 93.7%, 77.5% 78.4%, 75.0% 97.4%, 72.5% 90.8%, 70.0% 83.3%, 67.5% 96.7%, 65.0% 89.2%, 62.5% 99.1%, 60.0% 85.3%, 57.5% 83.2%, 55.0% 87.4%, 52.5% 80.7%, 50.0% 93.1%, 47.5% 84.7%, 45.0% 86.9%, 42.5% 87.2%, 40.0% 90.0%, 37.5% 81.5%, 35.0% 79.2%, 32.5% 89.6%, 30.0% 85.4%, 27.5% 98.7%, 25.0% 84.6%, 22.5% 85.8%, 20.0% 78.2%, 17.5% 81.9%, 15.0% 93.7%, 12.5% 91.5%, 10.0% 85.3%, 7.5% 99.5%, 5.0% 89.8%, 2.5% 96.3%, 0.0% 97.4%)"></div>
+    <div style="position: absolute; left: 48px; right: 48px; top: 21px; height: 40px; border-top: 1.5px solid #3a342d; border-bottom: 1.5px solid #3a342d; display: flex; align-items: center; justify-content: space-between; color: #2b2723">
+      <div style="display: flex; align-items: stretch; height: 100%">
+        <button aria-label="돌아가기" style="width: 46px; height: 40px; border: 0; border-left: 1px solid #3a342d; border-right: 1px solid #3a342d; background: transparent; color: #2b2723; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+        <button style="padding: 0 14px; height: 40px; border: 0; border-right: 1px solid #3a342d; background: #2b2723; color: #e9e2d0; cursor: pointer; font-size: 13px">게시판</button><button style="padding: 0 14px; height: 40px; border: 0; border-right: 1px solid #3a342d; background: transparent; color: #2b2723; cursor: pointer; font-size: 13px">받은 의뢰 3 / 5</button>
+      </div>
+      <div style="font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 17px; letter-spacing: 0.12em; white-space: nowrap">뮈르가스트 — 베스트하펜 · 경비대 앞 게시판</div>
+      <div style="display: flex; align-items: stretch; height: 100%"><div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 56px; padding: 0 8px; border-left: 1px solid #3a342d; border-right: 1px solid #3a342d; line-height: 1"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 16px">2</span><span style="font-size: 9px; color: #5a5249; margin-top: 2px">오늘 완료</span></div><div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 56px; padding: 0 8px; border-right: 1px solid #3a342d; line-height: 1"><span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 16px">1</span><span style="font-size: 9px; color: #5a5249; margin-top: 2px">피로</span></div></div>
+    </div>
+  </div>
+<div aria-hidden="true" style="position: absolute; left: 40px; top: 110px; width: 900px; height: 590px; background: #3a2c1e; background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 22px), repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 9px); border: 6px solid #241a11"></div><div style="position: absolute; left: 40px; top: 110px; width: 900px; height: 590px"><button style="position: absolute; left: 60px; top: 40px; width: 228px; height: 232px; border: 0; padding: 0; background: transparent; cursor: pointer; transform: rotate(-3deg); text-align: left; color: #24201c">
+  <span aria-hidden="true" style="position: absolute; inset: 0; background: #e9e2d0;  clip-path: polygon(0% 2%, 18% 0%, 40% 3%, 62% 0%, 84% 2%, 100% 0%, 99% 30%, 100% 62%, 98% 100%, 70% 98%, 45% 100%, 20% 97%, 0% 100%, 1% 64%, 0% 30%)"></span>
+  <span aria-hidden="true" style="position: absolute; left: 106px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: #3a342d"></span>
+  <span style="position: absolute; left: 18px; right: 18px; top: 30px; display: flex; flex-direction: column; gap: 6px">
+    <span style="display: flex; justify-content: space-between; font-size: 11px; color: #5a5249"><span>채집</span><span>등급 ●○○○○</span></span>
+    <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; line-height: 1.3">늪 이끼풀 다섯 묶음</span>
+    <span style="font-size: 12px; color: #3e372f">그로스모어 약초상</span>
+    <span style="margin-top: 6px; border-top: 1px solid rgba(58,52,45,0.4); padding-top: 8px; font-size: 12px; line-height: 1.6">기한 이틀<br>성은 3 · 친밀도</span>
+  </span>
+</button><button style="position: absolute; left: 330px; top: 30px; width: 228px; height: 232px; border: 0; padding: 0; background: transparent; cursor: pointer; transform: rotate(2deg); text-align: left; color: #24201c">
+  <span aria-hidden="true" style="position: absolute; inset: 0; background: #e9e2d0;  clip-path: polygon(0% 2%, 18% 0%, 40% 3%, 62% 0%, 84% 2%, 100% 0%, 99% 30%, 100% 62%, 98% 100%, 70% 98%, 45% 100%, 20% 97%, 0% 100%, 1% 64%, 0% 30%)"></span>
+  <span aria-hidden="true" style="position: absolute; left: 106px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: #3a342d"></span>
+  <span style="position: absolute; left: 18px; right: 18px; top: 30px; display: flex; flex-direction: column; gap: 6px">
+    <span style="display: flex; justify-content: space-between; font-size: 11px; color: #5a5249"><span>납품</span><span>등급 ●●○○○</span></span>
+    <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; line-height: 1.3">말린 약초 여섯</span>
+    <span style="font-size: 12px; color: #3e372f">베스트하펜 상인</span>
+    <span style="margin-top: 6px; border-top: 1px solid rgba(58,52,45,0.4); padding-top: 8px; font-size: 12px; line-height: 1.6">기한 사흘<br>시세보다 +30%</span>
+  </span>
+</button><button style="position: absolute; left: 600px; top: 50px; width: 228px; height: 232px; border: 0; padding: 0; background: transparent; cursor: pointer; transform: rotate(-2deg); text-align: left; color: #24201c">
+  <span aria-hidden="true" style="position: absolute; inset: 0; background: #e9e2d0;  clip-path: polygon(0% 2%, 18% 0%, 40% 3%, 62% 0%, 84% 2%, 100% 0%, 99% 30%, 100% 62%, 98% 100%, 70% 98%, 45% 100%, 20% 97%, 0% 100%, 1% 64%, 0% 30%)"></span>
+  <span aria-hidden="true" style="position: absolute; left: 106px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: #3a342d"></span>
+  <span style="position: absolute; left: 18px; right: 18px; top: 30px; display: flex; flex-direction: column; gap: 6px">
+    <span style="display: flex; justify-content: space-between; font-size: 11px; color: #5a5249"><span>토벌</span><span>등급 ●●○○○</span></span>
+    <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; line-height: 1.3">늪 거머리 열</span>
+    <span style="font-size: 12px; color: #3e372f">오스트렌 사냥꾼 회관</span>
+    <span style="margin-top: 6px; border-top: 1px solid rgba(58,52,45,0.4); padding-top: 8px; font-size: 12px; line-height: 1.6">기한 나흘<br>성은 5</span>
+  </span>
+</button><button style="position: absolute; left: 90px; top: 300px; width: 228px; height: 232px; border: 0; padding: 0; background: transparent; cursor: pointer; transform: rotate(3deg); text-align: left; color: #24201c">
+  <span aria-hidden="true" style="position: absolute; inset: 0; background: #f6efd9; outline: 2px solid #d9b46a; outline-offset: 3px; clip-path: polygon(0% 2%, 18% 0%, 40% 3%, 62% 0%, 84% 2%, 100% 0%, 99% 30%, 100% 62%, 98% 100%, 70% 98%, 45% 100%, 20% 97%, 0% 100%, 1% 64%, 0% 30%)"></span>
+  <span aria-hidden="true" style="position: absolute; left: 106px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: #8a6420"></span>
+  <span style="position: absolute; left: 18px; right: 18px; top: 30px; display: flex; flex-direction: column; gap: 6px">
+    <span style="display: flex; justify-content: space-between; font-size: 11px; color: #5a5249"><span>현상금</span><span>등급 ●●●●○</span></span>
+    <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; line-height: 1.3">늪 밀렵꾼 패거리</span>
+    <span style="font-size: 12px; color: #3e372f">베스트하펜 경비대</span>
+    <span style="margin-top: 6px; border-top: 1px solid rgba(58,52,45,0.4); padding-top: 8px; font-size: 12px; line-height: 1.6">기한 다섯 날<br>생포 1 베아트 · 처치 5 성은</span>
+  </span>
+</button><button style="position: absolute; left: 380px; top: 320px; width: 228px; height: 232px; border: 0; padding: 0; background: transparent; cursor: pointer; transform: rotate(-1deg); text-align: left; color: #24201c">
+  <span aria-hidden="true" style="position: absolute; inset: 0; background: #e9e2d0;  clip-path: polygon(0% 2%, 18% 0%, 40% 3%, 62% 0%, 84% 2%, 100% 0%, 99% 30%, 100% 62%, 98% 100%, 70% 98%, 45% 100%, 20% 97%, 0% 100%, 1% 64%, 0% 30%)"></span>
+  <span aria-hidden="true" style="position: absolute; left: 106px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: #3a342d"></span>
+  <span style="position: absolute; left: 18px; right: 18px; top: 30px; display: flex; flex-direction: column; gap: 6px">
+    <span style="display: flex; justify-content: space-between; font-size: 11px; color: #5a5249"><span>배달</span><span>등급 ●○○○○</span></span>
+    <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; line-height: 1.3">네벨하임에 편지</span>
+    <span style="font-size: 12px; color: #3e372f">리히트펜 등불 장인</span>
+    <span style="margin-top: 6px; border-top: 1px solid rgba(58,52,45,0.4); padding-top: 8px; font-size: 12px; line-height: 1.6">기한 하루<br>성은 2</span>
+  </span>
+</button><button style="position: absolute; left: 640px; top: 310px; width: 228px; height: 232px; border: 0; padding: 0; background: transparent; cursor: pointer; transform: rotate(2deg); text-align: left; color: #24201c">
+  <span aria-hidden="true" style="position: absolute; inset: 0; background: #e9e2d0;  clip-path: polygon(0% 2%, 18% 0%, 40% 3%, 62% 0%, 84% 2%, 100% 0%, 99% 30%, 100% 62%, 98% 100%, 70% 98%, 45% 100%, 20% 97%, 0% 100%, 1% 64%, 0% 30%)"></span>
+  <span aria-hidden="true" style="position: absolute; left: 106px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: #3a342d"></span>
+  <span style="position: absolute; left: 18px; right: 18px; top: 30px; display: flex; flex-direction: column; gap: 6px">
+    <span style="display: flex; justify-content: space-between; font-size: 11px; color: #5a5249"><span>수색</span><span>등급 ●●●○○</span></span>
+    <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; line-height: 1.3">늪가에 두고 온 상자</span>
+    <span style="font-size: 12px; color: #3e372f">오스트렌의 어머니</span>
+    <span style="margin-top: 6px; border-top: 1px solid rgba(58,52,45,0.4); padding-top: 8px; font-size: 12px; line-height: 1.6">기한 사흘<br>성은 6 · 후속 의뢰</span>
+  </span>
+</button></div><div style="position: absolute; left: 964px; top: 110px; width: 286px; height: 590px"><div aria-hidden="true" style="position: absolute; inset: 0; background-color: #ece5d3; background-image: linear-gradient(rgba(70,62,52,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(70,62,52,0.11) 1px, transparent 1px); background-size: 24px 24px; background-position: 12px 12px; clip-path: polygon(0.0% 1.0%, 7.1% 1.2%, 14.3% 2.0%, 21.4% 1.0%, 28.6% 1.1%, 35.7% 1.3%, 42.9% 0.4%, 50.0% 1.1%, 57.1% 1.4%, 64.3% 1.7%, 71.4% 0.2%, 78.6% 0.7%, 85.7% 0.2%, 92.9% 1.8%, 100.0% 1.5%, 99.9% 7.1%, 97.8% 14.3%, 97.9% 21.4%, 98.6% 28.6%, 98.6% 35.7%, 99.7% 42.9%, 100.0% 50.0%, 98.8% 57.1%, 99.9% 64.3%, 99.6% 71.4%, 99.5% 78.6%, 99.9% 85.7%, 99.0% 92.9%, 100.0% 99.0%, 92.9% 98.1%, 85.7% 98.9%, 78.6% 98.6%, 71.4% 98.9%, 64.3% 98.5%, 57.1% 99.0%, 50.0% 99.4%, 42.9% 97.8%, 35.7% 97.8%, 28.6% 98.2%, 21.4% 98.4%, 14.3% 99.3%, 7.1% 99.5%, 0.0% 99.4%, 0.2% 92.9%, 1.7% 85.7%, 0.9% 78.6%, 1.9% 71.4%, 0.9% 64.3%, 2.1% 57.1%, 1.9% 50.0%, 0.0% 42.9%, 0.5% 35.7%, 2.0% 28.6%, 1.0% 21.4%, 2.2% 14.3%, 0.9% 7.1%)"></div><div style="position: absolute; left: 26px; right: 26px; top: 24px; display: flex; flex-direction: column; gap: 12px">
+  <span style="font-size: 11px; letter-spacing: 0.2em; color: #5a5249">현상금 · 등급 4 · 권장 숙련도 45</span>
+  <span style="font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 24px; line-height: 1.3">늪 밀렵꾼 패거리</span>
+  <p style="margin: 0; font-family: 'Nanum Myeongjo', serif; font-size: 14px; line-height: 1.7">"이 얼굴들이야. 쇠약병에 미쳐 늪가 마을을 턴다. 산 채로면 두 배."</p>
+  <div style="display: grid; grid-template-columns: 64px 1fr; row-gap: 7px; font-size: 13px; border-top: 1px solid rgba(58,52,45,0.5); padding-top: 10px">
+    <span style="color: #5a5249">의뢰인</span><span>베스트하펜 경비대</span>
+    <span style="color: #5a5249">장소</span><span>동쪽 늪 가장자리</span>
+    <span style="color: #5a5249">기한</span><span>다섯 날</span>
+    <span style="color: #5a5249">보상</span><span>생포 1 베아트 · 처치 5 성은</span>
+  </div>
+  <span style="font-size: 11px; color: #8a6420">등급 4 이상은 실패하면 의뢰인 친밀도가 조금 내려가요.</span>
+</div>
+<button style="position: absolute; left: 26px; right: 26px; bottom: 24px; height: 52px; border: 0; background: #1c1814; color: #f0d08e; cursor: pointer; font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 18px; letter-spacing: 0.3em">받기</button></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
