@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:emulator": "firebase emulators:exec --only database --project demo-garden \"vitest run --config vitest.emulator.config.ts\"",
     "build": "vite build",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "check:defs": "tsx scripts/check-defs.ts",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:defs && npm run build"
   },
   "dependencies": {
     "zod": "^4.6.7"

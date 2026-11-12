@@ -71,3 +71,31 @@ export function computeSkillNumbers(table: SkillTable, input: SkillNumbersInput)
     energy: tier.energy,
   };
 }
+
+/** 기술 항목(SkillSpec)과 효과 목록으로 숫자를 계산한다. 없는 효과 ID는 오류. */
+export function computeSkillNumbersFromSpec(
+  table: SkillTable,
+  effects: readonly { id: string; weight: EffectWeight }[],
+  spec: {
+    tier: Tier;
+    potency: Potency;
+    hits: number | "자세";
+    range: Range;
+    effects: readonly string[];
+    personality?: number | undefined;
+  },
+): SkillNumbers {
+  const effectWeights = spec.effects.map((id) => {
+    const effect = effects.find((e) => e.id === id);
+    if (effect === undefined) throw new SkillTableError(`없는 효과: ${id}`);
+    return effect.weight;
+  });
+  return computeSkillNumbers(table, {
+    tier: spec.tier,
+    potency: spec.potency,
+    hits: spec.hits,
+    range: spec.range,
+    effectWeights,
+    personality: spec.personality,
+  });
+}
