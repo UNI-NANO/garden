@@ -1,0 +1,10 @@
+{
+  "id": "effects",
+  "name": "효과",
+  "version": 1,
+  "effects": [
+    { "id": "bleed", "name": "출혈", "weight": "가벼운" },
+    { "id": "morale", "name": "사기", "weight": "가벼운" },
+    { "id": "bind", "name": "속박", "weight": "무거운" }
+  ]
+}
