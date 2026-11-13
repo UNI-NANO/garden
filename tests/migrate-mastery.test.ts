@@ -26,6 +26,17 @@ describe("옛 숙련도 환산", () => {
     expect(convert(40).value).toBe(32);
     expect(points(32)).toEqual([8, 3]);
   });
+  it("기획서 표의 나머지 값: 딱 절반은 내린다", () => {
+    // 옛 값 → 기획서에 적힌 환산값
+    const table: [number, number][] = [
+      [15, 12], [22, 18], [25, 21], [23, 19], [17, 14], [16, 13], [13, 11], [5, 4], [20, 17],
+      [24, 20], [54, 41], [26, 22], [37, 30], [10, 8], [8, 7],
+    ];
+    for (const [old, expected] of table) expect(convert(old).value, `옛 ${old}`).toBe(expected);
+    // 여러 옛 기술이 한 나무로 모이면 환산한 뒤 더한다: 레이피어 22 + 펜싱 5 → 세검 22, 웅변 8 + 화술 8 → 말 14
+    expect(convert(22).value + convert(5).value).toBe(22);
+    expect(convert(8).value + convert(8).value).toBe(14);
+  });
   it("환산값에서 나오는 점수 (기획서 표의 나머지 줄)", () => {
     expect(points(22)).toEqual([5, 2]);
     expect(points(21)).toEqual([5, 2]);
