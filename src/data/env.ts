@@ -20,7 +20,7 @@ const ENVS: Record<EnvName, unknown> = {
       messagingSenderId: "0",
       appId: "demo-app",
     },
-    emulator: { host: "127.0.0.1", databasePort: 9000 },
+    emulator: { host: "127.0.0.1", databasePort: 9000, authPort: 9099 },
   },
   staging: {
     name: "staging",

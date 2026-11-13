@@ -10,7 +10,7 @@ const firebase = {
   messagingSenderId: "1",
   appId: "1:1:web:1",
 };
-const emulator = { host: "127.0.0.1", databasePort: 9000 };
+const emulator = { host: "127.0.0.1", databasePort: 9000, authPort: 9099 };
 
 describe("환경 설정 스키마", () => {
   it("올바른 설정은 통과한다", () => {

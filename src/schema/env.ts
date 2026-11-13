@@ -24,6 +24,7 @@ export const EnvConfigSchema = z
       .strictObject({
         host: z.enum(["127.0.0.1", "localhost"]),
         databasePort: z.number().int().min(1).max(65535),
+        authPort: z.number().int().min(1).max(65535),
       })
       .optional(),
   })
