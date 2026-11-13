@@ -14,6 +14,7 @@ const result = checkDefs({
   limits: read("limits.json"),
   items: read("items.json"),
   migration: read("migration.json"),
+  talents: read("talents.json"),
   trees,
 });
 

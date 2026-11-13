@@ -1,6 +1,18 @@
 {
   "id": "items",
   "name": "물건",
-  "version": 1,
-  "items": []
+  "version": 2,
+  "items": [
+    { "id": "sea-eel", "name": "바다장어", "kind": "묶음", "weight": 1 },
+    { "id": "rabbit-meat", "name": "토끼 고기", "kind": "묶음", "weight": 1 },
+    { "id": "rabbit-fur", "name": "토끼 털", "kind": "묶음", "weight": 1 },
+    { "id": "venison", "name": "사슴 고기", "kind": "묶음", "weight": 2 },
+    { "id": "deer-hide", "name": "사슴 가죽", "kind": "묶음", "weight": 2 },
+    { "id": "candle-stub", "name": "양초 토막", "kind": "묶음", "weight": 0.1 },
+    { "id": "fishing-rod.sturdy", "name": "튼튼한 낚싯대", "kind": "낱개", "weight": 2 },
+    { "id": "hunters-bow", "name": "사냥꾼의 활", "kind": "낱개", "weight": 2 },
+    { "id": "knights-longsword", "name": "기사의 장검", "kind": "낱개", "weight": 3 },
+    { "id": "plate-armor", "name": "판금 갑옷", "kind": "낱개", "weight": 20 },
+    { "id": "el-peso-del-padre", "name": "엘 페소 델 파드레", "kind": "낱개", "weight": 6 }
+  ]
 }

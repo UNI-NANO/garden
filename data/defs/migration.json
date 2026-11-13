@@ -1,11 +1,369 @@
 {
   "id": "migration",
   "name": "옛 데이터 이전 규칙",
-  "version": 1,
+  "version": 2,
   "masteryCurve": [
-    { "oldFrom": 0, "oldTo": 30, "newFrom": 0, "newTo": 25 },
-    { "oldFrom": 30, "oldTo": 60, "newFrom": 25, "newTo": 45 },
-    { "oldFrom": 60, "oldTo": 80, "newFrom": 45, "newTo": 60 },
-    { "oldFrom": 80, "oldTo": 100, "newFrom": 60, "newTo": 75 }
-  ]
+    {
+      "oldFrom": 0,
+      "oldTo": 30,
+      "newFrom": 0,
+      "newTo": 25
+    },
+    {
+      "oldFrom": 30,
+      "oldTo": 60,
+      "newFrom": 25,
+      "newTo": 45
+    },
+    {
+      "oldFrom": 60,
+      "oldTo": 80,
+      "newFrom": 45,
+      "newTo": 60
+    },
+    {
+      "oldFrom": 80,
+      "oldTo": 100,
+      "newFrom": 60,
+      "newTo": 75
+    }
+  ],
+  "abilities": {
+    "keepUpTo": 50,
+    "factorAbove": 0.5
+  },
+  "moneyRate": 1,
+  "defaultIntimacy": 50,
+  "itemDefaults": {
+    "freshness": 100,
+    "quality": "중",
+    "durability": 100
+  },
+  "skills": [
+    {
+      "id": "sword",
+      "name": "검술",
+      "group": "무기",
+      "from": [
+        "검술"
+      ]
+    },
+    {
+      "id": "longsword",
+      "name": "롱소드",
+      "group": "무기",
+      "from": [
+        "리히테나워류 롱소드",
+        "피오레류 롱소드"
+      ]
+    },
+    {
+      "id": "greatsword",
+      "name": "대검",
+      "group": "무기",
+      "from": []
+    },
+    {
+      "id": "rapier",
+      "name": "세검",
+      "group": "무기",
+      "from": [
+        "레이피어",
+        "펜싱"
+      ]
+    },
+    {
+      "id": "dagger",
+      "name": "단검",
+      "group": "무기",
+      "from": [
+        "단검술",
+        "스틸레토"
+      ]
+    },
+    {
+      "id": "cutlass",
+      "name": "곡도",
+      "group": "무기",
+      "from": [
+        "해적식 검투술"
+      ]
+    },
+    {
+      "id": "spear",
+      "name": "창술",
+      "group": "무기",
+      "from": [
+        "창술"
+      ]
+    },
+    {
+      "id": "mace",
+      "name": "둔기",
+      "group": "무기",
+      "from": [
+        "철퇴술"
+      ]
+    },
+    {
+      "id": "axe",
+      "name": "도끼",
+      "group": "무기",
+      "from": [
+        "도끼술"
+      ]
+    },
+    {
+      "id": "unarmed",
+      "name": "맨손 격투",
+      "group": "무기",
+      "from": [
+        "맨손 격투"
+      ]
+    },
+    {
+      "id": "shield",
+      "name": "방패",
+      "group": "무기",
+      "from": [
+        "방패술"
+      ]
+    },
+    {
+      "id": "bow",
+      "name": "궁술",
+      "group": "무기",
+      "from": [
+        "궁술"
+      ]
+    },
+    {
+      "id": "crossbow",
+      "name": "석궁",
+      "group": "무기",
+      "from": [
+        "석궁술"
+      ]
+    },
+    {
+      "id": "throwing",
+      "name": "투척",
+      "group": "무기",
+      "from": [
+        "투척"
+      ]
+    },
+    {
+      "id": "caldare",
+      "name": "그라비다드 칼다레",
+      "group": "가문",
+      "from": [
+        "그라비다드 칼다레",
+        "그라비다드 칼다레 - 일루시오네스"
+      ]
+    },
+    {
+      "id": "riding",
+      "name": "기마",
+      "group": "보조",
+      "from": [
+        "승마"
+      ]
+    },
+    {
+      "id": "medicine",
+      "name": "의술",
+      "group": "보조",
+      "from": [
+        "약학"
+      ]
+    },
+    {
+      "id": "command",
+      "name": "지휘",
+      "group": "보조",
+      "from": [
+        "정무"
+      ]
+    },
+    {
+      "id": "speech",
+      "name": "말",
+      "group": "보조",
+      "from": [
+        "언변",
+        "웅변",
+        "화술"
+      ]
+    },
+    {
+      "id": "prayer",
+      "name": "기도",
+      "group": "보조",
+      "from": [
+        "신학"
+      ]
+    },
+    {
+      "id": "echo",
+      "name": "잔향",
+      "group": "보조",
+      "from": [
+        "곡예"
+      ]
+    },
+    {
+      "id": "hunting",
+      "name": "사냥",
+      "group": "생활",
+      "from": [
+        "사냥"
+      ]
+    },
+    {
+      "id": "fishing",
+      "name": "낚시",
+      "group": "생활",
+      "from": [
+        "낚시"
+      ]
+    },
+    {
+      "id": "sailing",
+      "name": "항해술",
+      "group": "생활",
+      "from": [
+        "항해술"
+      ]
+    },
+    {
+      "id": "etiquette",
+      "name": "예법",
+      "group": "생활",
+      "from": [
+        "예법"
+      ]
+    },
+    {
+      "id": "philosophy",
+      "name": "철학",
+      "group": "생활",
+      "from": [
+        "철학"
+      ]
+    },
+    {
+      "id": "persuasion",
+      "name": "설득",
+      "group": "생활",
+      "from": [
+        "설득"
+      ]
+    },
+    {
+      "id": "bookkeeping",
+      "name": "장부",
+      "group": "생활",
+      "from": [
+        "장부"
+      ]
+    },
+    {
+      "id": "farming",
+      "name": "농사",
+      "group": "생활",
+      "from": [
+        "농사"
+      ]
+    },
+    {
+      "id": "ancient-script",
+      "name": "고대 글자",
+      "group": "생활",
+      "from": [
+        "고대 글자"
+      ]
+    }
+  ],
+  "skillsToTalents": [
+    {
+      "from": "백병술",
+      "talent": "melee-arts"
+    }
+  ],
+  "evolutionsToTalents": [
+    {
+      "from": "검무",
+      "talent": "sword-dance"
+    }
+  ],
+  "items": [
+    {
+      "from": "바다장어",
+      "item": "sea-eel"
+    },
+    {
+      "from": "토끼 고기",
+      "item": "rabbit-meat"
+    },
+    {
+      "from": "토끼 털",
+      "item": "rabbit-fur"
+    },
+    {
+      "from": "사슴 고기",
+      "item": "venison"
+    },
+    {
+      "from": "사슴 가죽",
+      "item": "deer-hide"
+    },
+    {
+      "from": "양초 토막",
+      "item": "candle-stub"
+    },
+    {
+      "from": "튼튼한 낚싯대",
+      "item": "fishing-rod.sturdy"
+    },
+    {
+      "from": "사냥꾼의 활",
+      "item": "hunters-bow"
+    },
+    {
+      "from": "기사의 장검",
+      "item": "knights-longsword"
+    },
+    {
+      "from": "판금 갑옷",
+      "item": "plate-armor"
+    },
+    {
+      "from": "엘 페소 델 파드레",
+      "item": "el-peso-del-padre"
+    }
+  ],
+  "characters": {
+    "쩡": {
+      "innate": {
+        "talent": "piercing-eye",
+        "revealed": false
+      },
+      "needsCheck": [
+        "기획서는 사이트의 「브라켄 사제 수련자」를 잘못 남은 데이터로 보고, 명세서는 사제 수련자 데이터로 옮기라고 한다. 명세서를 따라 직업·숙련도는 사이트 값으로 옮겼다. 지금 위치(브라켄)는 확인 필요."
+      ]
+    },
+    "나노": {
+      "people": [
+        {
+          "name": "토마소 칼다레",
+          "intimacy": 70
+        }
+      ],
+      "needsCheck": [
+        "「꺾이지 않는 마음」은 타고난 재능이 아니라 얻은 재능 후보라 주지 않았다.",
+        "최종 진화의 조건 사건(토마소를 넘어서다, 가주 계승)은 아직 일어나지 않은 일로 본다. 가문 퀘스트 5막으로 남김."
+      ]
+    }
+  }
 }

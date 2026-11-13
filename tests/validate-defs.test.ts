@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkDefs, type RawDefs } from "../src/rules/validate-defs";
-import { fakeEffects, fakeItems, fakeLimits, fakeMigration, fakeTable, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
+import { fakeEffects, fakeItems, fakeLimits, fakeMigration, fakeTable, fakeTalents, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
 
 const raw = (tree: unknown = makeTree(), over: Partial<RawDefs> = {}): RawDefs => ({
   skillTable: fakeTable(),
@@ -8,6 +8,7 @@ const raw = (tree: unknown = makeTree(), over: Partial<RawDefs> = {}): RawDefs =
   limits: fakeLimits(),
   items: fakeItems(),
   migration: fakeMigration(),
+  talents: fakeTalents(),
   trees: { "trees/t.json": tree },
   ...over,
 });
@@ -278,6 +279,19 @@ describe("이전 규칙", () => {
     expect(messages(raw(undefined, { migration }))).toEqual([
       "masteryCurve.1: 앞 구간과 빈틈없이 이어져야 한다",
       "masteryCurve: 마지막 구간은 옛 100에서 끝나야 한다",
+    ]);
+  });
+});
+
+describe("이전 대응표", () => {
+  it("없는 재능·물건을 가리키거나 옛 기술이 두 군데로 가면 잡는다", () => {
+    const migration = fakeMigration();
+    migration.items.push({ from: "빵", item: "bread" });
+    migration.skillsToTalents.push({ from: "검술", talent: "nope" });
+    expect(messages(raw(undefined, { migration }))).toEqual([
+      "skillsToTalents.검술: 옛 기술 「검술」이 두 군데로 간다 (skills.sword에도 있음)",
+      "skillsToTalents.검술: 없는 재능을 가리킨다: nope",
+      "items.빵: 없는 물건을 가리킨다: bread",
     ]);
   });
 });

@@ -1,5 +1,6 @@
 import rawMigration from "../../data/defs/migration.json";
 import rawLimits from "../../data/defs/limits.json";
+import rawTalents from "../../data/defs/talents.json";
 import rawTable from "../../data/defs/skill-table.json";
 
 type Json = Record<string, unknown>;
@@ -99,4 +100,6 @@ export const fakeItems = () => ({
   ],
 });
 
-export const fakeMigration = () => structuredClone(rawMigration);
+export const fakeMigration = () => ({ ...structuredClone(rawMigration), items: [] as { from: string; item: string }[] });
+
+export const fakeTalents = () => structuredClone(rawTalents);

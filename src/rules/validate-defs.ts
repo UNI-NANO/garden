@@ -3,6 +3,7 @@ import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
 import { MigrationSchema, type Migration } from "../schema/defs/migration";
+import { TalentListSchema, type TalentList } from "../schema/defs/talent";
 import type { Role, SkillSpec } from "../schema/defs/skill";
 import { SkillTableSchema, type SkillTable } from "../schema/defs/skill-table";
 import { TreeSchema, type Tree, type TreeNode } from "../schema/defs/tree";
@@ -20,6 +21,7 @@ export interface RawDefs {
   limits: unknown;
   items: unknown;
   migration: unknown;
+  talents: unknown;
   /** 파일 이름 → 내용 */
   trees: Record<string, unknown>;
 }
@@ -30,6 +32,7 @@ export interface Defs {
   limits: Limits;
   items: ItemList;
   migration: Migration;
+  talents: TalentList;
   trees: Tree[];
 }
 
@@ -40,6 +43,7 @@ const EFFECTS_FILE = "effects.json";
 const LIMITS_FILE = "limits.json";
 const ITEMS_FILE = "items.json";
 const MIGRATION_FILE = "migration.json";
+const TALENTS_FILE = "talents.json";
 
 function schemaIssues(file: string, error: z.ZodError): DefIssue[] {
   return error.issues.map((issue) => ({
@@ -71,6 +75,9 @@ export function checkDefs(raw: RawDefs): CheckResult {
   const migration = MigrationSchema.safeParse(raw.migration);
   if (!migration.success) issues.push(...schemaIssues(MIGRATION_FILE, migration.error));
 
+  const talents = TalentListSchema.safeParse(raw.talents);
+  if (!talents.success) issues.push(...schemaIssues(TALENTS_FILE, talents.error));
+
   const trees: { file: string; tree: Tree }[] = [];
   for (const file of Object.keys(raw.trees).sort()) {
     const tree = TreeSchema.safeParse(raw.trees[file]);
@@ -78,12 +85,12 @@ export function checkDefs(raw: RawDefs): CheckResult {
     else issues.push(...schemaIssues(file, tree.error));
   }
 
-  if (!table.success || !effects.success || !limits.success || !items.success || !migration.success || issues.length > 0) {
+  if (!table.success || !effects.success || !limits.success || !items.success || !migration.success || !talents.success || issues.length > 0) {
     return { ok: false, issues };
   }
 
   issues.push(...validateLinks(table.data, effects.data, limits.data, items.data, trees));
-  issues.push(...validateMigration(migration.data));
+  issues.push(...validateMigration(migration.data, items.data, talents.data));
   if (issues.length > 0) return { ok: false, issues };
   return { ok: true, defs: {
       skillTable: table.data,
@@ -91,13 +98,14 @@ export function checkDefs(raw: RawDefs): CheckResult {
       limits: limits.data,
       items: items.data,
       migration: migration.data,
+      talents: talents.data,
       trees: trees.map((t) => t.tree),
     },
   };
 }
 
 /** 환산 구간은 0에서 시작해 빈틈없이 이어지고, 옛 값이 클수록 새 값도 커야 한다 */
-function validateMigration(migration: Migration): DefIssue[] {
+function validateMigration(migration: Migration, items: ItemList, talents: TalentList): DefIssue[] {
   const issues: DefIssue[] = [];
   const add = (where: string, message: string) => issues.push({ file: MIGRATION_FILE, where, message });
   const curve = migration.masteryCurve;
@@ -113,6 +121,46 @@ function validateMigration(migration: Migration): DefIssue[] {
     }
   });
   if (curve[curve.length - 1]?.oldTo !== 100) add("masteryCurve", "마지막 구간은 옛 100에서 끝나야 한다");
+
+  // 재능: ID 중복
+  const talentIds = new Set<string>();
+  for (const talent of talents.talents) {
+    if (talentIds.has(talent.id)) issues.push({ file: TALENTS_FILE, where: talent.id, message: "ID가 겹친다" });
+    talentIds.add(talent.id);
+  }
+  const itemIds = new Set(items.items.map((item) => item.id));
+
+  // 대응표가 가리키는 것이 실제로 있는지, 같은 옛 이름이 두 군데로 가지 않는지
+  const skillIds = new Set<string>();
+  const oldSkillNames = new Map<string, string>();
+  const claimOld = (name: string, where: string) => {
+    const before = oldSkillNames.get(name);
+    if (before !== undefined) add(where, `옛 기술 「${name}」이 두 군데로 간다 (${before}에도 있음)`);
+    else oldSkillNames.set(name, where);
+  };
+  for (const skill of migration.skills) {
+    if (skillIds.has(skill.id)) add(`skills.${skill.id}`, "ID가 겹친다");
+    skillIds.add(skill.id);
+    for (const name of skill.from) claimOld(name, `skills.${skill.id}`);
+  }
+  for (const entry of migration.skillsToTalents) {
+    claimOld(entry.from, `skillsToTalents.${entry.from}`);
+    if (!talentIds.has(entry.talent)) add(`skillsToTalents.${entry.from}`, `없는 재능을 가리킨다: ${entry.talent}`);
+  }
+  for (const entry of migration.evolutionsToTalents) {
+    if (!talentIds.has(entry.talent)) add(`evolutionsToTalents.${entry.from}`, `없는 재능을 가리킨다: ${entry.talent}`);
+  }
+  const oldItemNames = new Set<string>();
+  for (const entry of migration.items) {
+    if (oldItemNames.has(entry.from)) add(`items.${entry.from}`, "옛 물건 이름이 겹친다");
+    oldItemNames.add(entry.from);
+    if (!itemIds.has(entry.item)) add(`items.${entry.from}`, `없는 물건을 가리킨다: ${entry.item}`);
+  }
+  for (const [player, rule] of Object.entries(migration.characters)) {
+    if (rule.innate !== undefined && !talentIds.has(rule.innate.talent)) {
+      add(`characters.${player}`, `없는 재능을 가리킨다: ${rule.innate.talent}`);
+    }
+  }
   return issues;
 }
 
