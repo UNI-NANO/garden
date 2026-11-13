@@ -8,3 +8,7 @@ coverage/
 # 비공개 데이터: 옛 내보내기 파일과 변환 결과는 이 저장소에 두지 않는다 (garden-data)
 *export*.json
 migration-out/
+
+# 화면 자동 확인의 결과물
+test-results/
+playwright-report/

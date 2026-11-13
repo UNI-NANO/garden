@@ -10,6 +10,8 @@ import "./ui/styles.css";
 
 const root = document.getElementById("app");
 if (root) {
+  // 화면이 뜨기 전에 보이던 시작 문구를 치운다
+  root.replaceChildren();
   let fb: Firebase | undefined;
   try {
     const env = selectEnv(import.meta.env.VITE_GARDEN_ENV, { isTest: import.meta.env.MODE === "test" });

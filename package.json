@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:emulator": "firebase emulators:exec --only database --project demo-garden \"vitest run --config vitest.emulator.config.ts\"",
+    "test:e2e": "firebase emulators:exec --only auth,database --project demo-garden \"playwright test\"",
     "build": "vite build",
     "check:defs": "tsx scripts/check-defs.ts",
     "check:private": "tsx scripts/check-no-private-data.ts",
