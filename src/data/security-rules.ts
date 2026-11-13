@@ -133,6 +133,8 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
       gm: { ".read": AUTH },
       defs: { ".read": AUTH, ".write": GM },
       world: { ".read": AUTH, ".write": GM },
+      // 비밀(드러나지 않은 타고난 재능 등)은 GM만 읽고 쓴다. 주인도 읽지 못한다.
+      secrets: { ".read": GM, ".write": GM },
       accounts: { $uid: { ".read": `(${AUTH} && auth.uid === $uid) || ${GM}`, ".write": GM } },
       characters: { ".read": GM, $cid: character },
       requests: {

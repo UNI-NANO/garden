@@ -5,7 +5,7 @@ export interface NewCharacterInput {
   owner: string;
   name: string;
   gender: string;
-  origin: Character["profile"]["origin"];
+  origin: NonNullable<Character["profile"]["origin"]>;
   chosenTalents: string[];
   /** 지금 세계의 달 (예: "514-3") */
   monthKey: string;
@@ -21,6 +21,7 @@ export function newCharacter(limits: Limits, input: NewCharacterInput): Characte
     meta: {
       schemaVersion: CHARACTER_SCHEMA_VERSION,
       owner: input.owner,
+      founder: false,
       rev: 0,
       stage: input.stage ?? "요청",
       createdAt: input.now,
@@ -31,6 +32,7 @@ export function newCharacter(limits: Limits, input: NewCharacterInput): Characte
       age: 0,
       origin: input.origin,
       imperialResident: false,
+      marks: [],
     },
     abilities: { health: initial, spirit: initial, credit: initial, connections: initial, reputation: initial },
     talents: { chosen: [...input.chosenTalents], acquired: {}, progress: {} },
@@ -51,5 +53,10 @@ export function newCharacter(limits: Limits, input: NewCharacterInput): Characte
     },
     claimedRewards: {},
     mailbox: {},
+    people: {},
+    growth: [],
+    evolutions: [],
+    life: [],
+    visitedRegions: [],
   };
 }

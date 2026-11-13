@@ -4,15 +4,18 @@ import type { Limits } from "./defs/limits";
 import { KeySchema } from "./keys";
 
 /**
- * 캐릭터 저장 모양 (버전 1, 핵심 칸만).
- * 거처·지도·도감·유물·인물과 동료·이동·스토리·일생 기록은 그 시스템을 만들 때 칸을 더하고 버전을 올린다.
+ * 캐릭터 저장 모양 (버전 2).
+ * 버전 1: 핵심 칸. 버전 2: 옛 데이터 이전에 필요한 칸(인물, 서술, 성장기, 진화 이력, 일생 기록, 가본 지역, 이전 기록).
+ * 거처·지도·도감·유물·동료·이동·스토리는 그 시스템을 만들 때 칸을 더하고 버전을 올린다.
+ *
+ * 주인이 읽을 수 있는 자리이므로 비밀(아직 드러나지 않은 타고난 재능 등)은 여기 두지 않는다 → schema/secrets.ts
  *
  * Realtime Database에 맞춘 약속:
  * - 빈 객체와 빈 배열은 저장되지 않고 사라진다. 그래서 비어 있을 수 있는 칸은 모두 기본값이 있다.
  * - 목록은 배열 대신 `키 → true` 꼴로 둔다(겹침이 없고, 한 줄씩 원자적으로 쓸 수 있다).
  * - 칸마다 따로 읽고 쓸 수 있게 큰 칸(meta, wallet, bag, month …)으로 나눈다.
  */
-export const CHARACTER_SCHEMA_VERSION = 1;
+export const CHARACTER_SCHEMA_VERSION = 2;
 
 /** 시각: UTC 기준 1970년부터의 밀리초 */
 const timestamp = z.number().int().min(0);
@@ -74,8 +77,10 @@ export function characterSchema(limits: Limits) {
   return z.strictObject({
     meta: z.strictObject({
       schemaVersion: z.literal(CHARACTER_SCHEMA_VERSION),
-      /** 이 캐릭터를 가진 계정 */
-      owner: z.string().min(1),
+      /** 이 캐릭터를 가진 계정. 없으면 아직 주인이 없다(GM만 읽고 쓴다) */
+      owner: z.string().min(1).optional(),
+      /** 창립 멤버 */
+      founder: z.boolean().default(false),
       /** 수정 번호. 값이 바뀔 때마다 1씩 오른다. 이전 값을 보고 계산한 쓰기를 거절하는 데 쓴다 */
       rev: count,
       /** 마지막으로 처리한 요청 ID */
@@ -85,16 +90,28 @@ export function characterSchema(limits: Limits) {
     }),
     profile: z.strictObject({
       name: z.string().min(1).max(40),
-      gender: z.string().min(1).max(20),
+      gender: z.string().min(1).max(20).optional(),
       age: count.max(150),
-      origin: z.strictObject({
-        realm: z.enum(["제국", "팔군도", "적국"]),
-        /** 태어난 지역·장소 (팔군도는 섬 이름까지) */
-        region: z.string().min(1),
-        place: z.string().min(1),
-      }),
+      /** 출신. 옛 데이터에서 옮긴 캐릭터는 확인 전까지 비어 있을 수 있다 */
+      origin: z
+        .strictObject({
+          realm: z.enum(["제국", "팔군도", "적국"]),
+          /** 태어난 지역·장소 (팔군도는 섬 이름까지) */
+          region: z.string().min(1),
+          place: z.string().min(1),
+        })
+        .optional(),
       /** 제국 거주민 */
       imperialResident: z.boolean(),
+      /** 가문·집안 */
+      family: z.string().min(1).optional(),
+      job: z.strictObject({ name: z.string().min(1), stage: z.string(), workplace: z.string().min(1).optional() }).optional(),
+      /** 지금 있는 곳 */
+      location: z.strictObject({ region: z.string().min(1), place: z.string().min(1) }).optional(),
+      /** 기억 표시와 평판 꼬리표 (재능이 아니라 기록) */
+      marks: z.array(z.string().min(1)).default([]),
+      /** 성격·외형·말버릇·그 밖 */
+      detail: z.strictObject({ temper: z.string(), look: z.string(), quote: z.string(), etc: z.string() }).optional(),
     }),
     abilities: z.strictObject({
       health: ability,
@@ -105,7 +122,8 @@ export function characterSchema(limits: Limits) {
     }),
     talents: z.strictObject({
       chosen: z.array(DefIdSchema).length(limits.talents.chosen),
-      innate: z.strictObject({ id: DefIdSchema, revealed: z.boolean() }).optional(),
+      /** 드러난 타고난 재능만. 드러나기 전에는 secrets에 있다 */
+      innate: DefIdSchema.optional(),
       acquired: keySet,
       /** 얻은 재능 조건의 카운터 */
       progress: z.record(KeySchema, count).default({}),
@@ -160,6 +178,38 @@ export function characterSchema(limits: Limits) {
     /** 받은 보상의 출처 ID */
     claimedRewards: keySet,
     mailbox: z.record(KeySchema, MailSchema).default({}),
+    /** 인물과 친밀도 */
+    people: z
+      .record(KeySchema, z.strictObject({ name: z.string().min(1), relation: z.string(), intimacy: z.number().int(), note: z.string() }))
+      .default({}),
+    /** 성장기 기록 */
+    growth: z.array(z.strictObject({ age: z.string(), title: z.string(), text: z.string() })).default([]),
+    /** 진화 이력: 무엇이 무엇에서 나왔는지 */
+    evolutions: z.array(z.strictObject({ name: z.string().min(1), from: z.array(z.string().min(1)).default([]) })).default([]),
+    /** 일생 기록: 한 줄 요약들. 나중에 「이방인들의 서가」의 책 재료가 된다 */
+    life: z
+      .array(
+        z.strictObject({
+          kind: z.enum(["전투", "이야기", "달", "기록"]),
+          /** 게임 속 때 (예: "513-10"). 모르면 없음 */
+          when: z.string().min(1).optional(),
+          text: z.string().min(1),
+        }),
+      )
+      .default([]),
+    /** 가본 지역 */
+    visitedRegions: z.array(z.string().min(1)).default([]),
+    /** 옛 사이트에서 옮겨 온 캐릭터의 이전 기록 */
+    migration: z
+      .strictObject({
+        oldPlayer: z.string().min(1),
+        migratedAt: timestamp,
+        /** 짝이 없어 옮기지 못한 것. 버리지 않고 GM에게 보인다 */
+        notMoved: z.array(z.strictObject({ kind: z.string().min(1), name: z.string().min(1), detail: z.string().optional() })).default([]),
+        /** 사람이 확인해야 할 것 */
+        needsCheck: z.array(z.string().min(1)).default([]),
+      })
+      .optional(),
   });
 }
 export type Character = z.infer<ReturnType<typeof characterSchema>>;

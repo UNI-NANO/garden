@@ -174,3 +174,33 @@ describe("다 되거나 하나도 안 되거나", () => {
     expect(await readAll(testEnv, "/")).toEqual(before);
   });
 });
+
+describe("비밀과 주인 없는 캐릭터", () => {
+  it("비밀은 GM만 읽고 쓴다. 주인도 읽지 못한다", async () => {
+    await assertSucceeds(as(GM).ref(`secrets/${CID}`).set({ innate: "piercing-eye" }));
+    await assertSucceeds(as(GM).ref(`secrets/${CID}`).get());
+    await assertFails(as(OWNER).ref(`secrets/${CID}`).get());
+    await assertFails(as(OWNER).ref(`secrets/${CID}/innate`).get());
+    await assertFails(as(OWNER).ref(`secrets/${CID}/innate`).set("x"));
+    await assertFails(anon().ref(`secrets/${CID}`).get());
+  });
+  it("주인 없는 캐릭터는 GM만 읽고 쓴다", async () => {
+    const { owner: _none, ...meta } = makeCharacter(OWNER).meta;
+    void _none;
+    await seed(testEnv, { ...makeCharacter(OWNER), meta });
+    await assertFails(as(OWNER).ref(char()).get());
+    await assertFails(as(OTHER).ref(char("wallet")).get());
+    await assertFails(as(OWNER).ref().update(enveloped({ [char("wallet")]: 10 })));
+    await assertSucceeds(as(GM).ref(char()).get());
+    // GM이 주인을 연결하면 그 계정이 읽을 수 있다
+    await assertSucceeds(as(GM).ref(char("meta/owner")).set(OTHER));
+    await assertSucceeds(as(OTHER).ref(char()).get());
+    await assertFails(as(OWNER).ref(char()).get());
+  });
+  it("플레이어는 새로 생긴 칸(인물·일생 기록·이전 기록)을 고칠 수 없다", async () => {
+    await assertFails(as(OWNER).ref().update(enveloped({ [char("people/p1")]: { name: "x", relation: "", intimacy: 100, note: "" } })));
+    await assertFails(as(OWNER).ref().update(enveloped({ [char("life/0")]: { kind: "기록", text: "x" } })));
+    await assertFails(as(OWNER).ref().update(enveloped({ [char("migration/oldPlayer")]: "x" })));
+    await assertFails(as(OWNER).ref().update(enveloped({ [char("meta/founder")]: true })));
+  });
+});

@@ -13,6 +13,10 @@
       ".read": "auth != null",
       ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)"
     },
+    "secrets": {
+      ".read": "(auth != null && root.child('gm').child(auth.uid).val() === true)",
+      ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)"
+    },
     "accounts": {
       "$uid": {
         ".read": "(auth != null && auth.uid === $uid) || (auth != null && root.child('gm').child(auth.uid).val() === true)",
