@@ -153,6 +153,7 @@ export const sampleExport = (): { store: Record<string, unknown>; gm: Record<str
     [k("jpg-btl-b003")]: j({ id: "b003", title: "끝나지 않은 싸움", region: "황도", mode: "solo", phase: "plan", result: null, members: ["가람"] }),
     [k("jpg-btl-b001-plan-가람")]: j({ turn: 1, card: "검술/검풍" }),
     [k("jpg-btl-calls")]: j([]),
+    [k("jpg-btl-b001-hb")]: j("1793230234289"),
     [k("jpg-story-s001")]: j({ sid: "s001", title: "늑대 토벌", region: "북쪽 팔", phase: "story", result: "lose", members: ["가람"], battleId: "b002" }),
     [k("jpg-story-s002")]: j({ sid: "s002", title: "서신 배달", region: "황도", phase: "done", members: ["나루"] }),
 

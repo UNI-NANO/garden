@@ -12,6 +12,7 @@
     "build": "vite build",
     "check:defs": "tsx scripts/check-defs.ts",
     "check:private": "tsx scripts/check-no-private-data.ts",
+    "migrate": "tsx scripts/migrate.ts",
     "build:rules": "tsx scripts/build-rules.ts",
     "check": "npm run typecheck && npm run lint && npm run test && npm run check:defs && npm run check:private && npm run build"
   },

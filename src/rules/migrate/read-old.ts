@@ -182,6 +182,7 @@ export function readOldData(exported: unknown, chars: readonly unknown[]): OldDa
     const rule = SKIP.find(([prefix]) => key.startsWith(prefix));
     if (rule) skip(rule[1]);
     else if (key.startsWith("jpg-btl-") && key.includes("-plan-")) skip("전투 계획");
+    else if (/^jpg-(btl|story)-.*-hb$/.test(key)) skip("전투·이야기 접속 표시");
     else store.set(key, parseValue(value));
   }
   const gm = new Map<string, unknown>();

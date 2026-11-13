@@ -157,6 +157,9 @@ function validateMigration(migration: Migration, items: ItemList, talents: Talen
     if (!itemIds.has(entry.item)) add(`items.${entry.from}`, `없는 물건을 가리킨다: ${entry.item}`);
   }
   for (const [player, rule] of Object.entries(migration.characters)) {
+    for (const id of rule.chosen ?? []) {
+      if (!talentIds.has(id)) add(`characters.${player}`, `없는 재능을 가리킨다: ${id}`);
+    }
     if (rule.innate !== undefined && !talentIds.has(rule.innate.talent)) {
       add(`characters.${player}`, `없는 재능을 가리킨다: ${rule.innate.talent}`);
     }

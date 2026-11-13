@@ -72,11 +72,14 @@ export function convertCharacter(bundle: OldBundle, ctx: ConvertContext): Conver
 
   // 재능
   const talentByName = (name: string, kind: Talent["kinds"][number]) => ctx.talents.find((t) => t.name === name && t.kinds.includes(kind));
-  const chosen: string[] = [];
-  for (const name of sheet?.talents ?? []) {
-    const talent = talentByName(name, "청한");
-    if (talent) chosen.push(talent.id);
-    else notMoved.push({ kind: "청한 재능", name });
+  // 청한 재능: 정해 둔 값(시트에만 있던 캐릭터) → 옛 데이터 순
+  const chosen: string[] = [...(rule?.chosen ?? [])];
+  if (rule?.chosen === undefined) {
+    for (const name of sheet?.talents ?? []) {
+      const talent = talentByName(name, "청한");
+      if (talent) chosen.push(talent.id);
+      else notMoved.push({ kind: "청한 재능", name });
+    }
   }
   if (chosen.length !== limits.talents.chosen) {
     throw new Error(`${player}: 청한 재능이 ${limits.talents.chosen}개가 아니다 (${chosen.length}개)`);

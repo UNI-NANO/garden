@@ -57,6 +57,7 @@ describe("옛 데이터 읽기", () => {
       채팅: 1,
       "전투 계획": 1,
       "전투 호출": 1,
+      "전투·이야기 접속 표시": 1,
       "접속 표시": 1,
       "생성 요청 목록(암호 해시 포함)": 1,
       "지역 게시판": 1,
@@ -139,6 +140,13 @@ describe("캐릭터 변환", () => {
   it("청한 재능은 ID로 옮긴다", () => {
     expect(convert("가람").character.talents.chosen).toEqual(["agility", "sturdy", "intuition"]);
     expect(convert("new-abc123").character.talents.chosen).toEqual(["learning", "charm", "voice"]);
+  });
+  it("청한 재능이 옛 데이터에 없으면 정해 둔 값을 쓴다", () => {
+    const chars = sampleChars();
+    (chars[0] as { talents: string[] }).talents = [];
+    const bundle = readOldData(sampleExport(), chars).characters.find((c) => c.player === "가람");
+    const withRule = MigrationSchema.parse({ ...rawMigration, characters: { 가람: { chosen: ["sturdy", "charm", "agility"] } } });
+    expect(convertCharacter(bundle!, { ...ctx, migration: withRule }).character.talents.chosen).toEqual(["sturdy", "charm", "agility"]);
   });
   it("타고난 재능: 드러난 것은 캐릭터에, 숨은 것은 비밀에", () => {
     const shown = convert("가람");

@@ -1,7 +1,7 @@
 {
   "id": "migration",
   "name": "옛 데이터 이전 규칙",
-  "version": 2,
+  "version": 3,
   "masteryCurve": [
     {
       "oldFrom": 0,
@@ -363,6 +363,25 @@
       "needsCheck": [
         "「꺾이지 않는 마음」은 타고난 재능이 아니라 얻은 재능 후보라 주지 않았다.",
         "최종 진화의 조건 사건(토마소를 넘어서다, 가주 계승)은 아직 일어나지 않은 일로 본다. 가문 퀘스트 5막으로 남김."
+      ],
+      "chosen": [
+        "sturdy",
+        "charm",
+        "agility"
+      ]
+    },
+    "고먐미": {
+      "chosen": [
+        "agility",
+        "keen-senses",
+        "intuition"
+      ]
+    },
+    "권동명": {
+      "chosen": [
+        "dexterity",
+        "charm",
+        "learning"
       ]
     }
   }

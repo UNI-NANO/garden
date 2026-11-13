@@ -41,6 +41,8 @@ export const MigrationSchema = z.strictObject({
   characters: z.record(
     z.string().min(1),
     z.strictObject({
+      /** 청한 재능. 옛 데이터에 없고 시트에만 있던 캐릭터 (기획서의 재능 표) */
+      chosen: z.array(DefIdSchema).optional(),
       /** 타고난 재능 (옛 GM 데이터보다 앞선다) */
       innate: z.strictObject({ talent: DefIdSchema, revealed: z.boolean() }).optional(),
       /** 인물의 친밀도를 정해 둔 값으로 */
