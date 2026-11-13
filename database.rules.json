@@ -18,9 +18,35 @@
       ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)"
     },
     "accounts": {
+      ".read": "(auth != null && root.child('gm').child(auth.uid).val() === true)",
       "$uid": {
         ".read": "(auth != null && auth.uid === $uid) || (auth != null && root.child('gm').child(auth.uid).val() === true)",
-        ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)"
+        ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)",
+        "displayName": {
+          ".write": "(auth != null && auth.uid === $uid)",
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "createdAt": {
+          ".write": "(auth != null && auth.uid === $uid) && !data.exists() && newData.exists()",
+          ".validate": "newData.isNumber() && newData.val() <= now + 300000"
+        },
+        "lastSeenAt": {
+          ".write": "(auth != null && auth.uid === $uid) && newData.exists()",
+          ".validate": "newData.isNumber() && newData.val() <= now + 300000"
+        },
+        "characterId": {
+          ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]+$/)"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "errors": {
+      ".read": "(auth != null && root.child('gm').child(auth.uid).val() === true)",
+      "$id": {
+        ".write": "auth != null && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid",
+        ".validate": "$id.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['at', 'uid', 'message']) && newData.child('at').isNumber() && newData.child('message').isString() && newData.child('message').val().length <= 2000"
       }
     },
     "characters": {

@@ -21,6 +21,7 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
   const GM = `(${AUTH} && root.child('gm').child(auth.uid).val() === true)`;
   const ownerOf = (cid: string) => `(${AUTH} && root.child('characters').child(${cid}).child('meta/owner').val() === auth.uid)`;
   const OWNER = ownerOf("$cid");
+  const SELF = `(${AUTH} && auth.uid === $uid)`;
   const before = "root.child('characters').child($cid)";
 
   /** depth: 규칙이 놓인 곳에서 /characters/$cid 까지 올라가는 단계 수 */
@@ -135,7 +136,29 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
       world: { ".read": AUTH, ".write": GM },
       // 비밀(드러나지 않은 타고난 재능 등)은 GM만 읽고 쓴다. 주인도 읽지 못한다.
       secrets: { ".read": GM, ".write": GM },
-      accounts: { $uid: { ".read": `(${AUTH} && auth.uid === $uid) || ${GM}`, ".write": GM } },
+      accounts: {
+        ".read": GM,
+        $uid: {
+          ".read": `${SELF} || ${GM}`,
+          ".write": GM,
+          // 본인은 자기 계정 기록을 만들고 표시 이름·마지막 접속만 고친다. 캐릭터 연결은 GM만.
+          displayName: { ".write": SELF, ".validate": "newData.isString() && newData.val().length <= 80" },
+          createdAt: { ".write": `${SELF} && !data.exists() && newData.exists()`, ".validate": "newData.isNumber() && newData.val() <= now + 300000" },
+          lastSeenAt: { ".write": `${SELF} && newData.exists()`, ".validate": "newData.isNumber() && newData.val() <= now + 300000" },
+          characterId: { ".validate": `newData.isString() && newData.val().matches(${KEY})` },
+          $other: { ".validate": false },
+        },
+      },
+      // 화면 오류 기록: 로그인한 사람이 자기 것을 덧붙이기만. 읽기는 GM만.
+      errors: {
+        ".read": GM,
+        $id: {
+          ".write": `${AUTH} && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid`,
+          ".validate":
+            `$id.matches(${KEY}) && newData.hasChildren(['at', 'uid', 'message'])` +
+            " && newData.child('at').isNumber() && newData.child('message').isString() && newData.child('message').val().length <= 2000",
+        },
+      },
       characters: { ".read": GM, $cid: character },
       requests: {
         $cid: {
