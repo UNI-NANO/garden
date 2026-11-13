@@ -1,6 +1,211 @@
 {
   "rules": {
     ".read": false,
-    ".write": false
+    ".write": false,
+    "gm": {
+      ".read": "auth != null"
+    },
+    "defs": {
+      ".read": "auth != null",
+      ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)"
+    },
+    "world": {
+      ".read": "auth != null",
+      ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)"
+    },
+    "accounts": {
+      "$uid": {
+        ".read": "(auth != null && auth.uid === $uid) || (auth != null && root.child('gm').child(auth.uid).val() === true)",
+        ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)"
+      }
+    },
+    "characters": {
+      ".read": "(auth != null && root.child('gm').child(auth.uid).val() === true)",
+      "$cid": {
+        ".read": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) || (auth != null && root.child('gm').child(auth.uid).val() === true)",
+        ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)",
+        "meta": {
+          "rev": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && newData.exists()",
+            ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 9007199254740991"
+          },
+          "lastRequestId": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && newData.exists()",
+            ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]+$/)"
+          }
+        },
+        "abilities": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && newData.exists()",
+          "$ability": {
+            ".validate": "($ability === 'health' || $ability === 'spirit' || $ability === 'credit' || $ability === 'connections' || $ability === 'reputation') && newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 100"
+          }
+        },
+        "mastery": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()",
+          "$skill": {
+            ".validate": "newData.hasChildren(['value', 'passed60', 'passed80'])",
+            "value": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+            },
+            "passed60": {
+              ".validate": "newData.isBoolean()"
+            },
+            "passed80": {
+              ".validate": "newData.isBoolean()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "trees": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()"
+        },
+        "loadout": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()"
+        },
+        "wallet": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && newData.exists()",
+          ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 1000000000 && ((auth != null && root.child('gm').child(auth.uid).val() === true) || newData.val() - (data.exists() ? data.val() : 0) <= 10000000)"
+        },
+        "bag": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()",
+          "stacks": {
+            "$key": {
+              ".validate": "$key.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['itemId', 'quantity', 'freshness', 'quality'])",
+              "itemId": {
+                ".validate": "newData.isString()"
+              },
+              "quantity": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 1 && newData.val() <= 99999 && ((auth != null && root.child('gm').child(auth.uid).val() === true) || newData.val() - (data.exists() ? data.val() : 0) <= 9999)"
+              },
+              "freshness": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 100"
+              },
+              "quality": {
+                ".validate": "newData.val() === '하' || newData.val() === '중' || newData.val() === '상' || newData.val() === '최상'"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
+          "uniques": {
+            "$key": {
+              ".validate": "$key.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['itemId', 'enhance', 'durability', 'quality'])",
+              "itemId": {
+                ".validate": "newData.isString()"
+              },
+              "enhance": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 20"
+              },
+              "durability": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 100"
+              },
+              "quality": {
+                ".validate": "newData.val() === '하' || newData.val() === '중' || newData.val() === '상' || newData.val() === '최상'"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "month": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['key', 'mainActions', 'minorActions', 'savedActions', 'career'])",
+          "key": {
+            ".validate": "newData.isString()"
+          },
+          "mainActions": {
+            ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 4"
+          },
+          "minorActions": {
+            ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 2"
+          },
+          "savedActions": {
+            ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 4"
+          },
+          "career": {
+            ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 2"
+          }
+        },
+        "claimedRewards": {
+          "$reward": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !data.exists()",
+            ".validate": "$reward.matches(/^[A-Za-z0-9_-]+$/) && newData.val() === true"
+          }
+        },
+        "mailbox": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()",
+          "$mail": {
+            ".validate": "$mail.matches(/^[A-Za-z0-9_-]+$/) && newData.child('expiresAt').isNumber()",
+            "stack": {
+              ".validate": "newData.hasChildren(['itemId', 'quantity', 'freshness', 'quality'])",
+              "itemId": {
+                ".validate": "newData.isString()"
+              },
+              "quantity": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 1 && newData.val() <= 99999"
+              },
+              "freshness": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 100"
+              },
+              "quality": {
+                ".validate": "newData.val() === '하' || newData.val() === '중' || newData.val() === '상' || newData.val() === '최상'"
+              },
+              "$other": {
+                ".validate": false
+              }
+            },
+            "unique": {
+              ".validate": "newData.hasChildren(['uniqueId', 'item'])",
+              "item": {
+                ".validate": "newData.hasChildren(['itemId', 'enhance', 'durability', 'quality'])",
+                "itemId": {
+                  ".validate": "newData.isString()"
+                },
+                "enhance": {
+                  ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 20"
+                },
+                "durability": {
+                  ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 100"
+                },
+                "quality": {
+                  ".validate": "newData.val() === '하' || newData.val() === '중' || newData.val() === '상' || newData.val() === '최상'"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "requests": {
+      "$cid": {
+        ".read": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) || (auth != null && root.child('gm').child(auth.uid).val() === true)",
+        "$rid": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && !data.exists() && newData.exists() && newData.parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').val() === $rid",
+          ".validate": "$rid.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['at', 'kind']) && newData.child('at').isNumber() && newData.child('at').val() <= now + 300000 && newData.child('kind').isString()"
+        }
+      }
+    },
+    "ledger": {
+      "$cid": {
+        ".read": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) || (auth != null && root.child('gm').child(auth.uid).val() === true)",
+        ".indexOn": [
+          "at"
+        ],
+        "$rid": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && !data.exists() && newData.exists() && newData.parent().parent().parent().child('requests').child($cid).child($rid).exists() && !root.child('requests').child($cid).child($rid).exists()",
+          ".validate": "newData.hasChildren(['at', 'requestId', 'reason', 'walletDelta', 'walletAfter']) && newData.child('requestId').val() === $rid && newData.child('reason').isString() && newData.child('walletDelta').isNumber() && newData.child('walletAfter').val() === newData.parent().parent().parent().child('characters').child($cid).child('wallet').val()"
+        }
+      }
+    }
   }
 }

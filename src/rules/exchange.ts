@@ -59,7 +59,7 @@ export interface LedgerLine {
   at: number;
   requestId: string;
   reason: string;
-  rewardId?: string;
+  rewardId?: string | undefined;
   walletDelta: number;
   walletAfter: number;
   items: LedgerItem[];
