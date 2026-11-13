@@ -25,6 +25,7 @@ const raw = {
   effects: readJson("effects.json"),
   limits: readJson("limits.json"),
   items: readJson("items.json"),
+  migration: readJson("migration.json"),
   trees,
 };
 

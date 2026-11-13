@@ -1,7 +1,7 @@
 {
   "id": "skill-table",
   "name": "기술 기준표",
-  "version": 2,
+  "version": 3,
   "tiers": {
     "기본 공격": { "power": 6, "cooldown": 0, "energy": 0 },
     "1단계": { "power": 8, "cooldown": 1, "energy": 1 },
@@ -38,6 +38,8 @@
   "energy": { "max": 10, "perTurn": 2, "onGuardOrDodge": 1 },
   "tree": {
     "stemThresholds": [1, 10, 30, 50],
+    "masteryPerBranchPoint": 4,
+    "masteryPerRootPoint": 10,
     "basicsPerTree": 4,
     "equippedBasics": 3,
     "roles": ["여는", "잇는", "끝내는"],

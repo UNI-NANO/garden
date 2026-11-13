@@ -2,6 +2,7 @@ import type { z } from "zod";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
+import { MigrationSchema, type Migration } from "../schema/defs/migration";
 import type { Role, SkillSpec } from "../schema/defs/skill";
 import { SkillTableSchema, type SkillTable } from "../schema/defs/skill-table";
 import { TreeSchema, type Tree, type TreeNode } from "../schema/defs/tree";
@@ -18,6 +19,7 @@ export interface RawDefs {
   effects: unknown;
   limits: unknown;
   items: unknown;
+  migration: unknown;
   /** 파일 이름 → 내용 */
   trees: Record<string, unknown>;
 }
@@ -27,6 +29,7 @@ export interface Defs {
   effects: EffectList;
   limits: Limits;
   items: ItemList;
+  migration: Migration;
   trees: Tree[];
 }
 
@@ -36,6 +39,7 @@ const SKILL_TABLE_FILE = "skill-table.json";
 const EFFECTS_FILE = "effects.json";
 const LIMITS_FILE = "limits.json";
 const ITEMS_FILE = "items.json";
+const MIGRATION_FILE = "migration.json";
 
 function schemaIssues(file: string, error: z.ZodError): DefIssue[] {
   return error.issues.map((issue) => ({
@@ -64,6 +68,9 @@ export function checkDefs(raw: RawDefs): CheckResult {
   const items = ItemListSchema.safeParse(raw.items);
   if (!items.success) issues.push(...schemaIssues(ITEMS_FILE, items.error));
 
+  const migration = MigrationSchema.safeParse(raw.migration);
+  if (!migration.success) issues.push(...schemaIssues(MIGRATION_FILE, migration.error));
+
   const trees: { file: string; tree: Tree }[] = [];
   for (const file of Object.keys(raw.trees).sort()) {
     const tree = TreeSchema.safeParse(raw.trees[file]);
@@ -71,20 +78,42 @@ export function checkDefs(raw: RawDefs): CheckResult {
     else issues.push(...schemaIssues(file, tree.error));
   }
 
-  if (!table.success || !effects.success || !limits.success || !items.success || issues.length > 0) {
+  if (!table.success || !effects.success || !limits.success || !items.success || !migration.success || issues.length > 0) {
     return { ok: false, issues };
   }
 
   issues.push(...validateLinks(table.data, effects.data, limits.data, items.data, trees));
+  issues.push(...validateMigration(migration.data));
   if (issues.length > 0) return { ok: false, issues };
   return { ok: true, defs: {
       skillTable: table.data,
       effects: effects.data,
       limits: limits.data,
       items: items.data,
+      migration: migration.data,
       trees: trees.map((t) => t.tree),
     },
   };
+}
+
+/** 환산 구간은 0에서 시작해 빈틈없이 이어지고, 옛 값이 클수록 새 값도 커야 한다 */
+function validateMigration(migration: Migration): DefIssue[] {
+  const issues: DefIssue[] = [];
+  const add = (where: string, message: string) => issues.push({ file: MIGRATION_FILE, where, message });
+  const curve = migration.masteryCurve;
+  curve.forEach((part, i) => {
+    const where = `masteryCurve.${i}`;
+    if (part.oldFrom >= part.oldTo) add(where, "옛 구간의 끝이 시작보다 커야 한다");
+    if (part.newFrom > part.newTo) add(where, "새 구간의 끝이 시작보다 작다");
+    const before = curve[i - 1];
+    if (before === undefined) {
+      if (part.oldFrom !== 0) add(where, "첫 구간은 옛 0에서 시작해야 한다");
+    } else if (before.oldTo !== part.oldFrom || before.newTo !== part.newFrom) {
+      add(where, "앞 구간과 빈틈없이 이어져야 한다");
+    }
+  });
+  if (curve[curve.length - 1]?.oldTo !== 100) add("masteryCurve", "마지막 구간은 옛 100에서 끝나야 한다");
+  return issues;
 }
 
 function validateLinks(

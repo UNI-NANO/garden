@@ -1,0 +1,11 @@
+{
+  "id": "migration",
+  "name": "옛 데이터 이전 규칙",
+  "version": 1,
+  "masteryCurve": [
+    { "oldFrom": 0, "oldTo": 30, "newFrom": 0, "newTo": 25 },
+    { "oldFrom": 30, "oldTo": 60, "newFrom": 25, "newTo": 45 },
+    { "oldFrom": 60, "oldTo": 80, "newFrom": 45, "newTo": 60 },
+    { "oldFrom": 80, "oldTo": 100, "newFrom": 60, "newTo": 75 }
+  ]
+}

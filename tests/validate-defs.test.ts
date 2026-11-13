@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { checkDefs, type RawDefs } from "../src/rules/validate-defs";
-import { fakeEffects, fakeItems, fakeLimits, fakeTable, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
+import { fakeEffects, fakeItems, fakeLimits, fakeMigration, fakeTable, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
 
 const raw = (tree: unknown = makeTree(), over: Partial<RawDefs> = {}): RawDefs => ({
   skillTable: fakeTable(),
   effects: fakeEffects(),
   limits: fakeLimits(),
   items: fakeItems(),
+  migration: fakeMigration(),
   trees: { "trees/t.json": tree },
   ...over,
 });
@@ -266,5 +267,17 @@ describe("범위와 물건", () => {
     const bad = fakeItems();
     bad.items[0]!.kind = "더미";
     expect(messages(raw(undefined, { items: bad })).length).toBeGreaterThan(0);
+  });
+});
+
+describe("이전 규칙", () => {
+  it("환산 구간에 빈틈이 있거나 끝이 맞지 않으면 잡는다", () => {
+    const migration = fakeMigration();
+    migration.masteryCurve[1]!.oldFrom = 35;
+    migration.masteryCurve[3]!.oldTo = 90;
+    expect(messages(raw(undefined, { migration }))).toEqual([
+      "masteryCurve.1: 앞 구간과 빈틈없이 이어져야 한다",
+      "masteryCurve: 마지막 구간은 옛 100에서 끝나야 한다",
+    ]);
   });
 });

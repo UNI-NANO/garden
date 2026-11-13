@@ -1,3 +1,4 @@
+import rawMigration from "../../data/defs/migration.json";
 import rawLimits from "../../data/defs/limits.json";
 import rawTable from "../../data/defs/skill-table.json";
 
@@ -97,3 +98,5 @@ export const fakeItems = () => ({
     { id: "sword.iron", name: "철검", kind: "낱개", weight: 10 },
   ],
 });
+
+export const fakeMigration = () => structuredClone(rawMigration);

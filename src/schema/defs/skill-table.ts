@@ -51,6 +51,10 @@ export const SkillTableSchema = z.strictObject({
   }),
   tree: z.strictObject({
     stemThresholds: z.array(z.number().int().min(0).max(100)).min(1),
+    /** 숙련도 몇마다 가지 점수 1 */
+    masteryPerBranchPoint: z.number().positive(),
+    /** 숙련도 몇마다 뿌리 점수 1 */
+    masteryPerRootPoint: z.number().positive(),
     basicsPerTree: z.number().int().min(1),
     /** 전투에 들고 가는 기본기 수 */
     equippedBasics: z.number().int().min(1),

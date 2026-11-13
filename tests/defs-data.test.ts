@@ -13,6 +13,7 @@ const result = checkDefs({
   effects: read("effects.json"),
   limits: read("limits.json"),
   items: read("items.json"),
+  migration: read("migration.json"),
   trees,
 });
 
