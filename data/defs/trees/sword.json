@@ -1,7 +1,7 @@
 {
   "id": "sword",
   "name": "검술",
-  "version": 3,
+  "version": 5,
   "description": "한손 장검. 가장 기본이 되는 균형형 나무로, 넓게 베기·받아치기·연계·진형 다루기를 고루 쓴다. 피해는 자상이 기본이고, 관통은 돌진 베기의 찌르기 루트와 밀어붙이기 택1에서만. 가문 갈래 자리는 비어 있다.",
   "basicAttack": {
     "id": "sword.cut",
@@ -178,14 +178,26 @@
       "kind": "보완",
       "name": "판정 칸 조금 넓게",
       "prev": "sword.combo",
-      "description": "판정 칸 조금 넓게"
+      "description": "판정 칸 조금 넓게",
+      "mods": [
+        {
+          "kind": "좋음 칸",
+          "amount": "판정 칸 조금 넓게"
+        }
+      ]
     },
     {
       "id": "sword.combo.s2",
       "kind": "보완",
       "name": "출혈 지속 +1턴",
       "prev": "sword.combo.s1",
-      "description": "출혈 지속 +1턴"
+      "description": "출혈 지속 +1턴",
+      "mods": [
+        {
+          "kind": "효과 유지",
+          "effect": "bleed"
+        }
+      ]
     },
     {
       "id": "sword.combo.a",
@@ -193,7 +205,26 @@
       "name": "쌓기",
       "prev": "sword.combo.s2",
       "description": "세 타 모두 출혈 1, 완벽이면 2.",
-      "axis": "쌓기 / 터뜨리기"
+      "axis": "쌓기 / 터뜨리기",
+      "mods": [
+        {
+          "kind": "효과 교체",
+          "effects": [
+            {
+              "id": "bleed",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "kind": "효과",
+          "effect": {
+            "id": "bleed",
+            "amount": 1
+          },
+          "when": "완벽"
+        }
+      ]
     },
     {
       "id": "sword.combo.a.s1",
@@ -201,9 +232,12 @@
       "name": "위력 +5%",
       "prev": "sword.combo.a",
       "description": "위력 +5%",
-      "bonus": {
-        "powerPct": 0.05
-      }
+      "mods": [
+        {
+          "kind": "위력 +",
+          "amount": 0.05
+        }
+      ]
     },
     {
       "id": "sword.combo.a.s2",
@@ -213,13 +247,23 @@
       "description": "둘 중 하나를 고른다.",
       "choice": [
         {
-          "description": "출혈 최대치 +2"
+          "description": "출혈 최대치 +2",
+          "mods": [
+            {
+              "kind": "효과 상한",
+              "effect": "bleed",
+              "add": 2
+            }
+          ]
         },
         {
           "description": "기력 −1",
-          "bonus": {
-            "energy": -1
-          }
+          "mods": [
+            {
+              "kind": "기력",
+              "add": -1
+            }
+          ]
         }
       ]
     },
@@ -276,14 +320,26 @@
       "axis": "쌓기 / 터뜨리기",
       "overrides": {
         "role": "끝내는"
-      }
+      },
+      "mods": [
+        {
+          "kind": "터뜨리기",
+          "effect": "bleed"
+        }
+      ]
     },
     {
       "id": "sword.combo.b.s1",
       "kind": "보완",
       "name": "터뜨린 출혈 하나당 피해 +5%",
       "prev": "sword.combo.b",
-      "description": "터뜨린 출혈 하나당 피해 +5%"
+      "description": "터뜨린 출혈 하나당 피해 +5%",
+      "mods": [
+        {
+          "kind": "터뜨리기 강화",
+          "perStack": 0.05
+        }
+      ]
     },
     {
       "id": "sword.combo.b.s2",
@@ -293,10 +349,21 @@
       "description": "둘 중 하나를 고른다.",
       "choice": [
         {
-          "description": "터뜨린 뒤 출혈 절반 남김"
+          "description": "터뜨린 뒤 출혈 절반 남김",
+          "mods": [
+            {
+              "kind": "터뜨리기 남김",
+              "share": 0.5
+            }
+          ]
         },
         {
-          "description": "터뜨린 만큼 흐트러짐"
+          "description": "터뜨린 만큼 흐트러짐",
+          "mods": [
+            {
+              "kind": "터뜨리기 흐트러짐"
+            }
+          ]
         }
       ]
     },
@@ -366,9 +433,12 @@
       "name": "위력 +5%",
       "prev": "sword.gale",
       "description": "위력 +5%",
-      "bonus": {
-        "powerPct": 0.05
-      }
+      "mods": [
+        {
+          "kind": "위력 +",
+          "amount": 0.05
+        }
+      ]
     },
     {
       "id": "sword.gale.s2",
@@ -376,9 +446,12 @@
       "name": "기력 −1",
       "prev": "sword.gale.s1",
       "description": "기력 −1",
-      "bonus": {
-        "energy": -1
-      }
+      "mods": [
+        {
+          "kind": "기력",
+          "add": -1
+        }
+      ]
     },
     {
       "id": "sword.gale.a",
@@ -389,14 +462,26 @@
       "axis": "넓게 / 깊게",
       "overrides": {
         "role": "여는"
-      }
+      },
+      "mods": [
+        {
+          "kind": "나머지 대상",
+          "share": 0.8
+        }
+      ]
     },
     {
       "id": "sword.gale.a.s1",
       "kind": "보완",
       "name": "나머지 대상에게도 흐트러짐 온전히",
       "prev": "sword.gale.a",
-      "description": "나머지 대상에게도 흐트러짐 온전히"
+      "description": "나머지 대상에게도 흐트러짐 온전히",
+      "mods": [
+        {
+          "kind": "나머지 흐트러짐",
+          "share": 1
+        }
+      ]
     },
     {
       "id": "sword.gale.a.s2",
@@ -406,13 +491,21 @@
       "description": "둘 중 하나를 고른다.",
       "choice": [
         {
-          "description": "휩쓸기가 뒷줄 한 칸까지"
+          "description": "휩쓸기가 뒷줄 한 칸까지",
+          "mods": [
+            {
+              "kind": "뒤 칸도"
+            }
+          ]
         },
         {
           "description": "쿨다운 −1",
-          "bonus": {
-            "cooldown": -1
-          }
+          "mods": [
+            {
+              "kind": "쿨다운",
+              "add": -1
+            }
+          ]
         }
       ]
     },
@@ -470,14 +563,30 @@
       "overrides": {
         "role": "잇는",
         "range": "단일"
-      }
+      },
+      "mods": [
+        {
+          "kind": "위력 ×",
+          "amount": 1.4
+        },
+        {
+          "kind": "흐트러짐 ×",
+          "amount": "흐트러짐 크게"
+        }
+      ]
     },
     {
       "id": "sword.gale.b.s1",
       "kind": "보완",
       "name": "흐트러짐 +10%",
       "prev": "sword.gale.b",
-      "description": "흐트러짐 +10%"
+      "description": "흐트러짐 +10%",
+      "mods": [
+        {
+          "kind": "흐트러짐 ×",
+          "amount": 1.1
+        }
+      ]
     },
     {
       "id": "sword.gale.b.s2",
@@ -487,13 +596,22 @@
       "description": "둘 중 하나를 고른다.",
       "choice": [
         {
-          "description": "판정 칸 조금 넓게"
+          "description": "판정 칸 조금 넓게",
+          "mods": [
+            {
+              "kind": "좋음 칸",
+              "amount": "판정 칸 조금 넓게"
+            }
+          ]
         },
         {
           "description": "위력 +5%",
-          "bonus": {
-            "powerPct": 0.05
-          }
+          "mods": [
+            {
+              "kind": "위력 +",
+              "amount": 0.05
+            }
+          ]
         }
       ]
     },
@@ -584,7 +702,13 @@
       "kind": "보완",
       "name": "자세 중 받는 피해 −10%",
       "prev": "sword.riposte",
-      "description": "자세 중 받는 피해 −10%"
+      "description": "자세 중 받는 피해 −10%",
+      "mods": [
+        {
+          "kind": "자세",
+          "damageTaken": 0.9
+        }
+      ]
     },
     {
       "id": "sword.riposte.s2",
@@ -592,9 +716,12 @@
       "name": "반격 위력 +5%",
       "prev": "sword.riposte.s1",
       "description": "반격 위력 +5%",
-      "bonus": {
-        "powerPct": 0.05
-      }
+      "mods": [
+        {
+          "kind": "위력 +",
+          "amount": 0.05
+        }
+      ]
     },
     {
       "id": "sword.riposte.a",
@@ -605,14 +732,26 @@
       "axis": "받아치기 / 밀어붙이기",
       "overrides": {
         "role": "끝내는"
-      }
+      },
+      "mods": [
+        {
+          "kind": "자세",
+          "parryWidth": "판정 칸 넓게"
+        }
+      ]
     },
     {
       "id": "sword.riposte.a.s1",
       "kind": "보완",
       "name": "받아치기 성공 시 기력 +1",
       "prev": "sword.riposte.a",
-      "description": "받아치기 성공 시 기력 +1"
+      "description": "받아치기 성공 시 기력 +1",
+      "mods": [
+        {
+          "kind": "자세",
+          "parryEnergy": 1
+        }
+      ]
     },
     {
       "id": "sword.riposte.a.s2",
@@ -622,10 +761,22 @@
       "description": "둘 중 하나를 고른다.",
       "choice": [
         {
-          "description": "자세가 한 턴 더 유지"
+          "description": "자세가 한 턴 더 유지",
+          "mods": [
+            {
+              "kind": "자세",
+              "holdTurns": 1
+            }
+          ]
         },
         {
-          "description": "반격이 2타"
+          "description": "반격이 2타",
+          "mods": [
+            {
+              "kind": "자세",
+              "counterHits": 2
+            }
+          ]
         }
       ]
     },
@@ -682,14 +833,26 @@
       "axis": "받아치기 / 밀어붙이기",
       "overrides": {
         "role": "잇는"
-      }
+      },
+      "mods": [
+        {
+          "kind": "자세 찌르기",
+          "amount": "약하게"
+        }
+      ]
     },
     {
       "id": "sword.riposte.b.s1",
       "kind": "보완",
       "name": "찌르기 위력 +10%",
       "prev": "sword.riposte.b",
-      "description": "찌르기 위력 +10%"
+      "description": "찌르기 위력 +10%",
+      "mods": [
+        {
+          "kind": "찌르기",
+          "power": 0.1
+        }
+      ]
     },
     {
       "id": "sword.riposte.b.s2",
@@ -699,10 +862,22 @@
       "description": "둘 중 하나를 고른다.",
       "choice": [
         {
-          "description": "찌르기가 관통 피해"
+          "description": "찌르기가 관통 피해",
+          "mods": [
+            {
+              "kind": "찌르기",
+              "damageType": "관통"
+            }
+          ]
         },
         {
-          "description": "찌르기에 흐트러짐"
+          "description": "찌르기에 흐트러짐",
+          "mods": [
+            {
+              "kind": "찌르기",
+              "stagger": "흐트러짐 크게"
+            }
+          ]
         }
       ]
     },
@@ -772,16 +947,25 @@
       "name": "위력 +5%",
       "prev": "sword.charge",
       "description": "위력 +5%",
-      "bonus": {
-        "powerPct": 0.05
-      }
+      "mods": [
+        {
+          "kind": "위력 +",
+          "amount": 0.05
+        }
+      ]
     },
     {
       "id": "sword.charge.s2",
       "kind": "보완",
       "name": "앞줄에 있을 때 기력 −1",
       "prev": "sword.charge.s1",
-      "description": "앞줄에 있을 때 기력 −1"
+      "description": "앞줄에 있을 때 기력 −1",
+      "mods": [
+        {
+          "kind": "기력",
+          "add": -1
+        }
+      ]
     },
     {
       "id": "sword.charge.a",
@@ -792,14 +976,25 @@
       "axis": "뚫기 / 노리기",
       "overrides": {
         "role": "여는"
-      }
+      },
+      "mods": [
+        {
+          "kind": "밀어내기"
+        }
+      ]
     },
     {
       "id": "sword.charge.a.s1",
       "kind": "보완",
       "name": "밀려난 적 흐트러짐 +",
       "prev": "sword.charge.a",
-      "description": "밀려난 적 흐트러짐 +"
+      "description": "밀려난 적 흐트러짐 +",
+      "mods": [
+        {
+          "kind": "흐트러짐 ×",
+          "amount": "흐트러짐 +"
+        }
+      ]
     },
     {
       "id": "sword.charge.a.s2",
@@ -809,10 +1004,28 @@
       "description": "둘 중 하나를 고른다.",
       "choice": [
         {
-          "description": "밀려난 적 한 턴 속박"
+          "description": "밀려난 적 한 턴 속박",
+          "mods": [
+            {
+              "kind": "밀려난 적 효과",
+              "effect": {
+                "id": "bind",
+                "amount": 1
+              }
+            }
+          ]
         },
         {
-          "description": "끌려 나온 적 취약"
+          "description": "끌려 나온 적 취약",
+          "mods": [
+            {
+              "kind": "끌려 나온 적 효과",
+              "effect": {
+                "id": "fragile",
+                "amount": 1
+              }
+            }
+          ]
         }
       ]
     },
@@ -873,7 +1086,13 @@
       "overrides": {
         "role": "끝내는",
         "damageType": "관통"
-      }
+      },
+      "mods": [
+        {
+          "kind": "뒷줄까지",
+          "amount": "뒷줄 위력"
+        }
+      ]
     },
     {
       "id": "sword.charge.b.s1",
@@ -881,9 +1100,12 @@
       "name": "관통 위력 +5%",
       "prev": "sword.charge.b",
       "description": "관통 위력 +5%",
-      "bonus": {
-        "powerPct": 0.05
-      }
+      "mods": [
+        {
+          "kind": "위력 +",
+          "amount": 0.05
+        }
+      ]
     },
     {
       "id": "sword.charge.b.s2",
@@ -893,10 +1115,16 @@
       "description": "둘 중 하나를 고른다.",
       "choice": [
         {
-          "description": "찌른 뒤 원래 자리로 돌아옴"
+          "description": "찌른 뒤 원래 자리로 돌아옴 (아무 일도 일어나지 않는 안전한 선택)"
         },
         {
-          "description": "찌른 적과 자리 바꿈"
+          "description": "찌른 적과 자리 바꿈: 한 턴 동안 적진에 있어 모든 적이 먼저 노리지만, 다음 턴 주는 위력이 오른다",
+          "mods": [
+            {
+              "kind": "적진으로",
+              "amount": "적진 위력"
+            }
+          ]
         }
       ]
     },

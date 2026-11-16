@@ -3,6 +3,7 @@ import rawEffects from "../../data/defs/effects.json";
 import rawEnemies from "../../data/defs/enemies.json";
 import rawTable from "../../data/defs/skill-table.json";
 import rawSword from "../../data/defs/trees/sword.json";
+import { buildSkill } from "../../src/rules/battle/build-skill";
 import { effectDefs } from "../../src/rules/battle/effects";
 import type { AllySetup, BattleContext, BattleSetup } from "../../src/rules/battle/engine";
 import { treeBattleSkills } from "../../src/rules/battle/setup";
@@ -16,7 +17,8 @@ export const table = SkillTableSchema.parse(rawTable);
 const effectList = EffectListSchema.parse(rawEffects).effects;
 export const ctx: BattleContext = { rules, table, effects: effectDefs(effectList) };
 const enemyDefs = EnemyListSchema.parse(rawEnemies).enemies;
-export const sword = treeBattleSkills(table, effectList, TreeSchema.parse(rawSword), "근접");
+export const swordTree = TreeSchema.parse(rawSword);
+export const sword = treeBattleSkills(table, effectList, swordTree, "근접");
 
 export const enemyDef = (id: string, over: Partial<Enemy> = {}): Enemy => {
   const def = enemyDefs.find((e) => e.id === id);
@@ -50,3 +52,18 @@ export const setup = (enemies: BattleSetup["enemies"], allies: AllySetup[] = [he
   enemies,
   ...over,
 });
+
+/** 칸을 찍은 검술 기술. picked에는 기본기 아래의 칸 ID를 적는다 (예: "a", "a.s1") */
+export const built = (basicId: string, picked: string[] = [], choices: Record<string, 0 | 1> = {}) =>
+  buildSkill(
+    table,
+    effectList,
+    rules.words,
+    swordTree,
+    basicId,
+    {
+      picked: new Set(picked.map((id) => `${basicId}.${id}`)),
+      choices: Object.fromEntries(Object.entries(choices).map(([id, side]) => [`${basicId}.${id}`, side])),
+    },
+    "근접",
+  );

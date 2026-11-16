@@ -212,9 +212,16 @@ describe("나무 모양 오류", () => {
   });
   it("칸 종류에 맞지 않는 칸", () => {
     expect(broken((t) => void delete find(t, "t.b1")["skill"])).toContain("t.b1: 기본기에는 skill이 있어야 한다");
-    expect(broken((t) => void (find(t, "t.b1.a")["bonus"] = { powerPct: 0.05 }))).toContain(
-      "t.b1.a: bonus는 보완 칸에만 적는다",
+    expect(broken((t) => void (find(t, "t.b1.a")["choice"] = [{ description: "가" }, { description: "나" }]))).toContain(
+      "t.b1.a: choice는 보완 칸에만 적는다",
     );
+    expect(broken((t) => void (find(t, "t.b1.s1")["mods"] = [{ kind: "좋음 칸", amount: "없는 말" }]))).toContain(
+      "t.b1.s1: 기준값에 없는 말: 없는 말",
+    );
+    expect(broken((t) => void (find(t, "t.b1.s1")["mods"] = [{ kind: "효과 유지", effect: "nope" }]))).toContain(
+      "t.b1.s1: 없는 효과를 가리킨다: nope",
+    );
+    expect(broken((t) => void (find(t, "t.b1.s1")["mods"] = [{ kind: "좋음 칸", amount: "판정 칸 조금 넓게", when: "연계 중" }]))).toEqual([]);
     expect(broken((t) => void (find(t, "t.b1.s1")["axis"] = "넓게 / 깊게"))).toContain(
       "t.b1.s1: axis는 갈림길·끝갈래에만 적는다",
     );

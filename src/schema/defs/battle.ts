@@ -62,6 +62,8 @@ export const BattleRulesSchema = z.strictObject({
   }),
   /** 한 방에 최대 체력의 이 비율 이상 맞고 쓰러지면 중상 */
   injury: z.strictObject({ severeHitShare: share }),
+  /** 칸의 설명에 나오는 말의 기준값 ("판정 칸 조금 넓게" 등). 칸의 규칙은 숫자 대신 이 말을 적을 수 있다 */
+  words: z.record(z.string().min(1), z.number()),
   /** 연계: 이어서 쓸 때 위력에 더하는 비율 */
   chain: z.strictObject({ linkBonus: z.number().min(0), finishBonus: z.number().min(0) }),
   /** 스스로 고르는 규칙: 체력이 이 비율 이하면 막는다 */

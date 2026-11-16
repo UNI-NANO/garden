@@ -4,6 +4,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { DefensePolicy } from "../src/rules/battle/auto";
+import { buildSkill } from "../src/rules/battle/build-skill";
 import { effectDefs } from "../src/rules/battle/effects";
 import type { AllySetup, BattleSetup } from "../src/rules/battle/engine";
 import { enemyNumbers, playerMaxHp } from "../src/rules/battle/numbers";
@@ -58,11 +59,22 @@ const player: AllySetup = {
   basicAttack: skills.basicAttack,
   skills: [pick("sword.combo"), pick("sword.charge"), pick("sword.gale")],
 };
+// 갈래를 찍은 플레이어: 기본기마다 보완 칸 둘, 첫 갈래(a), 그 보완 칸 둘. 고르는 칸은 첫째 쪽.
+const ROUTE = ["s1", "s2", "a", "a.s1", "a.s2"];
+const grown = (basicId: string) => {
+  const ids = ROUTE.map((tail) => `${basicId}.${tail}`);
+  const choices: Record<string, 0 | 1> = {};
+  for (const id of ids) choices[id] = 0;
+  return buildSkill(defs.skillTable, defs.effects.effects, defs.battle.words, sword, basicId, { picked: new Set(ids), choices }, "근접");
+};
+const grownPlayer: AllySetup = { ...player, skills: [grown("sword.combo"), grown("sword.charge"), grown("sword.gale")] };
 const mate = (n: number): AllySetup => ({ ...player, id: `mate${n}`, name: `동료 ${n}`, kind: "동료", slot: n, skills: [] });
 
 const parties: [string, AllySetup[]][] = [
   ["혼자", [player]],
   ["동료 둘과", [player, mate(1), mate(2)]],
+  ["혼자 (갈래 찍음)", [grownPlayer]],
+  ["동료 둘과 (갈래 찍음)", [grownPlayer, mate(1), mate(2)]],
 ];
 const foes: [string, BattleSetup["enemies"]][] = [
   ["늑대 하나", [{ id: "w1", def: enemy("wolf"), slot: 0 }]],
@@ -79,6 +91,7 @@ const policies: DefensePolicy[] = ["안 누름", "자동", "늘 막기"];
 
 console.log(`\n조건: 검술 숙련도 ${MASTERY} · 건강 ${HEALTH} (체력 ${playerMaxHp(defs.battle, HEALTH)}), 판정은 모두 좋음`);
 console.log(`플레이어 기술: ${[player.basicAttack, ...player.skills].map((s) => `${s.name}(위력 ${+(s.baseHitPower * s.hitCount).toFixed(2)}, 쿨다운 ${s.cooldown}, 기력 ${s.energy})`).join(", ")}`);
+console.log(`갈래를 찍으면: ${grownPlayer.skills.map((s) => `${s.name}(위력 ${+(s.baseHitPower * s.hitCount).toFixed(2)}, 쿨다운 ${s.cooldown}, 기력 ${s.energy})`).join(", ")} — 기본기마다 보완 칸 둘 + 첫 갈래 + 그 보완 칸 둘`);
 console.log("동료: 플레이어와 같은 체력·숙련도, 베기만 씀. 쓸 수 있는 연계를 먼저 고르고, 합은 이길 수 있을 때만 건다.");
 console.log(
   `적: ${["wolf", "deserter.shield", "deserter.crossbow"]

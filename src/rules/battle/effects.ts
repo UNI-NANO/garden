@@ -33,20 +33,28 @@ function immunities(defs: EffectDefs, stacks: EffectStacks): Set<string> {
  * 효과를 붙인다. 최대 중첩에서 멈추고, 면역이면 붙지 않는다.
  * 면역 효과가 새로 붙으면 이미 걸려 있던 그 효과들도 사라진다. 실제로 붙은 중첩 수를 돌려준다.
  */
-export function addEffect(defs: EffectDefs, stacks: EffectStacks, id: string, amount: number, alwaysImmune: readonly string[] = []): number {
+export function addEffect(defs: EffectDefs, stacks: EffectStacks, id: string, amount: number, alwaysImmune: readonly string[] = [], capBonus = 0): number {
   const def = defs.get(id);
   if (def === undefined || amount <= 0) return 0;
   if (alwaysImmune.includes(id) || immunities(defs, stacks).has(id)) return 0;
   const before = stacks[id] ?? 0;
-  const after = Math.min(def.max, before + Math.floor(amount));
+  // 이미 상한을 넘겨 쌓여 있던 것은 깎지 않는다
+  const after = Math.max(before, Math.min(def.max + capBonus, before + Math.floor(amount)));
   if (after > 0) stacks[id] = after;
   if (def.rule.kind === "면역") for (const blocked of def.rule.effects) delete stacks[blocked];
   return after - before;
 }
 
 /** 줄어드는 때가 `when`인 효과를 줄인다 */
-export function decayEffects(defs: EffectDefs, stacks: EffectStacks, when: Exclude<EffectDecay, "줄지 않음" | "턴 끝 절반" | "턴 끝 모두" | "턴 끝 −1"> | "턴 끝"): void {
+export function decayEffects(
+  defs: EffectDefs,
+  stacks: EffectStacks,
+  when: Exclude<EffectDecay, "줄지 않음" | "턴 끝 절반" | "턴 끝 모두" | "턴 끝 −1"> | "턴 끝",
+  /** 이번에는 줄지 않는 효과 */
+  held: readonly string[] = [],
+): void {
   for (const [def, count] of [...active(defs, stacks)]) {
+    if (held.includes(def.id)) continue;
     let next = count;
     if (when === "턴 끝") {
       if (def.decay === "턴 끝 −1") next = count - 1;

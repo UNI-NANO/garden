@@ -102,7 +102,7 @@ export function checkDefs(raw: RawDefs): CheckResult {
     return { ok: false, issues };
   }
 
-  issues.push(...validateLinks(table.data, effects.data, limits.data, items.data, trees));
+  issues.push(...validateLinks(table.data, effects.data, limits.data, items.data, trees, battle.data.words));
   issues.push(...validateMigration(migration.data, items.data, talents.data));
   const knownEffects = new Set(effects.data.effects.map((e) => e.id));
   for (const effect of effects.data.effects) {
@@ -203,6 +203,7 @@ function validateLinks(
   limits: Limits,
   items: ItemList,
   trees: { file: string; tree: Tree }[],
+  words: Record<string, number>,
 ): DefIssue[] {
   const issues: DefIssue[] = [];
   const seen = new Map<string, string>();
@@ -275,17 +276,24 @@ function validateLinks(
       }
     }
 
-    issues.push(...validateNodes(file, tree, table, checkSkill));
+    issues.push(...validateNodes(file, tree, table, checkSkill, words, effectIds));
     issues.push(...validateStem(file, tree, table));
   }
   return issues;
 }
+
+/** 숫자 자리에 말을 적을 수 있는 규칙들 */
+const wordKinds = new Set(["위력 +", "위력 ×", "흐트러짐 ×", "좋음 칸", "터뜨리기 강화", "뒷줄까지", "적진으로", "자세", "자세 찌르기", "찌르기"]);
+/** 말이 아니라 정해진 낱말인 값 (조건, 피해 타입) */
+const KNOWN_TEXT = new Set(["연계 중", "연계 아님", "대상이 흐트러짐", "대상이 뒷줄", "완벽", "자상", "관통", "파열"]);
 
 function validateNodes(
   file: string,
   tree: Tree,
   table: SkillTable,
   checkSkill: (where: string, skill: SkillSpec) => void,
+  words: Record<string, number>,
+  effectIds: ReadonlySet<string>,
 ): DefIssue[] {
   const issues: DefIssue[] = [];
   const add = (where: string, message: string) => issues.push({ file, where, message });
@@ -316,11 +324,17 @@ function validateNodes(
       if (node.hidden !== undefined) add(node.id, "hidden은 갈림길·끝갈래에만 적는다");
       if (node.overrides !== undefined) add(node.id, "overrides는 갈림길·끝갈래에만 적는다");
     }
-    if (node.kind !== "보완") {
-      if (node.bonus !== undefined) add(node.id, "bonus는 보완 칸에만 적는다");
-      if (node.choice !== undefined) add(node.id, "choice는 보완 칸에만 적는다");
-    } else if (node.bonus !== undefined && node.choice !== undefined) {
-      add(node.id, "bonus와 choice를 함께 적을 수 없다 (고르는 칸이면 choice 안에 적는다)");
+    if (node.kind !== "보완" && node.choice !== undefined) add(node.id, "choice는 보완 칸에만 적는다");
+    if (node.choice !== undefined && node.mods !== undefined) add(node.id, "mods와 choice를 함께 적을 수 없다 (고르는 칸이면 choice 안에 적는다)");
+    // 규칙이 가리키는 말과 효과가 실제로 있는지
+    for (const mod of [...(node.mods ?? []), ...(node.choice ?? []).flatMap((option) => option.mods ?? [])]) {
+      for (const value of Object.values(mod)) {
+        if (typeof value === "string" && wordKinds.has(mod.kind) && value !== mod.kind && !KNOWN_TEXT.has(value) && !(value in words)) {
+          add(node.id, `기준값에 없는 말: ${value}`);
+        }
+      }
+      const ids = "effect" in mod ? [typeof mod.effect === "string" ? mod.effect : mod.effect.id] : "effects" in mod ? mod.effects.map((e) => e.id) : [];
+      for (const id of ids) if (!effectIds.has(id)) add(node.id, `없는 효과를 가리킨다: ${id}`);
     }
 
     // 앞 칸
