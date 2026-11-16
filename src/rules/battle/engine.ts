@@ -74,6 +74,8 @@ export interface EnemyUnit {
   /** 흐트러진 턴. 흐트러지지 않았으면 null */
   brokenOnTurn: number | null;
   targeting: Targeting;
+  /** 바로 앞 턴에 노린 대상. 다른 대상이 있으면 같은 사람을 연달아 노리지 않는다 */
+  lastTargetId: string | null;
   actions: EnemyAction[];
   down: boolean;
 }
@@ -213,6 +215,7 @@ export function createBattle(setup: BattleSetup, ctx: BattleContext): BattleStat
       maxStagger: numbers.maxStagger,
       brokenOnTurn: null,
       targeting: e.def.targeting,
+      lastTargetId: null,
       actions: e.def.actions,
       down: false,
     };
@@ -233,8 +236,9 @@ function rollIntents(state: BattleState): Intent[] {
     if (enemy.brokenOnTurn !== null && enemy.brokenOnTurn < state.turn) continue;
     const rng = createRng(`${state.seed}:${state.turn}:${enemy.id}`);
     const action = pickAction(enemy.actions, rng.next());
-    const target = pickTarget(state, enemy.targeting, action.reach, rng.next());
+    const target = pickTarget(state, enemy.targeting, action.reach, rng.next(), enemy.lastTargetId);
     if (target === undefined) continue;
+    enemy.lastTargetId = target.id;
     intents.push({
       enemyId: enemy.id,
       actionName: action.name,
@@ -262,8 +266,14 @@ function pickAction(actions: readonly EnemyAction[], roll: number): EnemyAction 
   return last;
 }
 
-function pickTarget(state: BattleState, targeting: Targeting, reach: Reach, roll: number): AllyUnit | undefined {
-  const candidates = reachable(standingAllies(state), reach);
+/**
+ * 성향대로 대상을 고른다. `avoidId`(직전에 노린 대상)는 다른 대상이 있을 때만 피한다:
+ * 한 사람만 계속 맞지 않고, 다음에 누가 노려질지 읽을 수 있다.
+ */
+function pickTarget(state: BattleState, targeting: Targeting, reach: Reach, roll: number, avoidId: string | null = null): AllyUnit | undefined {
+  const all = reachable(standingAllies(state), reach);
+  const others = all.filter((a) => a.id !== avoidId);
+  const candidates = others.length > 0 ? others : all;
   if (candidates.length === 0) return undefined;
   switch (targeting) {
     case "앞줄":
