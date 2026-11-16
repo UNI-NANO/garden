@@ -59,8 +59,8 @@ const player: AllySetup = {
   basicAttack: skills.basicAttack,
   skills: [pick("sword.combo"), pick("sword.charge"), pick("sword.gale")],
 };
-// 갈래를 찍은 플레이어: 기본기마다 보완 칸 둘, 첫 갈래(a), 그 보완 칸 둘. 고르는 칸은 첫째 쪽.
-const ROUTE = ["s1", "s2", "a", "a.s1", "a.s2"];
+// 갈래를 찍은 플레이어: 기본기마다 보완 칸 둘, 첫 갈래(a), 그 보완 칸 둘, 끝갈래(a1)와 그 보완 칸. 고르는 칸은 첫째 쪽.
+const ROUTE = ["s1", "s2", "a", "a.s1", "a.s2", "a1", "a1.s"];
 const grown = (basicId: string) => {
   const ids = ROUTE.map((tail) => `${basicId}.${tail}`);
   const choices: Record<string, 0 | 1> = {};
@@ -91,7 +91,7 @@ const policies: DefensePolicy[] = ["안 누름", "자동", "늘 막기"];
 
 console.log(`\n조건: 검술 숙련도 ${MASTERY} · 건강 ${HEALTH} (체력 ${playerMaxHp(defs.battle, HEALTH)}), 판정은 모두 좋음`);
 console.log(`플레이어 기술: ${[player.basicAttack, ...player.skills].map((s) => `${s.name}(위력 ${+(s.baseHitPower * s.hitCount).toFixed(2)}, 쿨다운 ${s.cooldown}, 기력 ${s.energy})`).join(", ")}`);
-console.log(`갈래를 찍으면: ${grownPlayer.skills.map((s) => `${s.name}(위력 ${+(s.baseHitPower * s.hitCount).toFixed(2)}, 쿨다운 ${s.cooldown}, 기력 ${s.energy})`).join(", ")} — 기본기마다 보완 칸 둘 + 첫 갈래 + 그 보완 칸 둘`);
+console.log(`갈래를 찍으면: ${grownPlayer.skills.map((s) => `${s.name}(위력 ${+(s.baseHitPower * s.hitCount).toFixed(2)}, 쿨다운 ${s.cooldown}, 기력 ${s.energy})`).join(", ")} — 기본기마다 보완 칸 둘 + 첫 갈래 + 그 보완 칸 둘 + 끝갈래 a1과 그 보완 칸`);
 console.log("동료: 플레이어와 같은 체력·숙련도, 베기만 씀. 쓸 수 있는 연계를 먼저 고르고, 합은 이길 수 있을 때만 건다.");
 console.log(
   `적: ${["wolf", "deserter.shield", "deserter.crossbow"]

@@ -59,6 +59,8 @@ export interface BattleSkill {
   goodWidth?: number;
   /** 흐트러짐 피해에 곱하는 값 */
   staggerMultiplier?: number;
+  /** 피해에만 곱하는 값 (위력과 흐트러짐은 그대로) */
+  damageMultiplier?: number;
   /** 조건이 맞을 때만 걸리는 규칙 */
   conditional?: { kind: "위력 +" | "위력 ×" | "흐트러짐 ×" | "좋음 칸"; amount: number; when?: Condition; hit?: "마지막" }[];
   /** 완벽 칸에 더하는 폭 (화면이 쓴다) */
@@ -468,10 +470,12 @@ function strikeEnemy(
   damageType: DamageType,
   staggerShare: number,
   judgement?: Judgement,
+  /** 피해에만 곱하는 값 */
+  damageScale = 1,
 ): void {
   if (enemy.down) return;
   const taken = isStaggered(enemy) ? ctx.rules.stagger.damageTakenMultiplier : 1;
-  let amount = damageOf(power, ctx.rules.resist[enemy.resist[damageType]], enemy.defense, taken);
+  let amount = damageOf(power * damageScale, ctx.rules.resist[enemy.resist[damageType]], enemy.defense, taken);
   if (power > 0) {
     // 취약·수호는 저항과 방어를 거친 뒤에 더하고 뺀다. 맞으면 최소 1
     amount = Math.max(1, amount + damageTakenBonus(ctx.effects, enemy.effects));
@@ -880,7 +884,7 @@ function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action
       const isMain = enemy.id === main.id;
       const stagger =
         (isMain ? 1 : staggerShare) * (skill.staggerMultiplier ?? 1) * conditionalMultiplier(skill, { times: "흐트러짐 ×" }, state, ally, enemy, adjusted);
-      strikeEnemy(state, ctx, ally.id, enemy, isMain ? power : power * share, skill.damageType, stagger, judgement);
+      strikeEnemy(state, ctx, ally.id, enemy, isMain ? power : power * share, skill.damageType, stagger, judgement, skill.damageMultiplier ?? 1);
     });
     // 빗나간 타에는 효과가 붙지 않는다. 터뜨리는 마지막 타가 빗나가면 그 효과를 잃는 갈래도 있다
     if (power <= 0) {

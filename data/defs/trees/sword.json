@@ -1,7 +1,7 @@
 {
   "id": "sword",
   "name": "검술",
-  "version": 6,
+  "version": 7,
   "description": "한손 장검. 가장 기본이 되는 균형형 나무로, 넓게 베기·받아치기·연계·진형 다루기를 고루 쓴다. 피해는 자상이 기본이고, 관통은 돌진 베기의 찌르기 루트와 밀어붙이기 택1에서만. 가문 갈래 자리는 비어 있다.",
   "basicAttack": {
     "id": "sword.cut",
@@ -576,14 +576,27 @@
       "name": "끈질김",
       "prev": "sword.gale.a.s2",
       "description": "전투가 길수록 위력 증가.",
-      "axis": "끈질김 / 마무리"
+      "axis": "끈질김 / 마무리",
+      "mods": [
+        {
+          "kind": "끈질김",
+          "perTurn": "끈질김 턴당",
+          "max": "끈질김 최대"
+        }
+      ]
     },
     {
       "id": "sword.gale.a1.s",
       "kind": "보완",
       "name": "증가 최대치 +",
       "prev": "sword.gale.a1",
-      "description": "증가 최대치 +"
+      "description": "증가 최대치 +",
+      "mods": [
+        {
+          "kind": "끈질김 최대",
+          "amount": "끈질김 최대 +"
+        }
+      ]
     },
     {
       "id": "sword.gale.a1.u",
@@ -598,14 +611,26 @@
       "name": "마무리",
       "prev": "sword.gale.a.s2",
       "description": "하나라도 쓰러뜨리면 쿨다운 절반.",
-      "axis": "끈질김 / 마무리"
+      "axis": "끈질김 / 마무리",
+      "mods": [
+        {
+          "kind": "쓰러뜨리면 쿨다운",
+          "multiply": 0.5
+        }
+      ]
     },
     {
       "id": "sword.gale.a2.s",
       "kind": "보완",
       "name": "쓰러뜨리면 기력 +1",
       "prev": "sword.gale.a2",
-      "description": "쓰러뜨리면 기력 +1"
+      "description": "쓰러뜨리면 기력 +1",
+      "mods": [
+        {
+          "kind": "쓰러뜨리면 기력",
+          "add": 1
+        }
+      ]
     },
     {
       "id": "sword.gale.a2.u",
@@ -682,14 +707,27 @@
       "name": "빠르게",
       "prev": "sword.gale.b.s2",
       "description": "쿨다운 −2.",
-      "axis": "빠르게 / 무겁게"
+      "axis": "빠르게 / 무겁게",
+      "mods": [
+        {
+          "kind": "쿨다운",
+          "add": -2
+        }
+      ]
     },
     {
       "id": "sword.gale.b1.s",
       "kind": "보완",
       "name": "같은 적을 연속으로 치면 기력 −1",
       "prev": "sword.gale.b1",
-      "description": "같은 적을 연속으로 치면 기력 −1"
+      "description": "같은 적을 연속으로 치면 기력 −1",
+      "mods": [
+        {
+          "kind": "기력",
+          "add": -1,
+          "when": "같은 대상"
+        }
+      ]
     },
     {
       "id": "sword.gale.b1.u",
@@ -704,14 +742,28 @@
       "name": "무겁게",
       "prev": "sword.gale.b.s2",
       "description": "흐트러진 적에게 2배.",
-      "axis": "빠르게 / 무겁게"
+      "axis": "빠르게 / 무겁게",
+      "mods": [
+        {
+          "kind": "위력 ×",
+          "amount": 2,
+          "when": "대상이 흐트러짐"
+        }
+      ]
     },
     {
       "id": "sword.gale.b2.s",
       "kind": "보완",
       "name": "흐트러진 적에게 판정 칸 넓게",
       "prev": "sword.gale.b2",
-      "description": "흐트러진 적에게 판정 칸 넓게"
+      "description": "흐트러진 적에게 판정 칸 넓게",
+      "mods": [
+        {
+          "kind": "좋음 칸",
+          "amount": "판정 칸 넓게",
+          "when": "대상이 흐트러짐"
+        }
+      ]
     },
     {
       "id": "sword.gale.b2.u",
@@ -726,14 +778,33 @@
       "name": "칼등",
       "prev": "sword.gale.b.s2",
       "description": "숨은 역이용 갈래. 피해 크게 감소, 흐트러짐 2배, 쓰러뜨리면 생포(현상금·심문 보상).",
-      "hidden": true
+      "hidden": true,
+      "mods": [
+        {
+          "kind": "피해 ×",
+          "amount": "칼등 위력"
+        },
+        {
+          "kind": "흐트러짐 ×",
+          "amount": 2
+        },
+        {
+          "kind": "생포"
+        }
+      ]
     },
     {
       "id": "sword.gale.b.x.s",
       "kind": "보완",
       "name": "생포 보상 증가",
       "prev": "sword.gale.b.x",
-      "description": "생포 보상 증가"
+      "description": "생포 보상 증가",
+      "mods": [
+        {
+          "kind": "생포 보상",
+          "amount": "생포 보상 +"
+        }
+      ]
     },
     {
       "id": "sword.gale.b.x.u",
@@ -847,14 +918,30 @@
       "name": "나",
       "prev": "sword.riposte.a.s2",
       "description": "성공하면 집중 2.",
-      "axis": "나 / 동료"
+      "axis": "나 / 동료",
+      "mods": [
+        {
+          "kind": "받아치면 효과",
+          "effect": {
+            "id": "focus",
+            "amount": 2
+          }
+        }
+      ]
     },
     {
       "id": "sword.riposte.a1.s",
       "kind": "보완",
       "name": "집중 최대치 +",
       "prev": "sword.riposte.a1",
-      "description": "집중 최대치 +"
+      "description": "집중 최대치 +",
+      "mods": [
+        {
+          "kind": "효과 상한",
+          "effect": "focus",
+          "add": "집중 최대치 +"
+        }
+      ]
     },
     {
       "id": "sword.riposte.a1.u",
@@ -869,14 +956,25 @@
       "name": "동료",
       "prev": "sword.riposte.a.s2",
       "description": "옆 칸 동료를 노린 공격도 받아칠 수 있음.",
-      "axis": "나 / 동료"
+      "axis": "나 / 동료",
+      "mods": [
+        {
+          "kind": "대신 받기"
+        }
+      ]
     },
     {
       "id": "sword.riposte.a2.s",
       "kind": "보완",
       "name": "동료 대신 받을 때 피해 −10%",
       "prev": "sword.riposte.a2",
-      "description": "동료 대신 받을 때 피해 −10%"
+      "description": "동료 대신 받을 때 피해 −10%",
+      "mods": [
+        {
+          "kind": "대신 받기",
+          "damageTaken": 0.9
+        }
+      ]
     },
     {
       "id": "sword.riposte.a2.u",
@@ -948,14 +1046,32 @@
       "name": "깎기",
       "prev": "sword.riposte.b.s2",
       "description": "찌른 적에게 취약.",
-      "axis": "깎기 / 키우기"
+      "axis": "깎기 / 키우기",
+      "mods": [
+        {
+          "kind": "찌르기 효과",
+          "effect": {
+            "id": "fragile",
+            "amount": 1
+          }
+        }
+      ]
     },
     {
       "id": "sword.riposte.b1.s",
       "kind": "보완",
       "name": "취약 지속 +1턴",
       "prev": "sword.riposte.b1",
-      "description": "취약 지속 +1턴"
+      "description": "취약 지속 +1턴",
+      "mods": [
+        {
+          "kind": "찌르기 효과",
+          "effect": {
+            "id": "fragile",
+            "amount": 1
+          }
+        }
+      ]
     },
     {
       "id": "sword.riposte.b1.u",
@@ -970,14 +1086,32 @@
       "name": "키우기",
       "prev": "sword.riposte.b.s2",
       "description": "자세 중 자신감 쌓임.",
-      "axis": "깎기 / 키우기"
+      "axis": "깎기 / 키우기",
+      "mods": [
+        {
+          "kind": "자세 중 효과",
+          "effect": {
+            "id": "confidence",
+            "amount": 1
+          }
+        }
+      ]
     },
     {
       "id": "sword.riposte.b2.s",
       "kind": "보완",
       "name": "자신감 최대치 +",
       "prev": "sword.riposte.b2",
-      "description": "자신감 최대치 +"
+      "description": "자신감 최대치 +",
+      "mods": [
+        {
+          "kind": "자세 중 효과",
+          "effect": {
+            "id": "confidence",
+            "amount": 1
+          }
+        }
+      ]
     },
     {
       "id": "sword.riposte.b2.u",

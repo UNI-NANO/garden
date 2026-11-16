@@ -38,6 +38,8 @@ export const ModSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("위력 +"), amount: AmountSchema, when: ConditionSchema.optional(), hit: HitSchema.optional() }),
   z.strictObject({ kind: z.literal("위력 ×"), amount: AmountSchema, when: ConditionSchema.optional(), hit: HitSchema.optional() }),
   z.strictObject({ kind: z.literal("흐트러짐 ×"), amount: AmountSchema, when: ConditionSchema.optional() }),
+  /** 피해에만 곱한다 (위력·흐트러짐은 그대로) */
+  z.strictObject({ kind: z.literal("피해 ×"), amount: AmountSchema }),
   z.strictObject({ kind: z.literal("좋음 칸"), amount: AmountSchema, when: ConditionSchema.optional(), hit: HitSchema.optional() }),
   z.strictObject({ kind: z.literal("완벽 칸"), amount: AmountSchema }),
   z.strictObject({ kind: z.literal("기력"), add: z.number().int(), when: ConditionSchema.optional() }),

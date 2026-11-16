@@ -66,6 +66,9 @@ export function buildSkill(
         else skill.goodWidth = (skill.goodWidth ?? 0) + value;
         return;
       }
+      case "피해 ×":
+        skill.damageMultiplier = (skill.damageMultiplier ?? 1) * amount(mod.amount);
+        return;
       case "완벽 칸":
         skill.perfectWidth = (skill.perfectWidth ?? 0) + amount(mod.amount);
         return;

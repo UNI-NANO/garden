@@ -438,3 +438,124 @@ describe("적 카드의 특징", () => {
     expect([skillEnergyCost(b, ally(b), s, foe(b, "s1")), skillEnergyCost(b, ally(b), s, foe(b, "c1"))]).toEqual([1, 0]);
   });
 });
+
+describe("끝갈래와 그 보완 칸: 검풍", () => {
+  it("끈질김: 턴마다 위력 +10%, 최대 +50%. 보완 칸을 찍으면 최대 +80%", () => {
+    const wide = built("sword.gale", ["a"]);
+    const long = built("sword.gale", ["a", "a1"]);
+    const longer = built("sword.gale", ["a", "a1", "a1.s"]);
+    const b = startWith(long, [dummy("w1", 0)]);
+    const ratio = (s: BattleSkill, turn: number) => {
+      b.turn = turn;
+      return powersOf(b, s)[0]! / powersOf(b, wide)[0]!;
+    };
+    expect([1, 3, 5, 9].map((t) => ratio(long, t))).toEqual([1.1, 1.3, 1.5, 1.5].map((x) => expect.closeTo(x, 10)));
+    expect([5, 8, 12].map((t) => ratio(longer, t))).toEqual([1.5, 1.8, 1.8].map((x) => expect.closeTo(x, 10)));
+  });
+  it("마무리: 하나라도 쓰러뜨리면 쿨다운 절반(내림), 보완 칸은 기력 +1", () => {
+    const finish = built("sword.gale", ["a", "a2"]);
+    const weak = [wolf("w1", 0, { overrides: { hp: 1, power: 0 } }), dummy("w2", 1)];
+    const killed = resolveAllies(startWith(finish, weak), [use(finish, "w2")], ctx);
+    // 쿨다운 4 → 2 (턴 끝에 한 번 줄어드는 몫까지 3으로 적힌다)
+    expect(ally(killed).cooldowns).toEqual({ "sword.gale": 3 });
+    const none = resolveAllies(startWith(finish, [dummy("w1", 0), dummy("w2", 1)]), [use(finish, "w2")], ctx);
+    expect(ally(none).cooldowns).toEqual({ "sword.gale": 5 });
+    const refund = built("sword.gale", ["a", "a2", "a2.s"]);
+    const withKill = ally(resolveAllies(startWith(refund, weak), [use(refund, "w2")], ctx)).energy;
+    const withoutKill = ally(resolveAllies(startWith(refund, [dummy("w1", 0), dummy("w2", 1)]), [use(refund, "w2")], ctx)).energy;
+    expect(withKill - withoutKill).toBe(1);
+  });
+  it("빠르게: 쿨다운 −2, 보완 칸은 바로 앞 차례에 친 적을 또 치면 기력 −1", () => {
+    const fast = built("sword.gale", ["b", "b1", "b1.s"]);
+    expect(fast.cooldown).toBe(2);
+    const cut = hero().basicAttack;
+    let b = createBattle(setup([dummy("w1", 0), dummy("w2", 1)], [hero({ skills: [fast] })]), ctx);
+    b = playTurn(b, { actions: [{ unitId: "hero", type: "기술", skillId: cut.id, targetId: "w1", judgements: good(cut.hitCount) }], defenses: {} }, ctx);
+    expect([skillEnergyCost(b, ally(b), fast, foe(b, "w1")), skillEnergyCost(b, ally(b), fast, foe(b, "w2"))]).toEqual([fast.energy - 1, fast.energy]);
+    const before = ally(b).energy;
+    const after = resolveAllies(b, [use(fast, "w1")], ctx);
+    expect(before - ally(after).energy).toBe(fast.energy - 1);
+    // 한 턴을 쉬면 연속이 아니다
+    const rested = playTurn(b, { actions: [rest], defenses: {} }, ctx);
+    expect(skillEnergyCost(rested, ally(rested), fast, foe(rested, "w1"))).toBe(fast.energy);
+  });
+  it("무겁게: 흐트러진 적에게 위력 ×2, 보완 칸은 그때 좋음 칸 +6", () => {
+    const deep = built("sword.gale", ["b"]);
+    const heavy = built("sword.gale", ["b", "b2", "b2.s"]);
+    const b = startWith(heavy);
+    expect(powersOf(b, heavy)[0]! / powersOf(b, deep)[0]!).toBeCloseTo(1, 10);
+    expect(skillGoodWidth(b, ally(b), heavy, foe(b))).toBe(0);
+    foe(b).brokenOnTurn = b.turn;
+    expect(powersOf(b, heavy)[0]! / powersOf(b, deep)[0]!).toBeCloseTo(2, 10);
+    expect(skillGoodWidth(b, ally(b), heavy, foe(b))).toBe(6);
+  });
+  it("칼등: 피해는 ×0.3, 흐트러짐은 2배, 쓰러뜨린 적은 생포", () => {
+    const deep = built("sword.gale", ["b"]);
+    const back = built("sword.gale", ["b", "b.x"]);
+    const tough = () => [dummy("w1", 0, { overrides: { hp: 999, power: 0, stagger: 100 } })];
+    const hit = (s: BattleSkill) => resolveAllies(startWith(s, tough()), [use(s)], ctx);
+    // 30.9 → 31, 30.9 × 0.3 = 9.27 → 9
+    expect([999 - foe(hit(deep)).hp, 999 - foe(hit(back)).hp]).toEqual([31, 9]);
+    expect((100 - foe(hit(back)).stagger) / (100 - foe(hit(deep)).stagger)).toBeCloseTo(2, 10);
+    const weak = [wolf("w1", 0, { overrides: { hp: 5, power: 0 } })];
+    const caught = resolveAllies(startWith(back, weak), [use(back)], ctx);
+    expect(foe(caught)).toMatchObject({ down: true, captured: { by: "hero", rewardBonus: 0 } });
+    expect(caught.events.find((e) => e.type === "생포")).toMatchObject({ unit: "w1", by: "hero" });
+    const bounty = built("sword.gale", ["b", "b.x", "b.x.s"]);
+    expect(foe(resolveAllies(startWith(bounty, weak), [use(bounty)], ctx)).captured).toEqual({ by: "hero", rewardBonus: 0.5 });
+    // 칼등이 아니면 생포하지 않는다
+    expect(foe(resolveAllies(startWith(deep, weak), [use(deep)], ctx)).captured).toBeUndefined();
+  });
+});
+
+describe("끝갈래와 그 보완 칸: 되받아치기", () => {
+  const parry = { "w1>hero": "받아치기 성공" as const };
+  const tough = () => [wolf("w1", 0, { overrides: { hp: 999 } })];
+  it("나: 받아치면 집중 2, 보완 칸은 집중 최대 +2", () => {
+    const me = built("sword.riposte", ["a", "a1"]);
+    expect(ally(playTurn(startWith(me, tough()), { actions: [use(me)], defenses: parry }, ctx)).effects).toEqual({ focus: 2 });
+    expect(ally(playTurn(startWith(me, tough()), { actions: [use(me)], defenses: {} }, ctx)).effects).toEqual({});
+    const full = (s: BattleSkill) => {
+      const b = startWith(s, tough());
+      ally(b).effects = { focus: 5 };
+      return ally(playTurn(b, { actions: [use(s)], defenses: parry }, ctx)).effects;
+    };
+    // 자세 기술을 쓸 때 집중이 1 줄고(5 → 4), 받아치면 2가 붙는다
+    expect(full(me)).toEqual({ focus: 5 });
+    expect(full(built("sword.riposte", ["a", "a1", "a1.s"]))).toEqual({ focus: 6 });
+  });
+  it("동료: 같은 줄 바로 옆 동료를 노린 공격을 대신 받는다, 보완 칸은 그 피해 ×0.9", () => {
+    const run = (s: BattleSkill, mateSlot: number, defenses = {}) => {
+      const mate = hero({ id: "mate", name: "시험 동료", kind: "동료", slot: mateSlot, skills: [] });
+      let b = createBattle(setup([wolf("w1", 0, { overrides: { hp: 999 } })], [hero({ skills: [s] }), mate]), ctx);
+      b.intents[0]!.targetId = "mate";
+      b = playTurn(b, { actions: [use(s), { unitId: "mate", type: "쉬기" }], defenses }, ctx);
+      return { hero: ally(b).hp, mate: b.allies[1]!.hp, state: b };
+    };
+    const cover = built("sword.riposte", ["a", "a2"]);
+    expect(run(cover, 1)).toMatchObject({ hero: 55 - 7, mate: 55 });
+    expect(run(cover, 1).state.events.find((e) => e.type === "대신 받음")).toMatchObject({ ally: "hero", for: "mate" });
+    // 같은 줄이라도 바로 옆 칸이 아니면(0과 2) 대신 받지 않는다
+    expect(run(cover, 2)).toMatchObject({ hero: 55, mate: 55 - 7 });
+    // 대신 받은 공격도 받아칠 수 있다
+    expect(run(cover, 1, parry)).toMatchObject({ hero: 55, mate: 55 });
+    // 7 × 0.9 = 6.3 → 6
+    expect(run(built("sword.riposte", ["a", "a2", "a2.s"]), 1)).toMatchObject({ hero: 55 - 6, mate: 55 });
+  });
+  it("깎기: 자세 찌르기가 맞으면 취약 1, 보완 칸은 취약 2", () => {
+    const cut = built("sword.riposte", ["b", "b1"]);
+    expect(foe(resolveAllies(startWith(cut), [use(cut)], ctx)).effects).toEqual({ fragile: 1 });
+    const deeper = built("sword.riposte", ["b", "b1", "b1.s"]);
+    expect(foe(resolveAllies(startWith(deeper), [use(deeper)], ctx)).effects).toEqual({ fragile: 2 });
+  });
+  it("키우기: 자세를 잡은 턴의 끝마다 자신감 1, 보완 칸은 2", () => {
+    const grow = built("sword.riposte", ["b", "b2"]);
+    let b = playTurn(startWith(grow), { actions: [use(grow)], defenses: {} }, ctx);
+    expect(ally(b).effects).toEqual({ confidence: 1 });
+    // 자세가 풀린 턴에는 쌓이지 않는다
+    b = playTurn(b, { actions: [rest], defenses: {} }, ctx);
+    expect(ally(b).effects).toEqual({ confidence: 1 });
+    const more = built("sword.riposte", ["b", "b2", "b2.s"]);
+    expect(ally(playTurn(startWith(more), { actions: [use(more)], defenses: {} }, ctx)).effects).toEqual({ confidence: 2 });
+  });
+});
