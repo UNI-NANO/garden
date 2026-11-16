@@ -398,3 +398,19 @@ describe("같은 입력이면 같은 결과", () => {
     expect(replayBattle(battle, record, ctx)).toEqual(replayBattle(battle, record, ctx));
   });
 });
+
+describe("한 판을 끝까지 돌리기", () => {
+  it("스스로 고르는 규칙으로 끝까지 가고, 기록으로 다시 돌리면 같다", async () => {
+    const { simulateBattle } = await import("../src/rules/battle/simulate");
+    const battle = setup([wolf()]);
+    const result = simulateBattle(battle, ctx, "안 누름");
+    expect(result.outcome).toBe("승리");
+    expect(result.turns).toBeGreaterThan(0);
+    expect(replayBattle(battle, result.record, ctx)).toEqual(result.final);
+  });
+  it("끝나지 않는 싸움은 정해진 턴에서 멈춘다", async () => {
+    const { simulateBattle } = await import("../src/rules/battle/simulate");
+    const wall = wolf("w1", 0, { overrides: { hp: 99999, power: 0 } });
+    expect(simulateBattle(setup([wall]), ctx, "안 누름", 5)).toMatchObject({ outcome: "끝나지 않음", turns: 5 });
+  });
+});

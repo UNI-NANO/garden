@@ -13,6 +13,7 @@
     "build": "vite build",
     "check:defs": "tsx scripts/check-defs.ts",
     "check:private": "tsx scripts/check-no-private-data.ts",
+    "balance": "tsx scripts/balance.ts",
     "migrate": "tsx scripts/migrate.ts",
     "check:build": "tsx scripts/check-build.ts",
     "build:rules": "tsx scripts/build-rules.ts",
