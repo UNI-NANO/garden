@@ -132,6 +132,7 @@ test("로그인부터 도서관 홈까지", async ({ page }, testInfo) => {
   await expect(page.getByText("사서가 열람증을 준비하고 있어요.")).toBeVisible();
   await expect(page.getByText("아린")).toHaveCount(0);
   await page.getByRole("button", { name: "나가기" }).click();
+  await expect(page.getByRole("heading", { name: "도서관 입구" })).toBeVisible();
 
   // 8. 저장된 값이 깨져도 화면은 멈추지 않고 안내를 띄우며, 오류가 기록된다
   await admin.update({ [`characters/${sample.characterId}/wallet`]: -5 });
