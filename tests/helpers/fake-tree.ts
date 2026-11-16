@@ -1,4 +1,6 @@
 import rawMigration from "../../data/defs/migration.json";
+import rawBattle from "../../data/defs/battle.json";
+import rawEnemies from "../../data/defs/enemies.json";
 import rawLimits from "../../data/defs/limits.json";
 import rawTalents from "../../data/defs/talents.json";
 import rawTable from "../../data/defs/skill-table.json";
@@ -103,3 +105,6 @@ export const fakeItems = () => ({
 export const fakeMigration = () => ({ ...structuredClone(rawMigration), items: [] as { from: string; item: string }[] });
 
 export const fakeTalents = () => structuredClone(rawTalents);
+
+export const fakeBattle = () => structuredClone(rawBattle);
+export const fakeEnemies = () => structuredClone(rawEnemies);

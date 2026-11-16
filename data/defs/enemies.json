@@ -1,0 +1,49 @@
+{
+  "id": "enemies",
+  "name": "적",
+  "version": 1,
+  "enemies": [
+    {
+      "id": "wolf",
+      "name": "늑대",
+      "archetype": "짐승",
+      "tier": 1,
+      "rank": "일반",
+      "row": "앞줄",
+      "resist": { "자상": "약함", "관통": "보통", "파열": "보통" },
+      "defense": 0,
+      "targeting": "체력이 가장 낮은 쪽",
+      "actions": [
+        { "name": "물어뜯기", "damageType": "자상", "reach": "근접", "range": "단일", "weight": 2 },
+        { "name": "덮치기", "damageType": "파열", "reach": "근접", "range": "단일", "weight": 1 }
+      ]
+    },
+    {
+      "id": "deserter.shield",
+      "name": "탈영병 방패병",
+      "archetype": "병사",
+      "tier": 2,
+      "rank": "일반",
+      "row": "앞줄",
+      "resist": { "자상": "강함", "관통": "보통", "파열": "약함" },
+      "defense": 2,
+      "targeting": "앞줄",
+      "actions": [
+        { "name": "창 찌르기", "damageType": "관통", "reach": "근접", "range": "단일", "weight": 1 },
+        { "name": "방패 치기", "damageType": "파열", "reach": "근접", "range": "단일", "weight": 1 }
+      ]
+    },
+    {
+      "id": "deserter.crossbow",
+      "name": "탈영병 석궁병",
+      "archetype": "병사",
+      "tier": 2,
+      "rank": "일반",
+      "row": "뒷줄",
+      "resist": { "자상": "강함", "관통": "보통", "파열": "약함" },
+      "defense": 2,
+      "targeting": "앞줄",
+      "actions": [{ "name": "석궁 쏘기", "damageType": "관통", "reach": "원거리", "range": "단일", "weight": 1 }]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkDefs, type RawDefs } from "../src/rules/validate-defs";
-import { fakeEffects, fakeItems, fakeLimits, fakeMigration, fakeTable, fakeTalents, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
+import { fakeBattle, fakeEffects, fakeEnemies, fakeItems, fakeLimits, fakeMigration, fakeTable, fakeTalents, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
 
 const raw = (tree: unknown = makeTree(), over: Partial<RawDefs> = {}): RawDefs => ({
   skillTable: fakeTable(),
@@ -9,6 +9,8 @@ const raw = (tree: unknown = makeTree(), over: Partial<RawDefs> = {}): RawDefs =
   items: fakeItems(),
   migration: fakeMigration(),
   talents: fakeTalents(),
+  battle: fakeBattle(),
+  enemies: fakeEnemies(),
   trees: { "trees/t.json": tree },
   ...over,
 });
@@ -293,5 +295,19 @@ describe("이전 대응표", () => {
       "skillsToTalents.검술: 없는 재능을 가리킨다: nope",
       "items.빵: 없는 물건을 가리킨다: bread",
     ]);
+  });
+});
+
+describe("전투 기준값과 적", () => {
+  it("모양이 틀리거나 적 ID가 겹치면 잡는다", () => {
+    const battle = fakeBattle();
+    battle.injury.severeHitShare = 3;
+    expect(messages(raw(undefined, { battle })).length).toBeGreaterThan(0);
+    const enemies = fakeEnemies();
+    enemies.enemies.push(structuredClone(enemies.enemies[0]!));
+    expect(messages(raw(undefined, { enemies }))).toEqual(["wolf: ID가 겹친다"]);
+    const bad = fakeEnemies();
+    bad.enemies[0]!.tier = 9;
+    expect(messages(raw(undefined, { enemies: bad })).length).toBeGreaterThan(0);
   });
 });

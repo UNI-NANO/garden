@@ -46,6 +46,8 @@ const defsResult = checkDefs({
   items: readDef("items.json"),
   migration: readDef("migration.json"),
   talents: readDef("talents.json"),
+  battle: readDef("battle.json"),
+  enemies: readDef("enemies.json"),
   trees,
 });
 if (!defsResult.ok) fail(`정의 데이터에 문제가 있다: ${defsResult.issues[0]?.message ?? ""}`);

@@ -27,6 +27,8 @@ const raw = {
   items: readJson("items.json"),
   migration: readJson("migration.json"),
   talents: readJson("talents.json"),
+  battle: readJson("battle.json"),
+  enemies: readJson("enemies.json"),
   trees,
 };
 

@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import { BattleRulesSchema, EnemyListSchema, type BattleRules, type EnemyList } from "../schema/defs/battle";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -22,6 +23,8 @@ export interface RawDefs {
   items: unknown;
   migration: unknown;
   talents: unknown;
+  battle: unknown;
+  enemies: unknown;
   /** 파일 이름 → 내용 */
   trees: Record<string, unknown>;
 }
@@ -33,6 +36,8 @@ export interface Defs {
   items: ItemList;
   migration: Migration;
   talents: TalentList;
+  battle: BattleRules;
+  enemies: EnemyList;
   trees: Tree[];
 }
 
@@ -44,6 +49,8 @@ const LIMITS_FILE = "limits.json";
 const ITEMS_FILE = "items.json";
 const MIGRATION_FILE = "migration.json";
 const TALENTS_FILE = "talents.json";
+const BATTLE_FILE = "battle.json";
+const ENEMIES_FILE = "enemies.json";
 
 function schemaIssues(file: string, error: z.ZodError): DefIssue[] {
   return error.issues.map((issue) => ({
@@ -78,6 +85,12 @@ export function checkDefs(raw: RawDefs): CheckResult {
   const talents = TalentListSchema.safeParse(raw.talents);
   if (!talents.success) issues.push(...schemaIssues(TALENTS_FILE, talents.error));
 
+  const battle = BattleRulesSchema.safeParse(raw.battle);
+  if (!battle.success) issues.push(...schemaIssues(BATTLE_FILE, battle.error));
+
+  const enemies = EnemyListSchema.safeParse(raw.enemies);
+  if (!enemies.success) issues.push(...schemaIssues(ENEMIES_FILE, enemies.error));
+
   const trees: { file: string; tree: Tree }[] = [];
   for (const file of Object.keys(raw.trees).sort()) {
     const tree = TreeSchema.safeParse(raw.trees[file]);
@@ -85,12 +98,17 @@ export function checkDefs(raw: RawDefs): CheckResult {
     else issues.push(...schemaIssues(file, tree.error));
   }
 
-  if (!table.success || !effects.success || !limits.success || !items.success || !migration.success || !talents.success || issues.length > 0) {
+  if (!table.success || !effects.success || !limits.success || !items.success || !migration.success || !talents.success || !battle.success || !enemies.success || issues.length > 0) {
     return { ok: false, issues };
   }
 
   issues.push(...validateLinks(table.data, effects.data, limits.data, items.data, trees));
   issues.push(...validateMigration(migration.data, items.data, talents.data));
+  const enemyIds = new Set<string>();
+  for (const enemy of enemies.data.enemies) {
+    if (enemyIds.has(enemy.id)) issues.push({ file: ENEMIES_FILE, where: enemy.id, message: "ID가 겹친다" });
+    enemyIds.add(enemy.id);
+  }
   if (issues.length > 0) return { ok: false, issues };
   return { ok: true, defs: {
       skillTable: table.data,
@@ -99,6 +117,8 @@ export function checkDefs(raw: RawDefs): CheckResult {
       items: items.data,
       migration: migration.data,
       talents: talents.data,
+      battle: battle.data,
+      enemies: enemies.data,
       trees: trees.map((t) => t.tree),
     },
   };

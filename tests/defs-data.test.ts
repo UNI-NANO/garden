@@ -15,6 +15,8 @@ const result = checkDefs({
   items: read("items.json"),
   migration: read("migration.json"),
   talents: read("talents.json"),
+  battle: read("battle.json"),
+  enemies: read("enemies.json"),
   trees,
 });
 
