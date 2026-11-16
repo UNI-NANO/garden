@@ -1,5 +1,6 @@
 import rawMigration from "../../data/defs/migration.json";
 import rawBattle from "../../data/defs/battle.json";
+import rawEffects from "../../data/defs/effects.json";
 import rawEnemies from "../../data/defs/enemies.json";
 import rawLimits from "../../data/defs/limits.json";
 import rawTalents from "../../data/defs/talents.json";
@@ -77,15 +78,7 @@ export function makeTree(id = "t"): FakeTree {
   };
 }
 
-export const fakeEffects = () => ({
-  id: "effects",
-  name: "효과",
-  version: 1,
-  effects: [
-    { id: "bleed", name: "출혈", weight: "가벼운" },
-    { id: "bind", name: "속박", weight: "무거운" },
-  ],
-});
+export const fakeEffects = () => structuredClone(rawEffects);
 
 export const fakeTable = () => structuredClone(rawTable);
 

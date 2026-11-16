@@ -104,10 +104,20 @@ export function checkDefs(raw: RawDefs): CheckResult {
 
   issues.push(...validateLinks(table.data, effects.data, limits.data, items.data, trees));
   issues.push(...validateMigration(migration.data, items.data, talents.data));
+  const knownEffects = new Set(effects.data.effects.map((e) => e.id));
+  for (const effect of effects.data.effects) {
+    if (effect.rule.kind !== "면역") continue;
+    for (const id of effect.rule.effects) {
+      if (!knownEffects.has(id)) issues.push({ file: EFFECTS_FILE, where: effect.id, message: `없는 효과를 막는다: ${id}` });
+    }
+  }
   const enemyIds = new Set<string>();
   for (const enemy of enemies.data.enemies) {
     if (enemyIds.has(enemy.id)) issues.push({ file: ENEMIES_FILE, where: enemy.id, message: "ID가 겹친다" });
     enemyIds.add(enemy.id);
+    for (const id of [...(enemy.immune ?? []), ...enemy.actions.flatMap((a) => (a.effects ?? []).map((e) => e.id))]) {
+      if (!knownEffects.has(id)) issues.push({ file: ENEMIES_FILE, where: enemy.id, message: `없는 효과를 가리킨다: ${id}` });
+    }
   }
   if (issues.length > 0) return { ok: false, issues };
   return { ok: true, defs: {
@@ -244,7 +254,11 @@ function validateLinks(
     for (const node of tree.nodes) claim(file, node.id);
 
     const checkSkill = (where: string, skill: SkillSpec) => {
-      for (const id of skill.effects) if (!effectIds.has(id)) add(where, `없는 효과를 가리킨다: ${id}`);
+      const hitCount = skill.hits === "자세" ? 1 : skill.hits;
+      for (const effect of skill.effects) {
+        if (!effectIds.has(effect.id)) add(where, `없는 효과를 가리킨다: ${effect.id}`);
+        for (const hit of effect.hits ?? []) if (hit > hitCount) add(where, `${hit}번째 타에 효과를 붙였는데 ${hitCount}타 기술이다`);
+      }
     };
 
     // 기본 공격

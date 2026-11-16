@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DefIdSchema, defHeader } from "./common";
+import { AppliedEffectSchema } from "./effect";
 import { DamageTypeSchema } from "./skill";
 import { RangeSchema } from "./skill-table";
 
@@ -61,6 +62,8 @@ export const BattleRulesSchema = z.strictObject({
   }),
   /** 한 방에 최대 체력의 이 비율 이상 맞고 쓰러지면 중상 */
   injury: z.strictObject({ severeHitShare: share }),
+  /** 연계: 이어서 쓸 때 위력에 더하는 비율 */
+  chain: z.strictObject({ linkBonus: z.number().min(0), finishBonus: z.number().min(0) }),
   /** 스스로 고르는 규칙: 체력이 이 비율 이하면 막는다 */
   auto: z.strictObject({ guardBelowHpShare: share }),
 });
@@ -83,6 +86,8 @@ export const EnemyActionSchema = z.strictObject({
   weight: z.number().positive(),
   /** 이 행동의 위력 = 적의 위력 × 이 값 (없으면 1) */
   powerMultiplier: multiplier.optional(),
+  /** 맞은 쪽에 붙는 효과 */
+  effects: z.array(AppliedEffectSchema).optional(),
 });
 export type EnemyAction = z.infer<typeof EnemyActionSchema>;
 
@@ -97,6 +102,8 @@ export const EnemySchema = z.strictObject({
   defense: count,
   targeting: TargetingSchema,
   actions: z.array(EnemyActionSchema).min(1),
+  /** 걸리지 않는 효과 */
+  immune: z.array(DefIdSchema).optional(),
   /** 등급 공식 대신 직접 정한 값 (튀어야 하는 적만) */
   overrides: z.strictObject({ hp: z.number().positive().optional(), stagger: z.number().positive().optional(), power: z.number().min(0).optional() }).optional(),
 });

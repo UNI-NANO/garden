@@ -1,10 +1,22 @@
 {
   "id": "effects",
   "name": "효과",
-  "version": 1,
+  "version": 2,
   "effects": [
-    { "id": "bleed", "name": "출혈", "weight": "가벼운" },
-    { "id": "morale", "name": "사기", "weight": "가벼운" },
-    { "id": "bind", "name": "속박", "weight": "무거운" }
+    { "id": "bleed", "name": "출혈", "weight": "가벼운", "polarity": "해로운", "max": 99, "decay": "턴 끝 −1", "rule": { "kind": "지속 피해" } },
+    { "id": "poison", "name": "독", "weight": "가벼운", "polarity": "해로운", "max": 99, "decay": "턴 끝 −1", "rule": { "kind": "지속 피해", "healMultiplier": 0.5 } },
+    { "id": "burn", "name": "화상", "weight": "가벼운", "polarity": "해로운", "max": 99, "decay": "턴 끝 절반", "rule": { "kind": "지속 피해" } },
+    { "id": "fragile", "name": "취약", "weight": "가벼운", "polarity": "해로운", "max": 20, "decay": "맞을 때 −1", "rule": { "kind": "받는 피해", "perStack": 1 } },
+    { "id": "ward", "name": "수호", "weight": "가벼운", "polarity": "이로운", "max": 99, "decay": "턴 끝 모두", "rule": { "kind": "받는 피해", "perStack": -1 } },
+    { "id": "bind", "name": "속박", "weight": "무거운", "polarity": "해로운", "max": 10, "decay": "턴 끝 −1", "rule": { "kind": "움직임 불가" } },
+    { "id": "fear", "name": "공포", "weight": "가벼운", "polarity": "해로운", "max": 20, "decay": "턴 끝 −1", "rule": { "kind": "공포", "barShakePerStack": 1, "enemyPowerPerStack": -0.05 } },
+    { "id": "focus", "name": "집중", "weight": "가벼운", "polarity": "이로운", "max": 5, "decay": "쓸 때 −1", "rule": { "kind": "좋음 칸", "widthPerStack": 2 } },
+    { "id": "intimidate", "name": "위압", "weight": "가벼운", "polarity": "이로운", "max": 10, "decay": "턴 끝 −1", "rule": { "kind": "위압", "attackerWidthPerStack": -2, "enemyPowerPerStack": -0.05 } },
+    { "id": "erosion", "name": "침식", "weight": "무거운", "polarity": "해로운", "max": 6, "decay": "줄지 않음", "rule": { "kind": "완벽 없음" } },
+    { "id": "morale", "name": "사기", "weight": "가벼운", "polarity": "이로운", "max": 5, "decay": "턴 끝 −1", "rule": { "kind": "주는 위력", "perStack": 0.05 } },
+    { "id": "confidence", "name": "자신감", "weight": "가벼운", "polarity": "이로운", "max": 6, "decay": "줄지 않음", "rule": { "kind": "보통 배율", "addPerStack": 0.05, "max": 1 } },
+    { "id": "haste", "name": "신속", "weight": "가벼운", "polarity": "이로운", "max": 3, "decay": "턴 끝 −1", "rule": { "kind": "쿨다운 더 줄임", "amount": 1 } },
+    { "id": "resolve", "name": "결의", "weight": "무거운", "polarity": "이로운", "max": 3, "decay": "쓰일 때 −1", "rule": { "kind": "버티기", "hpLeft": 1 } },
+    { "id": "recite", "name": "낭독", "weight": "무거운", "polarity": "이로운", "max": 5, "decay": "턴 끝 −1", "rule": { "kind": "면역", "effects": ["fear", "erosion", "intimidate"] } }
   ]
 }

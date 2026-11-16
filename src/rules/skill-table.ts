@@ -92,11 +92,11 @@ export function computeSkillNumbersFromSpec(
     potency: Potency;
     hits: number | "자세";
     range: Range;
-    effects: readonly string[];
+    effects: readonly { id: string }[];
     personality?: number | undefined;
   },
 ): SkillNumbers {
-  const effectWeights = spec.effects.map((id) => {
+  const effectWeights = spec.effects.map(({ id }) => {
     const effect = effects.find((e) => e.id === id);
     if (effect === undefined) throw new SkillTableError(`없는 효과: ${id}`);
     return effect.weight;

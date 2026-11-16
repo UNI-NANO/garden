@@ -1,21 +1,70 @@
 {
   "id": "battle",
   "name": "전투 기준값",
-  "version": 1,
-  "player": { "hpBase": 30, "hpPerHealth": 0.5, "defense": 0, "powerPerMastery": 0.003 },
-  "judgementBar": { "length": 100, "goodBase": 16, "goodPerMastery": 0.12, "perfectShare": 0.25, "normalShareEachSide": 0.6 },
-  "range": { "othersShare": { "단일": 1, "휩쓸기": 0.6, "전체": 0.5 }, "staggerOthersShare": 0.5 },
+  "version": 2,
+  "player": {
+    "hpBase": 30,
+    "hpPerHealth": 0.5,
+    "defense": 0,
+    "powerPerMastery": 0.003
+  },
+  "judgementBar": {
+    "length": 100,
+    "goodBase": 16,
+    "goodPerMastery": 0.12,
+    "perfectShare": 0.25,
+    "normalShareEachSide": 0.6
+  },
+  "range": {
+    "othersShare": {
+      "단일": 1,
+      "휩쓸기": 0.6,
+      "전체": 0.5
+    },
+    "staggerOthersShare": 0.5
+  },
   "rangedMultiplier": 0.85,
-  "resist": { "강함": 0.5, "보통": 1, "약함": 1.5 },
+  "resist": {
+    "강함": 0.5,
+    "보통": 1,
+    "약함": 1.5
+  },
   "stagger": {
-    "typeMultiplier": { "파열": 1.2, "관통": 1.0, "자상": 0.8 },
+    "typeMultiplier": {
+      "파열": 1.2,
+      "관통": 1.0,
+      "자상": 0.8
+    },
     "damageTakenMultiplier": 1.5,
     "parryMultiplier": 2
   },
-  "guard": { "damageMultiplier": 0.5, "energy": 1 },
-  "dodge": { "energy": 1 },
-  "move": { "energy": 1 },
-  "enemy": { "hpBase": 16, "hpPerTier": 12, "eliteHpMultiplier": 1.8, "staggerShare": 0.45, "powerBase": 4, "powerPerTier": 3, "elitePowerAdd": 4 },
-  "injury": { "severeHitShare": 0.3 },
-  "auto": { "guardBelowHpShare": 0.3 }
+  "guard": {
+    "damageMultiplier": 0.5,
+    "energy": 1
+  },
+  "dodge": {
+    "energy": 1
+  },
+  "move": {
+    "energy": 1
+  },
+  "enemy": {
+    "hpBase": 16,
+    "hpPerTier": 12,
+    "eliteHpMultiplier": 1.8,
+    "staggerShare": 0.45,
+    "powerBase": 4,
+    "powerPerTier": 3,
+    "elitePowerAdd": 4
+  },
+  "injury": {
+    "severeHitShare": 0.3
+  },
+  "chain": {
+    "linkBonus": 0.1,
+    "finishBonus": 0.25
+  },
+  "auto": {
+    "guardBelowHpShare": 0.3
+  }
 }

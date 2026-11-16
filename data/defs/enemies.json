@@ -1,7 +1,7 @@
 {
   "id": "enemies",
   "name": "적",
-  "version": 1,
+  "version": 2,
   "enemies": [
     {
       "id": "wolf",
@@ -10,12 +10,40 @@
       "tier": 1,
       "rank": "일반",
       "row": "앞줄",
-      "resist": { "자상": "약함", "관통": "보통", "파열": "보통" },
+      "resist": {
+        "자상": "약함",
+        "관통": "보통",
+        "파열": "보통"
+      },
       "defense": 0,
       "targeting": "체력이 가장 낮은 쪽",
       "actions": [
-        { "name": "물어뜯기", "damageType": "자상", "reach": "근접", "range": "단일", "weight": 2 },
-        { "name": "덮치기", "damageType": "파열", "reach": "근접", "range": "단일", "weight": 1 }
+        {
+          "name": "물어뜯기",
+          "damageType": "자상",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2,
+          "effects": [
+            {
+              "id": "bleed",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "덮치기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "bind",
+              "amount": 1
+            }
+          ]
+        }
       ]
     },
     {
@@ -25,12 +53,34 @@
       "tier": 2,
       "rank": "일반",
       "row": "앞줄",
-      "resist": { "자상": "강함", "관통": "보통", "파열": "약함" },
+      "resist": {
+        "자상": "강함",
+        "관통": "보통",
+        "파열": "약함"
+      },
       "defense": 2,
       "targeting": "앞줄",
       "actions": [
-        { "name": "창 찌르기", "damageType": "관통", "reach": "근접", "range": "단일", "weight": 1 },
-        { "name": "방패 치기", "damageType": "파열", "reach": "근접", "range": "단일", "weight": 1 }
+        {
+          "name": "창 찌르기",
+          "damageType": "관통",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "fragile",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "방패 치기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1
+        }
       ]
     },
     {
@@ -40,10 +90,22 @@
       "tier": 2,
       "rank": "일반",
       "row": "뒷줄",
-      "resist": { "자상": "강함", "관통": "보통", "파열": "약함" },
+      "resist": {
+        "자상": "강함",
+        "관통": "보통",
+        "파열": "약함"
+      },
       "defense": 2,
       "targeting": "앞줄",
-      "actions": [{ "name": "석궁 쏘기", "damageType": "관통", "reach": "원거리", "range": "단일", "weight": 1 }]
+      "actions": [
+        {
+          "name": "석궁 쏘기",
+          "damageType": "관통",
+          "reach": "원거리",
+          "range": "단일",
+          "weight": 1
+        }
+      ]
     }
   ]
 }

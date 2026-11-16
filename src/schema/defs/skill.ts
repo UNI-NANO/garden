@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DefIdSchema } from "./common";
+import { AppliedEffectSchema } from "./effect";
 import { PotencySchema, RangeSchema, TierSchema } from "./skill-table";
 
 export const RoleSchema = z.enum(["여는", "잇는", "끝내는"]);
@@ -18,8 +18,8 @@ export const SkillSpecSchema = z.strictObject({
   range: RangeSchema,
   role: RoleSchema,
   damageType: DamageTypeSchema,
-  /** 붙은 효과의 ID. 같은 효과가 예산을 두 번 차지하면 두 번 적는다 */
-  effects: z.array(DefIdSchema),
+  /** 붙는 효과. 한 줄이 효과 예산을 한 번 차지한다 */
+  effects: z.array(AppliedEffectSchema),
   /** 개성 보정: 위력에 곱하는 배율. 기준을 일부러 깰 때만 */
   personality: z.number().positive().optional(),
 });

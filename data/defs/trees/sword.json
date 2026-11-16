@@ -1,7 +1,7 @@
 {
   "id": "sword",
   "name": "검술",
-  "version": 2,
+  "version": 3,
   "description": "한손 장검. 가장 기본이 되는 균형형 나무로, 넓게 베기·받아치기·연계·진형 다루기를 고루 쓴다. 피해는 자상이 기본이고, 관통은 돌진 베기의 찌르기 루트와 밀어붙이기 택1에서만. 가문 갈래 자리는 비어 있다.",
   "basicAttack": {
     "id": "sword.cut",
@@ -162,7 +162,14 @@
         "role": "잇는",
         "damageType": "자상",
         "effects": [
-          "bleed"
+          {
+            "id": "bleed",
+            "amount": 1,
+            "hits": [
+              1,
+              2
+            ]
+          }
         ]
       }
     },

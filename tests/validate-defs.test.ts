@@ -78,7 +78,7 @@ describe("스키마(모양) 오류", () => {
 describe("연결 오류", () => {
   it("없는 효과를 가리킴", () => {
     expect(
-      broken((t) => void ((find(t, "t.b1")["skill"] as { effects: string[] }).effects = ["nope"])),
+      broken((t) => void ((find(t, "t.b1")["skill"] as { effects: unknown[] }).effects = [{ id: "nope", amount: 1 }])),
     ).toEqual(["t.b1: 없는 효과를 가리킨다: nope"]);
   });
   it("ID 중복 (한 나무 안, 나무 사이)", () => {
@@ -309,5 +309,25 @@ describe("전투 기준값과 적", () => {
     const bad = fakeEnemies();
     bad.enemies[0]!.tier = 9;
     expect(messages(raw(undefined, { enemies: bad })).length).toBeGreaterThan(0);
+  });
+});
+
+describe("효과 칸", () => {
+  it("타수를 넘는 타 번호, 없는 효과를 막는 면역, 적의 없는 효과를 잡는다", () => {
+    expect(
+      broken((t) => void ((find(t, "t.b1")["skill"] as { effects: unknown[] }).effects = [{ id: "bleed", amount: 1, hits: [2] }])),
+    ).toEqual(["t.b1: 2번째 타에 효과를 붙였는데 1타 기술이다"]);
+    const effects = fakeEffects();
+    const recite = effects.effects.find((e) => e.id === "recite")!;
+    (recite.rule as { effects: string[] }).effects = ["nope"];
+    expect(messages(raw(undefined, { effects }))).toEqual(["recite: 없는 효과를 막는다: nope"]);
+    const enemies = fakeEnemies();
+    (enemies.enemies[0] as { immune?: string[] }).immune = ["nope"];
+    expect(messages(raw(undefined, { enemies }))).toEqual(["wolf: 없는 효과를 가리킨다: nope"]);
+  });
+  it("효과 카드의 모양이 틀리면 잡는다", () => {
+    const effects = fakeEffects();
+    (effects.effects[0] as { decay: string }).decay = "가끔";
+    expect(messages(raw(undefined, { effects })).length).toBeGreaterThan(0);
   });
 });
