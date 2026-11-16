@@ -13,7 +13,10 @@ describe("전투 숫자", () => {
     expect(masteryMultiplier(rules, 100)).toBeCloseTo(1.3, 10);
   });
   it("판정 칸: 좋음 폭 = 16 + 숙련도 × 0.12, 완벽은 그 25%, 보통은 양옆 60%", () => {
-    expect(judgementWidths(rules, 0)).toEqual({ good: 16, perfect: 4, normalEachSide: 9.6 });
+    expect(judgementWidths(rules, 0)).toEqual({ good: 16, perfect: 4, normalEachSide: 9.6, shake: 0 });
+    // 효과: 집중 2중첩(+4), 공포 3중첩, 침식
+    expect(judgementWidths(rules, 0, { goodWidth: 4, shake: 3, noPerfect: true })).toEqual({ good: 20, perfect: 0, normalEachSide: 12, shake: 3 });
+    expect(judgementWidths(rules, 0, { goodWidth: -99, shake: 0, noPerfect: false }).good).toBe(0);
     const w = judgementWidths(rules, 100);
     expect(w.good).toBeCloseTo(28, 10);
     expect(w.perfect).toBeCloseTo(7, 10);

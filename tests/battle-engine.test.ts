@@ -167,18 +167,20 @@ describe("합", () => {
 });
 
 describe("흐트러짐", () => {
-  it("게이지가 0이 되면 다음 턴에 움직이지 못하고 피해를 1.5배 받으며, 그 턴 끝에 다시 찬다", () => {
+  it("게이지가 0이 되면 그 턴의 공격이 끊기고, 다음 턴에도 움직이지 못하며, 피해를 1.5배 받는다", () => {
     let s = start([wolf("w1", 0, { overrides: { hp: 999, stagger: 13 } })]);
     // 1턴: 돌진 베기(12.47) → 남은 게이지 0.53
     s = playTurn(s, { actions: [use("sword.charge", "w1")], defenses: {} }, ctx);
     expect(foe(s).brokenOnTurn).toBeNull();
     expect(foe(s).stagger).toBeCloseTo(13 - 14.3 * 1.09 * 0.8, 6);
-    // 2턴: 베기로 무너뜨린다. 무너진 턴의 의도는 그대로 실행된다
+    // 2턴: 베기로 무너뜨린다. 무너지는 순간 이번 턴에 하려던 공격도 끊긴다
+    expect(s.intents[0]?.cancelled).toBe(false);
     s = resolveAllies(s, [use("sword.cut", "w1")], ctx);
     expect(foe(s)).toMatchObject({ brokenOnTurn: 2, stagger: 0 });
+    expect(s.intents[0]?.cancelled).toBe(true);
     const hpBefore = ally(s).hp;
     s = resolveEnemies(s, {}, ctx);
-    expect(ally(s).hp).toBe(hpBefore - 7);
+    expect(ally(s).hp).toBe(hpBefore);
     // 3턴: 의도가 없고, 받는 피해 1.5배 (9.81 × 1.5 = 14.7 → 15)
     expect(s.turn).toBe(3);
     expect(s.intents).toEqual([]);
@@ -448,5 +450,235 @@ describe("한 판을 끝까지 돌리기", () => {
     const { simulateBattle } = await import("../src/rules/battle/simulate");
     const wall = wolf("w1", 0, { overrides: { hp: 99999, power: 0 } });
     expect(simulateBattle(setup([wall]), ctx, "안 누름", 5)).toMatchObject({ outcome: "끝나지 않음", turns: 5 });
+  });
+});
+
+describe("효과", () => {
+  const dummy = (over = {}) => wolf("w1", 0, { overrides: { hp: 999, power: 0, stagger: 9999 }, ...over });
+  const plain = (name: string, effects: { id: string; amount: number }[] = []) => {
+    const def = enemyDef("wolf", { overrides: { hp: 999, power: 7, stagger: 9999 } });
+    def.actions = [{ name, damageType: "파열", reach: "근접", range: "단일", weight: 1, effects }];
+    return { id: "w1", def, slot: 0 };
+  };
+
+  it("연속 베기: 앞 두 타에 출혈 1씩. 턴 끝에 중첩만큼 깎이고 하나 줄어든다", () => {
+    let s = start([dummy()]);
+    s = resolveAllies(s, [use("sword.combo", "w1")], ctx);
+    expect(foe(s).effects).toEqual({ bleed: 2 });
+    const before = foe(s).hp;
+    s = resolveEnemies(s, {}, ctx);
+    expect(before - foe(s).hp).toBe(2);
+    expect(foe(s).effects).toEqual({ bleed: 1 });
+    s = wait(s, 1);
+    expect(foe(s).effects).toEqual({});
+    expect(before - foe(s).hp).toBe(3);
+  });
+  it("빗나간 타에는 효과가 붙지 않는다", () => {
+    const s = resolveAllies(start([dummy()]), [use("sword.combo", "w1", { judgements: ["빗나감", "좋음", "좋음"] })], ctx);
+    expect(foe(s).effects).toEqual({ bleed: 1 });
+  });
+  it("지속 피해로 적이 쓰러지면 승리한다", () => {
+    let s = start([wolf("w1", 0, { overrides: { hp: 8, power: 0 } })]);
+    // 연속 베기: 2.35 × 1.5 → 4, 4 … 세 타에 8이 넘으므로 체력을 넉넉히 다시 잡는다
+    foe(s).hp = 20;
+    s = playTurn(s, { actions: [use("sword.combo", "w1")], defenses: {} }, ctx);
+    foe(s).hp = 1;
+    s = wait(s, 1);
+    expect(s.outcome).toBe("승리");
+    expect(foe(s).down).toBe(true);
+  });
+  it("적의 공격이 효과를 붙인다. 막아도 붙고, 받아치면 붙지 않는다", () => {
+    const bleeder = () => start([plain("물어뜯기", [{ id: "bleed", amount: 2 }])]);
+    let s = resolveEnemies(resolveAllies(bleeder(), [rest], ctx), {}, ctx);
+    // 7을 맞고, 턴 끝에 출혈 2
+    expect(ally(s).hp).toBe(55 - 7 - 2);
+    expect(ally(s).effects).toEqual({ bleed: 1 });
+    s = resolveEnemies(resolveAllies(bleeder(), [rest], ctx), { "w1>hero": "막기 성공" }, ctx);
+    expect(ally(s).hp).toBe(55 - 4 - 2);
+    s = resolveEnemies(resolveAllies(bleeder(), [rest], ctx), { "w1>hero": "받아치기 성공" }, ctx);
+    expect(ally(s)).toMatchObject({ hp: 55, effects: {} });
+  });
+  it("지속 피해로 쓰러진 플레이어는 경상", () => {
+    let s = start([plain("할퀴기")], [hero({ health: 0 })]);
+    ally(s).hp = 2;
+    ally(s).effects = { poison: 5 };
+    foe(s).power = 0;
+    s.intents = [];
+    s = playTurn(s, { actions: [rest], defenses: {} }, ctx);
+    expect(s.outcome).toBe("패배");
+    expect(ally(s)).toMatchObject({ hp: 0, injury: "경상" });
+  });
+  it("취약: 맞을 때마다 피해 +1(중첩당), 맞을 때마다 하나 줄어든다", () => {
+    let s = start([dummy()]);
+    foe(s).effects = { fragile: 2 };
+    s = resolveAllies(s, [use("sword.combo", "w1")], ctx);
+    // 한 타 2.35 × 1.5 = 3.5 → 4. 첫 타 +2, 둘째 타 +1, 셋째 타 +0
+    expect(999 - foe(s).hp).toBe(4 + 2 + (4 + 1) + 4);
+    expect(foe(s).effects["fragile"]).toBeUndefined();
+  });
+  it("수호: 받는 피해를 줄이되 맞으면 최소 1, 턴 끝에 모두 사라진다", () => {
+    let s = start([plain("할퀴기")]);
+    ally(s).effects = { ward: 3 };
+    s = playTurn(s, { actions: [rest], defenses: {} }, ctx);
+    expect(ally(s)).toMatchObject({ hp: 55 - 4, effects: {} });
+    let big = start([plain("할퀴기")]);
+    ally(big).effects = { ward: 50 };
+    big = playTurn(big, { actions: [rest], defenses: {} }, ctx);
+    expect(ally(big).hp).toBe(54);
+  });
+  it("속박: 자리를 옮기거나 도망치거나 피할 수 없다", () => {
+    const s = start([wolf()]);
+    ally(s).effects = { bind: 1 };
+    expect(() => resolveAllies(s, [{ unitId: "hero", type: "자리 옮기기", slot: 4 }], ctx)).toThrow(/묶여서/);
+    expect(() => resolveAllies(s, [{ unitId: "hero", type: "도망" }], ctx)).toThrow(/묶여서/);
+    expect(() => resolveAllies(s, [use("sword.cut", "w1")], ctx)).not.toThrow();
+    const big = enemyDef("wolf");
+    big.actions = [{ name: "큰 공격", damageType: "파열", reach: "근접", range: "단일", big: true, weight: 1 }];
+    let bound = start([{ id: "w1", def: big, slot: 0 }]);
+    ally(bound).effects = { bind: 1 };
+    bound = playTurn(bound, { actions: [rest], defenses: { "w1>hero": "피하기 성공" } }, ctx);
+    expect(ally(bound).hp).toBe(48);
+    // 턴 끝에 풀린다
+    expect(ally(bound).effects).toEqual({});
+  });
+  it("사기: 주는 위력 +5%(중첩당). 공포·위압: 적의 위력이 준다", () => {
+    const s = start([dummy()]);
+    ally(s).effects = { morale: 2 };
+    // 6.54 × 1.1 × 1.5 = 10.79 → 11
+    expect(999 - foe(resolveAllies(s, [use("sword.cut", "w1")], ctx)).hp).toBe(11);
+    let feared = start([plain("할퀴기")]);
+    foe(feared).effects = { fear: 4 };
+    feared = playTurn(feared, { actions: [rest], defenses: {} }, ctx);
+    // 7 × 0.8 = 5.6 → 6
+    expect(ally(feared).hp).toBe(49);
+    let awed = start([plain("할퀴기")]);
+    ally(awed).effects = { intimidate: 2 };
+    awed = playTurn(awed, { actions: [rest], defenses: {} }, ctx);
+    // 7 × 0.9 = 6.3 → 6
+    expect(ally(awed).hp).toBe(49);
+  });
+  it("침식: 완벽으로 쳐도 좋음. 자신감: 보통의 배율이 오른다", () => {
+    const hit = (effects: Record<string, number>, judgement: "보통" | "완벽") => {
+      const s = start([dummy()]);
+      ally(s).effects = effects;
+      return 999 - foe(resolveAllies(s, [use("sword.cut", "w1", { judgements: [judgement] })], ctx)).hp;
+    };
+    expect([hit({}, "완벽"), hit({ erosion: 1 }, "완벽")]).toEqual([13, 10]);
+    // 보통 0.7 → 6.54 × 0.7 × 1.5 = 6.87 → 7, 자신감 6이면 좋음과 같다
+    expect([hit({}, "보통"), hit({ confidence: 6 }, "보통")]).toEqual([7, 10]);
+  });
+  it("집중은 기술을 쓸 때마다 하나 줄어든다", () => {
+    let s = start([dummy()]);
+    ally(s).effects = { focus: 2 };
+    s = playTurn(s, { actions: [use("sword.cut", "w1")], defenses: {} }, ctx);
+    expect(ally(s).effects).toEqual({ focus: 1 });
+    expect(ally(wait(s, 1)).effects).toEqual({ focus: 1 });
+  });
+  it("신속: 턴 끝에 쿨다운이 1 더 줄어든다", () => {
+    let s = start([dummy()]);
+    ally(s).effects = { haste: 1 };
+    s = playTurn(s, { actions: [use("sword.charge", "w1")], defenses: {} }, ctx);
+    // 쿨다운 3: 보통은 턴 끝에 3이 남지만 신속으로 2
+    expect(ally(s).cooldowns["sword.charge"]).toBe(2);
+    expect(ally(s).effects).toEqual({});
+  });
+  it("결의: 쓰러질 한 방을 한 번 버텨 체력 1로 남는다", () => {
+    let s = start([plain("할퀴기")], [hero({ health: 0 })]);
+    foe(s).power = 99;
+    s.intents[0]!.power = 99;
+    ally(s).effects = { resolve: 1 };
+    s = playTurn(s, { actions: [rest], defenses: {} }, ctx);
+    expect(ally(s)).toMatchObject({ hp: 1, down: false, effects: {} });
+    expect(s.outcome).toBeUndefined();
+    s = playTurn(s, { actions: [rest], defenses: {} }, ctx);
+    expect(s.outcome).toBe("패배");
+  });
+  it("면역인 적에게는 효과가 붙지 않는다", () => {
+    const s = resolveAllies(start([dummy({ immune: ["bleed"] })]), [use("sword.combo", "w1")], ctx);
+    expect(foe(s).effects).toEqual({});
+  });
+});
+
+describe("연계", () => {
+  const dummy = () => wolf("w1", 0, { overrides: { hp: 9999, power: 0, stagger: 99999 } });
+  /** 그 턴에 준 피해 */
+  const dealt = (s: BattleState, action: AllyAction) => {
+    const before = foe(s).hp;
+    const after = resolveAllies(s, [action], ctx);
+    return { damage: before - foe(after).hp, next: resolveEnemies(after, {}, ctx) };
+  };
+  const bonusOf = (s: BattleState) => s.events.filter((e) => e.type === "연계").map((e) => (e.type === "연계" ? e.bonus : 0));
+
+  it("여는 → 잇는 → 끝내는: 잇는 기술 +10%, 끝내는 기술 +25%", () => {
+    let s = start([dummy()]);
+    s = dealt(s, use("sword.charge", "w1")).next;
+    expect(ally(s).chain).toEqual({ last: "여는", turn: 1 });
+    const link = dealt(s, use("sword.combo", "w1"));
+    expect(ally(link.next).chain).toEqual({ last: "잇는", turn: 2 });
+    // 검풍 13.5 × 1.09 × 1.25 × 1.5 = 27.59 → 28 (연계가 없으면 22)
+    const finish = dealt(link.next, use("sword.gale", "w1"));
+    expect(finish.damage).toBe(28);
+    expect(ally(finish.next).chain).toBeUndefined();
+    expect(bonusOf(finish.next)).toEqual([0.1, 0.25]);
+  });
+  it("여는 기술 바로 다음의 끝내는 기술은 +10%", () => {
+    let s = start([dummy()]);
+    s = dealt(s, use("sword.charge", "w1")).next;
+    // 13.5 × 1.09 × 1.1 × 1.5 = 24.28 → 24
+    expect(dealt(s, use("sword.gale", "w1")).damage).toBe(24);
+  });
+  it("잇는 → 잇는은 연계를 유지한다", () => {
+    let s = start([dummy()]);
+    s = dealt(s, use("sword.cut", "w1")).next;
+    s = dealt(s, use("sword.combo", "w1")).next;
+    s = wait(s, 0);
+    // 연속 베기는 쿨다운 1이라 한 턴 건너야 하므로, 쿨다운을 지우고 바로 이어 본다
+    ally(s).cooldowns = {};
+    s = dealt(s, use("sword.combo", "w1")).next;
+    expect(ally(s).chain).toEqual({ last: "잇는", turn: 3 });
+    expect(bonusOf(s)).toEqual([0.1, 0.1]);
+  });
+  it("연계 없이 쓴 잇는·끝내는 기술에는 보너스가 없다", () => {
+    const s = start([dummy()]);
+    expect(dealt(s, use("sword.gale", "w1")).damage).toBe(22);
+    const combo = dealt(start([dummy()]), use("sword.combo", "w1"));
+    expect(ally(combo.next).chain).toBeUndefined();
+    expect(bonusOf(combo.next)).toEqual([]);
+  });
+  it("한 턴을 쉬거나 자리를 옮기면 끊긴다", () => {
+    let s = start([dummy()]);
+    s = dealt(s, use("sword.charge", "w1")).next;
+    s = wait(s, 1);
+    expect(dealt(s, use("sword.gale", "w1")).damage).toBe(22);
+    let moved = start([dummy()]);
+    moved = dealt(moved, use("sword.charge", "w1")).next;
+    moved = playTurn(moved, { actions: [{ unitId: "hero", type: "자리 옮기기", slot: 1 }], defenses: {} }, ctx);
+    expect(dealt(moved, use("sword.gale", "w1")).damage).toBe(22);
+  });
+  it("모든 타가 빗나가면 끊긴다", () => {
+    let s = start([dummy()]);
+    s = dealt(s, use("sword.charge", "w1", { judgements: ["빗나감"] })).next;
+    expect(ally(s).chain).toBeUndefined();
+    expect(dealt(s, use("sword.gale", "w1")).damage).toBe(22);
+  });
+  it("합에서 밀려 기술이 취소되면 끊긴다", () => {
+    let s = start([wolf("w1", 0, { overrides: { hp: 9999, power: 50 } })]);
+    s = playTurn(s, { actions: [use("sword.charge", "w1", { clash: true })], defenses: { "w1>hero": "막기 성공" } }, ctx);
+    expect(ally(s).chain).toBeUndefined();
+  });
+  it("자세 기술도 여는 기술이라 연계를 시작한다", () => {
+    let s = start([dummy()]);
+    s = playTurn(s, { actions: [use("sword.riposte", "w1", { judgements: [] })], defenses: {} }, ctx);
+    expect(ally(s).chain).toEqual({ last: "여는", turn: 1 });
+  });
+  it("스스로 고르는 규칙은 쓸 수 있는 연계를 먼저 고른다", () => {
+    let s = start([dummy()]);
+    expect(autoAllyActions(s, ctx)[0]).toMatchObject({ skillId: "sword.charge" });
+    s = playTurn(s, { actions: autoAllyActions(s, ctx), defenses: {} }, ctx);
+    // 연계를 잇는 기술(연속 베기 +10%, 검풍 +10%) 가운데 센 쪽
+    expect(autoAllyActions(s, ctx)[0]).toMatchObject({ skillId: "sword.gale" });
+    s = playTurn(s, { actions: autoAllyActions(s, ctx), defenses: {} }, ctx);
+    // 연계가 끝났고 센 기술은 쿨다운이라, 다시 여는 기술부터
+    expect(autoAllyActions(s, ctx)[0]).toMatchObject({ skillId: "sword.combo" });
   });
 });

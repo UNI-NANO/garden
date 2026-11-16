@@ -4,6 +4,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { DefensePolicy } from "../src/rules/battle/auto";
+import { effectDefs } from "../src/rules/battle/effects";
 import type { AllySetup, BattleSetup } from "../src/rules/battle/engine";
 import { enemyNumbers, playerMaxHp } from "../src/rules/battle/numbers";
 import { treeBattleSkills } from "../src/rules/battle/setup";
@@ -30,7 +31,7 @@ if (!checked.ok) {
   process.exit(1);
 }
 const defs = checked.defs;
-const ctx = { rules: defs.battle, table: defs.skillTable };
+const ctx = { rules: defs.battle, table: defs.skillTable, effects: effectDefs(defs.effects.effects) };
 const sword = defs.trees.find((t) => t.id === "sword");
 if (!sword) throw new Error("검술 나무가 없다");
 const skills = treeBattleSkills(defs.skillTable, defs.effects.effects, sword, "근접");
@@ -78,7 +79,7 @@ const policies: DefensePolicy[] = ["안 누름", "자동", "늘 막기"];
 
 console.log(`\n조건: 검술 숙련도 ${MASTERY} · 건강 ${HEALTH} (체력 ${playerMaxHp(defs.battle, HEALTH)}), 판정은 모두 좋음`);
 console.log(`플레이어 기술: ${[player.basicAttack, ...player.skills].map((s) => `${s.name}(위력 ${+(s.baseHitPower * s.hitCount).toFixed(2)}, 쿨다운 ${s.cooldown}, 기력 ${s.energy})`).join(", ")}`);
-console.log("동료: 플레이어와 같은 체력·숙련도, 베기만 씀. 연속 베기의 출혈은 아직 적용되지 않음. 합은 이길 수 있을 때만 건다.");
+console.log("동료: 플레이어와 같은 체력·숙련도, 베기만 씀. 쓸 수 있는 연계를 먼저 고르고, 합은 이길 수 있을 때만 건다.");
 console.log(
   `적: ${["wolf", "deserter.shield", "deserter.crossbow"]
     .map((id) => {

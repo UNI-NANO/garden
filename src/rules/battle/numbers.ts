@@ -12,14 +12,22 @@ export function masteryMultiplier(rules: BattleRules, mastery: number): number {
   return 1 + mastery * rules.player.powerPerMastery;
 }
 
-/** 판정 칸의 폭 (바 길이 기준). 좋음 칸 안에 완벽 칸이 있고, 좋음 칸 양옆이 보통 칸이다 */
-export function judgementWidths(rules: BattleRules, mastery: number): { perfect: number; good: number; normalEachSide: number } {
+/**
+ * 판정 칸의 폭 (바 길이 기준). 좋음 칸 안에 완벽 칸이 있고, 좋음 칸 양옆이 보통 칸이다.
+ * `modifiers`는 효과가 바꾸는 값(집중·위압·공포·침식)이다. 화면이 바를 그릴 때 쓴다.
+ */
+export function judgementWidths(
+  rules: BattleRules,
+  mastery: number,
+  modifiers: { goodWidth: number; shake: number; noPerfect: boolean } = { goodWidth: 0, shake: 0, noPerfect: false },
+): { perfect: number; good: number; normalEachSide: number; shake: number } {
   const bar = rules.judgementBar;
-  const good = Math.min(bar.length, bar.goodBase + mastery * bar.goodPerMastery);
+  const good = Math.min(bar.length, Math.max(0, bar.goodBase + mastery * bar.goodPerMastery + modifiers.goodWidth));
   return {
     good,
-    perfect: good * bar.perfectShare,
+    perfect: modifiers.noPerfect ? 0 : good * bar.perfectShare,
     normalEachSide: Math.min((bar.length - good) / 2, good * bar.normalShareEachSide),
+    shake: modifiers.shake,
   };
 }
 

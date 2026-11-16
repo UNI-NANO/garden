@@ -26,6 +26,8 @@ export function battleSkillOf(
     damageType: card.skill.damageType,
     reach,
     stance: card.skill.hits === "자세",
+    role: card.skill.role,
+    effects: [...card.skill.effects],
   };
 }
 
