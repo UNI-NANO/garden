@@ -235,6 +235,15 @@ describe("나무 모양 오류", () => {
       broken((t) => void ((t["basicAttack"] as { skill: { tier: string } }).skill.tier = "1단계")),
     ).toEqual(["t.atk: 기본 공격의 단계는 「기본 공격」이어야 한다"]);
   });
+  it("궁극기의 기술 항목", () => {
+    const ultimateSkill = (t: FakeTree, tier: string) => ({ ...(find(t, "t.b1")["skill"] as object), tier });
+    expect(broken((t) => void (find(t, "t.b1.a1.u")["skill"] = ultimateSkill(t, "궁극기")))).toEqual([]);
+    expect(broken((t) => void (find(t, "t.b1.a1.u")["skill"] = ultimateSkill(t, "3단계")))).toEqual(["t.b1.a1.u: 궁극기의 단계는 궁극기여야 한다 (지금 3단계)"]);
+    expect(broken((t) => void (find(t, "t.b1.a1.u")["mods"] = [{ kind: "방어 무시" }]))).toEqual([
+      "t.b1.a1.u: 궁극기에 규칙(mods)을 적으려면 기술 항목(skill)도 있어야 한다",
+    ]);
+    expect(broken((t) => void (find(t, "t.b1.s1")["skill"] = ultimateSkill(t, "궁극기")))).toContain("t.b1.s1: skill은 기본기와 궁극기에만 적는다");
+  });
   it("뿌리 갈래 수와 칸 수", () => {
     expect(broken((t) => void t.roots.pop())).toEqual(["roots: 뿌리는 4갈래여야 한다 (지금 3)"]);
     expect(broken((t) => void t.roots[0]?.slots.pop())).toEqual(["t.r1: 뿌리 한 갈래는 4칸이어야 한다 (지금 3)"]);

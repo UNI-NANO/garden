@@ -284,7 +284,7 @@ function validateLinks(
 
 /** 숫자 자리에 말을 적을 수 있는 규칙들 */
 /** 말이 들어갈 수 있는 항목이 아닌 것: 종류, 효과 ID, 조건, 타, 피해 종류 */
-const NOT_AMOUNT_KEYS = new Set(["kind", "effect", "when", "hit", "damageType"]);
+const NOT_AMOUNT_KEYS = new Set(["kind", "effect", "when", "hit", "damageType", "row"]);
 
 function validateNodes(
   file: string,
@@ -314,7 +314,13 @@ function validateNodes(
           add(node.id, `기본기의 단계는 1~3단계여야 한다 (지금 ${node.skill.tier})`);
         }
       }
-    } else if (node.skill !== undefined) add(node.id, "skill은 기본기에만 적는다");
+    } else if (node.kind === "궁극기") {
+      // 궁극기의 기술 항목은 채워 가는 중이라 없어도 되지만, 규칙만 있고 기술 항목이 없으면 안 된다
+      if (node.skill !== undefined) {
+        checkSkill(node.id, node.skill);
+        if (node.skill.tier !== "궁극기") add(node.id, `궁극기의 단계는 궁극기여야 한다 (지금 ${node.skill.tier})`);
+      } else if (node.mods !== undefined) add(node.id, "궁극기에 규칙(mods)을 적으려면 기술 항목(skill)도 있어야 한다");
+    } else if (node.skill !== undefined) add(node.id, "skill은 기본기와 궁극기에만 적는다");
     if (isFork) {
       if (node.hidden !== true && node.axis === undefined) add(node.id, "갈림길·끝갈래에는 axis가 있어야 한다");
       if (node.axis !== undefined && !table.tree.axes.includes(node.axis)) add(node.id, `기준표에 없는 축: ${node.axis}`);

@@ -42,6 +42,44 @@ export function buildSkill(
   const basic = tree.nodes.find((node) => node.id === basicId && node.kind === "기본기");
   if (!basic?.skill) throw new BuildSkillError(`기본기가 아니다: ${basicId}`);
   const skill: BattleSkill = battleSkillOf(table, effects, { id: basic.id, name: basic.name, skill: basic.skill }, reach);
+  const mods: Mod[] = [];
+  // 나무의 칸은 앞 칸이 먼저 오도록 적혀 있다. 갈림길은 한쪽만 찍을 수 있으므로 찍은 칸들은 한 줄을 이룬다
+  for (const node of tree.nodes) {
+    if (node.id === basicId || !node.id.startsWith(`${basicId}.`) || !state.picked.has(node.id) || node.kind === "궁극기") continue;
+    if (node.overrides?.role) skill.role = node.overrides.role;
+    if (node.overrides?.damageType) skill.damageType = node.overrides.damageType;
+    if (node.overrides?.range) skill.range = node.overrides.range;
+    mods.push(...(node.choice ? (node.choice[state.choices[node.id] ?? 0].mods ?? []) : (node.mods ?? [])));
+  }
+  return applyMods(skill, mods, words);
+}
+
+/**
+ * 궁극기 하나를 전투용 기술로 만든다. 궁극기 칸과 그 앞의 칸을 기본기까지 모두 찍었어야 한다.
+ * 루트의 갈래·보완 칸은 이어받지 않고, 궁극기 칸의 기술 항목과 규칙만 쓴다.
+ */
+export function buildUltimate(
+  table: SkillTable,
+  effects: readonly Effect[],
+  words: Readonly<Record<string, number>>,
+  tree: Tree,
+  ultimateId: string,
+  picked: ReadonlySet<string>,
+  reach: Reach,
+): BattleSkill {
+  const byId = new Map(tree.nodes.map((node) => [node.id, node]));
+  const node = byId.get(ultimateId);
+  if (node?.kind !== "궁극기") throw new BuildSkillError(`궁극기가 아니다: ${ultimateId}`);
+  if (!node.skill) throw new BuildSkillError(`${node.name}: 아직 기술 항목이 없는 궁극기`);
+  for (let at: string | null = node.id; at !== null; at = byId.get(at)?.prev ?? null) {
+    if (!picked.has(at)) throw new BuildSkillError(`${node.name}: 루트를 끝까지 찍지 않았다 (${at})`);
+  }
+  const skill = battleSkillOf(table, effects, { id: node.id, name: node.name, skill: node.skill }, reach);
+  return applyMods(skill, node.mods ?? [], words);
+}
+
+/** 규칙들을 차례로 적용한다. 위력 = 기본 × (1 + 「위력 +」의 합) × 「위력 ×」의 곱 */
+function applyMods(skill: BattleSkill, mods: readonly Mod[], words: Readonly<Record<string, number>>): BattleSkill {
   const amount = (value: Amount) => resolveAmount(words, value);
 
   let powerPct = 0;
@@ -105,6 +143,28 @@ export function buildSkill(
       case "생포":
         skill.capture ??= { rewardBonus: 0 };
         return;
+      case "생포 체력":
+        skill.capture ??= { rewardBonus: 0 };
+        skill.captureBelow = amount(mod.amount);
+        return;
+      case "흐트러뜨리기":
+        skill.breakOnHit = mod.when !== undefined ? { when: mod.when } : {};
+        return;
+      case "흐트러짐 절반":
+        skill.halveStagger = true;
+        return;
+      case "방어 무시":
+        skill.ignoreDefense = true;
+        return;
+      case "빗나가면 나에게 효과":
+        (skill.missSelfEffects ??= []).push(mod.effect);
+        return;
+      case "고를 수 있는 대상":
+        skill.targetWhen = mod.when;
+        return;
+      case "줄 전체":
+        skill.wholeRow = mod.row;
+        return;
       case "생포 보상":
         if (!skill.capture) throw new BuildSkillError(`${skill.name}: 생포가 없는데 생포 보상을 바꾸려 한다`);
         skill.capture.rewardBonus += amount(mod.amount);
@@ -126,7 +186,11 @@ export function buildSkill(
         (skill.effectCapBonus ??= {})[mod.effect] = (skill.effectCapBonus[mod.effect] ?? 0) + amount(mod.add);
         return;
       case "터뜨리기":
-        skill.burst = { effect: mod.effect, perStackPct: 0, keepShare: 0, toStagger: false, perfectMultiplier: 1, loseOnMiss: false, ...skill.burst };
+        skill.burst = { effect: mod.effect, perStackPct: 0, keepShare: 0, toStagger: false, perfectMultiplier: 1, loseOnMiss: false, all: false, onlyPerfect: false, ...skill.burst };
+        if (mod.when === "완벽") skill.burst.onlyPerfect = true;
+        return;
+      case "터뜨리기 모두":
+        burstOf(skill).all = true;
         return;
       case "터뜨리기 강화":
         burstOf(skill).perStackPct += amount(mod.perStack);
@@ -211,16 +275,7 @@ export function buildSkill(
     }
   };
 
-  // 나무의 칸은 앞 칸이 먼저 오도록 적혀 있다. 갈림길은 한쪽만 찍을 수 있으므로 찍은 칸들은 한 줄을 이룬다
-  for (const node of tree.nodes) {
-    if (node.id === basicId || !node.id.startsWith(`${basicId}.`) || !state.picked.has(node.id) || node.kind === "궁극기") continue;
-    if (node.overrides?.role) skill.role = node.overrides.role;
-    if (node.overrides?.damageType) skill.damageType = node.overrides.damageType;
-    if (node.overrides?.range) skill.range = node.overrides.range;
-    const mods = node.choice ? (node.choice[state.choices[node.id] ?? 0].mods ?? []) : (node.mods ?? []);
-    for (const mod of mods) apply(mod);
-  }
-
+  for (const mod of mods) apply(mod);
   skill.baseHitPower = skill.baseHitPower * (1 + powerPct) * powerMul;
   skill.energy = Math.max(0, energy);
   skill.cooldown = Math.max(0, cooldown);

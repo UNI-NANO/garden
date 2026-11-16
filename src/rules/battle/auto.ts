@@ -1,5 +1,5 @@
-import { reachable, rowOf } from "./formation";
-import { canUseSkill, chainBonus, defenseKey, skillHitCount, skillHitPowers, type AllyAction, type BattleContext, type BattleSkill, type BattleState, type Defenses } from "./engine";
+import { rowOf } from "./formation";
+import { allySkills, canUseSkill, chainBonus, defenseKey, skillHitCount, skillHitPowers, skillTargets, type AllyAction, type BattleContext, type BattleSkill, type BattleState, type Defenses } from "./engine";
 
 /**
  * 스스로 고르는 규칙 (명세서 「자동 전투」). 자동 전투, 동료, 시간 초과 때 함께 쓴다.
@@ -10,17 +10,17 @@ import { canUseSkill, chainBonus, defenseKey, skillHitCount, skillHitPowers, typ
  */
 export function autoAllyActions(state: BattleState, ctx: BattleContext): AllyAction[] {
   const actions: AllyAction[] = [];
-  const enemies = state.enemies.filter((e) => !e.down);
   for (const ally of state.allies) {
     if (ally.down || ally.fled) continue;
-    const usable = [ally.basicAttack, ...ally.skills]
+    const usable = allySkills(ally)
       .filter((skill) => !skill.stance && canUseSkill(ally, skill))
-      .filter((skill) => skill.reach === "원거리" || rowOf(ally.slot) === "앞줄");
+      .filter((skill) => skill.reach === "원거리" || rowOf(ally.slot) === "앞줄")
+      .filter((skill) => skillTargets(state, ally, skill).length > 0);
     // 쓸 수 있는 연계를 먼저, 그다음 위력이 가장 큰 기술
     const score = (skill: BattleSkill) => skill.baseHitPower * skillHitCount(state, ally, skill, undefined) * (1 + chainBonus(state, ctx, ally, skill));
     const linked = usable.filter((skill) => chainBonus(state, ctx, ally, skill) > 0);
     const skill = (linked.length > 0 ? linked : usable).sort((a, b) => score(b) - score(a))[0];
-    const target = skill ? [...reachable(enemies, skill.reach)].sort((a, b) => a.hp - b.hp || a.slot - b.slot)[0] : undefined;
+    const target = skill ? [...skillTargets(state, ally, skill)].sort((a, b) => a.hp - b.hp || a.slot - b.slot)[0] : undefined;
     if (!skill || !target) {
       actions.push({ unitId: ally.id, type: "쉬기" });
       continue;

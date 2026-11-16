@@ -3,7 +3,7 @@ import rawEffects from "../../data/defs/effects.json";
 import rawEnemies from "../../data/defs/enemies.json";
 import rawTable from "../../data/defs/skill-table.json";
 import rawSword from "../../data/defs/trees/sword.json";
-import { buildSkill } from "../../src/rules/battle/build-skill";
+import { buildSkill, buildUltimate } from "../../src/rules/battle/build-skill";
 import { effectDefs } from "../../src/rules/battle/effects";
 import type { AllySetup, BattleContext, BattleSetup } from "../../src/rules/battle/engine";
 import { treeBattleSkills } from "../../src/rules/battle/setup";
@@ -67,3 +67,11 @@ export const built = (basicId: string, picked: string[] = [], choices: Record<st
     },
     "근접",
   );
+
+/** 궁극기와 그 루트를 기본기까지 모두 찍은 것으로 놓고 궁극기 기술을 만든다 */
+export const ultimate = (id: string) => {
+  const byId = new Map(swordTree.nodes.map((node) => [node.id, node]));
+  const picked = new Set<string>();
+  for (let at: string | null = id; at !== null; at = byId.get(at)?.prev ?? null) picked.add(at);
+  return buildUltimate(table, effectList, rules.words, swordTree, id, picked, "근접");
+};

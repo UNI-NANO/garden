@@ -1,7 +1,7 @@
 {
   "id": "sword",
   "name": "검술",
-  "version": 7,
+  "version": 8,
   "description": "한손 장검. 가장 기본이 되는 균형형 나무로, 넓게 베기·받아치기·연계·진형 다루기를 고루 쓴다. 피해는 자상이 기본이고, 관통은 돌진 베기의 찌르기 루트와 밀어붙이기 택1에서만. 가문 갈래 자리는 비어 있다.",
   "basicAttack": {
     "id": "sword.cut",
@@ -428,7 +428,25 @@
       "kind": "궁극기",
       "name": "피의 결산",
       "prev": "sword.combo.b1.s",
-      "description": "전체. 모든 적의 출혈을 한꺼번에 터뜨림."
+      "description": "전체. 모든 적의 출혈을 한꺼번에 터뜨림.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "보통",
+        "hits": 1,
+        "range": "전체",
+        "role": "끝내는",
+        "damageType": "자상",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "터뜨리기",
+          "effect": "bleed"
+        },
+        {
+          "kind": "터뜨리기 모두"
+        }
+      ]
     },
     {
       "id": "sword.combo.b2",
@@ -470,7 +488,42 @@
       "kind": "궁극기",
       "name": "단 한 번의 매듭",
       "prev": "sword.combo.b2.s",
-      "description": "1타, 바늘만 한 칸. 완벽이면 출혈 ×3 피해와 흐트러짐 즉시 0. 빗나가면 내가 출혈 3."
+      "description": "1타, 바늘만 한 칸. 완벽이면 출혈 ×3 피해와 흐트러짐 즉시 0. 빗나가면 내가 출혈 3.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "강함",
+        "hits": 1,
+        "range": "단일",
+        "role": "끝내는",
+        "damageType": "자상",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "좋음 칸",
+          "amount": "바늘 칸"
+        },
+        {
+          "kind": "터뜨리기",
+          "effect": "bleed",
+          "when": "완벽"
+        },
+        {
+          "kind": "터뜨리기 완벽",
+          "amount": 3
+        },
+        {
+          "kind": "흐트러뜨리기",
+          "when": "완벽"
+        },
+        {
+          "kind": "빗나가면 나에게 효과",
+          "effect": {
+            "id": "bleed",
+            "amount": 3
+          }
+        }
+      ]
     },
     {
       "id": "sword.gale",
@@ -734,7 +787,22 @@
       "kind": "궁극기",
       "name": "칼바람 한 줄기",
       "prev": "sword.gale.b1.s",
-      "description": "쿨다운이 짧은 궁극기. 약하지만 전투에 여러 번."
+      "description": "쿨다운이 짧은 궁극기. 약하지만 전투에 여러 번.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "약함",
+        "hits": 1,
+        "range": "단일",
+        "role": "끝내는",
+        "damageType": "자상",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "쿨다운",
+          "add": -3
+        }
+      ]
     },
     {
       "id": "sword.gale.b2",
@@ -770,7 +838,29 @@
       "kind": "궁극기",
       "name": "산 가르기",
       "prev": "sword.gale.b2.s",
-      "description": "흐트러진 적에게만. 아주 큰 위력, 뒷줄까지 갈라짐."
+      "description": "흐트러진 적에게만. 아주 큰 위력, 뒷줄까지 갈라짐.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "강함",
+        "hits": 1,
+        "range": "단일",
+        "role": "끝내는",
+        "damageType": "자상",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "고를 수 있는 대상",
+          "when": "대상이 흐트러짐"
+        },
+        {
+          "kind": "위력 ×",
+          "amount": "아주 큰 위력"
+        },
+        {
+          "kind": "뒤 칸도"
+        }
+      ]
     },
     {
       "id": "sword.gale.b.x",
@@ -811,7 +901,33 @@
       "kind": "궁극기",
       "name": "역날의 마음",
       "prev": "sword.gale.b.x.s",
-      "description": "체력이 일정 이하인 적 전원을 기절시켜 생포."
+      "description": "체력이 일정 이하인 적 전원을 기절시켜 생포.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "보통",
+        "hits": 1,
+        "range": "전체",
+        "role": "끝내는",
+        "damageType": "자상",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "피해 ×",
+          "amount": "칼등 위력"
+        },
+        {
+          "kind": "흐트러짐 ×",
+          "amount": 2
+        },
+        {
+          "kind": "생포"
+        },
+        {
+          "kind": "생포 체력",
+          "amount": "생포 체력"
+        }
+      ]
     },
     {
       "id": "sword.riposte",
@@ -948,7 +1064,30 @@
       "kind": "궁극기",
       "name": "명경지수",
       "prev": "sword.riposte.a1.s",
-      "description": "3턴 동안 나를 노린 모든 공격에 넓은 받아치기 칸, 성공할 때마다 집중."
+      "description": "3턴 동안 나를 노린 모든 공격에 넓은 받아치기 칸, 성공할 때마다 집중.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "보통",
+        "hits": "자세",
+        "range": "단일",
+        "role": "끝내는",
+        "damageType": "자상",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "자세",
+          "holdTurns": 2,
+          "parryWidth": "판정 칸 넓게"
+        },
+        {
+          "kind": "받아치면 효과",
+          "effect": {
+            "id": "focus",
+            "amount": 2
+          }
+        }
+      ]
     },
     {
       "id": "sword.riposte.a2",
@@ -1296,7 +1435,24 @@
       "kind": "궁극기",
       "name": "성벽 부수기",
       "prev": "sword.charge.a2.s",
-      "description": "지키기·방패를 무시하고 흐트러짐을 즉시 절반으로."
+      "description": "지키기·방패를 무시하고 흐트러짐을 즉시 절반으로.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "강함",
+        "hits": 1,
+        "range": "단일",
+        "role": "끝내는",
+        "damageType": "자상",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "방어 무시"
+        },
+        {
+          "kind": "흐트러짐 절반"
+        }
+      ]
     },
     {
       "id": "sword.charge.b",
@@ -1384,7 +1540,26 @@
       "kind": "궁극기",
       "name": "천적사냥",
       "prev": "sword.charge.b1.s",
-      "description": "적 뒷줄 전원을 차례로 돌진해 찌름."
+      "description": "적 뒷줄 전원을 차례로 돌진해 찌름.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "보통",
+        "hits": 1,
+        "range": "휩쓸기",
+        "role": "끝내는",
+        "damageType": "관통",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "줄 전체",
+          "row": "뒷줄"
+        },
+        {
+          "kind": "나머지 대상",
+          "share": 1
+        }
+      ]
     },
     {
       "id": "sword.charge.b2",
@@ -1418,7 +1593,21 @@
       "kind": "궁극기",
       "name": "꿰뚫는 돌격",
       "prev": "sword.charge.b2.s",
-      "description": "앞줄과 그 뒤 뒷줄을 한 줄로 관통."
+      "description": "앞줄과 그 뒤 뒷줄을 한 줄로 관통.",
+      "skill": {
+        "tier": "궁극기",
+        "potency": "강함",
+        "hits": 1,
+        "range": "단일",
+        "role": "끝내는",
+        "damageType": "관통",
+        "effects": []
+      },
+      "mods": [
+        {
+          "kind": "뒤 칸도"
+        }
+      ]
     }
   ]
 }

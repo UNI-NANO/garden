@@ -54,13 +54,23 @@ export const ModSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("쓰러뜨리면 기력"), add: z.number().int() }),
   z.strictObject({ kind: z.literal("생포") }),
   z.strictObject({ kind: z.literal("생포 보상"), amount: AmountSchema }),
+  /** 친 뒤 체력이 최대 체력의 이 비율 이하인 맞은 적을 생포한다 */
+  z.strictObject({ kind: z.literal("생포 체력"), amount: AmountSchema }),
+  /** 맞히면 대상을 바로 흐트러뜨린다 */
+  z.strictObject({ kind: z.literal("흐트러뜨리기"), when: ConditionSchema.optional() }),
+  /** 맞히면 대상의 남은 흐트러짐 게이지를 절반으로 */
+  z.strictObject({ kind: z.literal("흐트러짐 절반") }),
+  z.strictObject({ kind: z.literal("방어 무시") }),
+  /** 모든 타가 빗나가면 나에게 붙는 효과 */
+  z.strictObject({ kind: z.literal("빗나가면 나에게 효과"), effect: AppliedEffectSchema }),
   // 효과
   z.strictObject({ kind: z.literal("효과"), effect: AppliedEffectSchema, when: z.literal("완벽").optional() }),
   z.strictObject({ kind: z.literal("효과 교체"), effects: z.array(AppliedEffectSchema) }),
   z.strictObject({ kind: z.literal("효과 유지"), effect: DefIdSchema }),
   z.strictObject({ kind: z.literal("효과 ×"), effect: DefIdSchema, amount: AmountSchema, when: ConditionSchema.optional() }),
   z.strictObject({ kind: z.literal("효과 상한"), effect: DefIdSchema, add: AmountSchema }),
-  z.strictObject({ kind: z.literal("터뜨리기"), effect: DefIdSchema }),
+  z.strictObject({ kind: z.literal("터뜨리기"), effect: DefIdSchema, when: z.literal("완벽").optional() }),
+  z.strictObject({ kind: z.literal("터뜨리기 모두") }),
   z.strictObject({ kind: z.literal("터뜨리기 강화"), perStack: AmountSchema }),
   z.strictObject({ kind: z.literal("터뜨리기 남김"), share: z.number().min(0).max(1) }),
   z.strictObject({ kind: z.literal("터뜨리기 흐트러짐") }),
@@ -70,6 +80,10 @@ export const ModSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("나머지 대상"), share: z.number().min(0).max(1) }),
   z.strictObject({ kind: z.literal("나머지 흐트러짐"), share: z.number().min(0).max(1) }),
   z.strictObject({ kind: z.literal("뒤 칸도") }),
+  /** 조건이 맞는 적만 대상으로 고를 수 있다 */
+  z.strictObject({ kind: z.literal("고를 수 있는 대상"), when: ConditionSchema }),
+  /** 그 줄의 서 있는 적 전원을 친다 (앞줄이 서 있어도 뒷줄을 고를 수 있다) */
+  z.strictObject({ kind: z.literal("줄 전체"), row: z.enum(["앞줄", "뒷줄"]) }),
   z.strictObject({ kind: z.literal("밀어내기") }),
   z.strictObject({ kind: z.literal("밀려난 적 효과"), effect: AppliedEffectSchema }),
   z.strictObject({ kind: z.literal("끌려 나온 적 효과"), effect: AppliedEffectSchema }),
@@ -117,7 +131,7 @@ export const TreeNodeSchema = z.strictObject({
   /** 바로 앞 칸. 기본기만 null */
   prev: DefIdSchema.nullable(),
   description: text,
-  /** 기본기의 기술 항목 */
+  /** 기본기·궁극기의 기술 항목 */
   skill: SkillSpecSchema.optional(),
   /** 갈림길·끝갈래: 어느 축의 선택인지 */
   axis: text.optional(),

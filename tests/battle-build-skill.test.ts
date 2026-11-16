@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSkill, BuildSkillError, resolveAmount } from "../src/rules/battle/build-skill";
+import { buildSkill, buildUltimate, BuildSkillError, resolveAmount } from "../src/rules/battle/build-skill";
 import {
   createBattle,
   playTurn,
@@ -11,13 +11,15 @@ import {
   skillGoodWidth,
   skillHitCount,
   skillHitPowers,
+  skillTargets,
   type AllyAction,
   type BattleSkill,
   type BattleState,
 } from "../src/rules/battle/engine";
 import { judgementWidths } from "../src/rules/battle/numbers";
 import type { Judgement } from "../src/schema/defs/skill-table";
-import { built, ctx, enemyDef, hero, rules, setup, skill, swordTree, table } from "./helpers/fake-battle";
+import { autoAllyActions } from "../src/rules/battle/auto";
+import { ultimate, built, ctx, enemyDef, hero, rules, setup, skill, swordTree, table } from "./helpers/fake-battle";
 
 const wolf = (id = "w1", slot = 0, over = {}) => ({ id, def: enemyDef("wolf", over), slot });
 const dummy = (id = "w1", slot = 0, over = {}) => wolf(id, slot, { overrides: { hp: 999, power: 0, stagger: 9999 }, ...over });
@@ -557,5 +559,123 @@ describe("끝갈래와 그 보완 칸: 되받아치기", () => {
     expect(ally(b).effects).toEqual({ confidence: 1 });
     const more = built("sword.riposte", ["b", "b2", "b2.s"]);
     expect(ally(playTurn(startWith(more), { actions: [use(more)], defenses: {} }, ctx)).effects).toEqual({ confidence: 2 });
+  });
+});
+
+describe("궁극기", () => {
+  it("궁극기와 그 루트를 끝까지 찍어야 들 수 있고, 숫자는 기준표에서", () => {
+    const gust = ultimate("sword.gale.b1.u");
+    // 궁극기 24 × 약함 0.75, 쿨다운 5 − 3, 기력 5, 역할 끝내는
+    expect(gust).toMatchObject({ baseHitPower: 18, cooldown: 2, energy: 5, role: "끝내는", tier: "궁극기", hitCount: 1 });
+    const route = ["sword.gale", "sword.gale.s1", "sword.gale.s2", "sword.gale.b", "sword.gale.b.s1", "sword.gale.b.s2", "sword.gale.b1", "sword.gale.b1.s", "sword.gale.b1.u"];
+    const build = (picked: string[], id = "sword.gale.b1.u") => buildUltimate(table, [], rules.words, swordTree, id, new Set(picked), "근접");
+    expect(build(route)).toEqual(gust);
+    expect(() => build(route.filter((id) => id !== "sword.gale.b.s1"))).toThrow("루트를 끝까지 찍지 않았다 (sword.gale.b.s1)");
+    expect(() => build(route, "sword.gale.b1")).toThrow("궁극기가 아니다");
+    // 아직 기술 항목이 없는 궁극기(다음 단위)
+    expect(() => ultimate("sword.combo.a1.u")).toThrow("아직 기술 항목이 없는");
+  });
+  it("든 궁극기는 다른 기술처럼 쓰고, 자동 전투도 고른다", () => {
+    const gust = ultimate("sword.gale.b1.u");
+    let b = createBattle(setup([dummy()], [hero({ skills: [], ultimate: gust })]), ctx);
+    expect(autoAllyActions(b, ctx)[0]).toMatchObject({ type: "기술", skillId: "sword.gale.b1.u" });
+    b = resolveAllies(b, [use(gust)], ctx);
+    expect(ally(b).cooldowns).toEqual({ "sword.gale.b1.u": 3 });
+    expect(ally(b).energy).toBe(ctx.table.energy.max - 5);
+  });
+  it("피의 결산: 맞은 적 모두의 출혈을 터뜨린다", () => {
+    const reckoning = ultimate("sword.combo.b1.u");
+    const b = createBattle(setup([dummy("w1", 0), dummy("w2", 1), dummy("w3", 2)], [hero({ skills: [], ultimate: reckoning })]), ctx);
+    foe(b, "w1").effects = { bleed: 4 };
+    foe(b, "w2").effects = { bleed: 2 };
+    const after = resolveAllies(b, [use(reckoning)], ctx);
+    expect(after.events.filter((e) => e.type === "터뜨림").map((e) => e.type === "터뜨림" && [e.to, e.stacks])).toEqual([
+      ["w1", 4],
+      ["w2", 2],
+    ]);
+    expect(after.enemies.map((e) => e.effects)).toEqual([{}, {}, {}]);
+  });
+  it("단 한 번의 매듭: 바늘 칸, 완벽이면 출혈 ×3 피해와 바로 흐트러짐, 빗나가면 내가 출혈 3", () => {
+    const knot = ultimate("sword.combo.b2.u");
+    expect(knot.goodWidth).toBe(-12);
+    const run = (judgement: "좋음" | "완벽" | "빗나감") => {
+      const b = createBattle(setup([dummy("w1", 0, { overrides: { hp: 999, power: 0, stagger: 100 } })], [hero({ skills: [], ultimate: knot })]), ctx);
+      foe(b).effects = { bleed: 4 };
+      return resolveAllies(b, [use(knot, "w1", { judgements: [judgement] })], ctx);
+    };
+    const plain = run("좋음");
+    expect(foe(plain)).toMatchObject({ effects: { bleed: 4 }, brokenOnTurn: null });
+    const perfect = run("완벽");
+    expect(perfect.events.find((e) => e.type === "터뜨림")).toMatchObject({ stacks: 4, amount: 12 });
+    expect(foe(perfect).brokenOnTurn).toBe(1);
+    const missed = run("빗나감");
+    expect(ally(missed).effects).toEqual({ bleed: 3 });
+    expect(foe(missed).effects).toEqual({ bleed: 4 });
+  });
+  it("산 가르기: 흐트러진 적만 고를 수 있고, 위력 ×1.5, 뒤 칸도 맞는다", () => {
+    const split = ultimate("sword.gale.b2.u");
+    const b = createBattle(setup([dummy("w1", 0), dummy("w2", 1), dummy("w3", 3)], [hero({ skills: [], ultimate: split })]), ctx);
+    expect(skillTargets(b, ally(b), split)).toEqual([]);
+    expect(() => resolveAllies(b, [use(split)], ctx)).toThrow("닿지 않는다");
+    foe(b, "w1").brokenOnTurn = 1;
+    expect(skillTargets(b, ally(b), split).map((e) => e.id)).toEqual(["w1"]);
+    const after = resolveAllies(b, [use(split)], ctx);
+    // 궁극기 24 × 강함 1.3 × 아주 큰 위력 1.5
+    expect(split.baseHitPower).toBeCloseTo(24 * 1.3 * 1.5, 10);
+    expect([999 - foe(after, "w1").hp > 0, 999 - foe(after, "w2").hp, 999 - foe(after, "w3").hp > 0]).toEqual([true, 0, true]);
+    // 자동 전투도 흐트러진 적이 없으면 고르지 않는다
+    const none = createBattle(setup([dummy("w1", 0)], [hero({ skills: [], ultimate: split })]), ctx);
+    expect(autoAllyActions(none, ctx)[0]).toMatchObject({ skillId: "sword.cut" });
+  });
+  it("역날의 마음: 모두를 칼등으로 치고, 체력이 30% 이하로 남은 적을 생포한다", () => {
+    const mercy = ultimate("sword.gale.b.x.u");
+    const tough = (id: string, slot: number) => wolf(id, slot, { overrides: { hp: 40, power: 0, stagger: 9999 } });
+    const b = createBattle(setup([tough("w1", 0), tough("w2", 1)], [hero({ skills: [], ultimate: mercy })]), ctx);
+    foe(b, "w1").hp = 10;
+    const after = resolveAllies(b, [use(mercy)], ctx);
+    // 고른 적 24 × 0.8 × 1.09 × 1.5 × 0.3 = 9.4 → 9: w1은 1이 남아 생포.
+    // 나머지는 전체 공격의 기준값대로 절반 4.7 → 5: w2는 35로 12를 넘는다
+    expect(foe(after, "w1")).toMatchObject({ down: true, captured: { by: "hero", rewardBonus: 0 } });
+    expect(foe(after, "w2")).toMatchObject({ down: false, hp: 35 });
+    expect(foe(after, "w2").captured).toBeUndefined();
+  });
+  it("명경지수: 자세가 3턴, 넓은 받아치기 칸, 받아칠 때마다 집중 2", () => {
+    const calm = ultimate("sword.riposte.a1.u");
+    expect(calm.stanceOpts).toMatchObject({ holdTurns: 2, parryWidth: 6 });
+    const parry = { "w1>hero": "받아치기 성공" as const };
+    let b = createBattle(setup([wolf("w1", 0, { overrides: { hp: 999 } })], [hero({ skills: [], ultimate: calm })]), ctx);
+    b = playTurn(b, { actions: [use(calm)], defenses: parry }, ctx);
+    expect(ally(b).effects).toEqual({ focus: 2 });
+    b = playTurn(b, { actions: [rest], defenses: parry }, ctx);
+    expect(ally(b).effects).toEqual({ focus: 4 });
+    b = playTurn(b, { actions: [rest], defenses: parry }, ctx);
+    // 집중은 5에서 멈추고, 셋째 턴 끝에 자세가 풀린다
+    expect(ally(b).effects).toEqual({ focus: 5 });
+    expect(ally(b).stance).toBeUndefined();
+  });
+  it("성벽 부수기: 방어를 무시하고, 맞히면 남은 흐트러짐을 절반으로", () => {
+    const breaker = ultimate("sword.charge.a2.u");
+    const run = (s: BattleSkill) => resolveAllies(createBattle(setup([shield()], [hero({ skills: [], ultimate: s })]), ctx), [use(s, "s1")], ctx);
+    const plain = { ...breaker, ignoreDefense: false, halveStagger: false };
+    // 24 × 1.3 × 1.09 × 0.5(자상 강함) = 17.0: 방어 2를 빼면 15, 무시하면 17
+    expect([999 - foe(run(plain), "s1").hp, 999 - foe(run(breaker), "s1").hp]).toEqual([15, 17]);
+    const left = foe(run(plain), "s1").stagger;
+    expect(foe(run(breaker), "s1").stagger).toBeCloseTo(left / 2, 10);
+  });
+  it("천적사냥: 앞줄이 서 있어도 뒷줄 전원을 같은 위력으로", () => {
+    const hunt = ultimate("sword.charge.b1.u");
+    const b = createBattle(setup([shield("s1", 0), crossbow("c1", 3), crossbow("c2", 4)], [hero({ skills: [], ultimate: hunt })]), ctx);
+    expect(skillTargets(b, ally(b), hunt).map((e) => e.id)).toEqual(["c1", "c2"]);
+    const after = resolveAllies(b, [use(hunt, "c2")], ctx);
+    const damage = (id: string) => 999 - foe(after, id).hp;
+    expect(damage("c1")).toBeGreaterThan(0);
+    expect([damage("c1"), damage("s1")]).toEqual([damage("c2"), 0]);
+  });
+  it("꿰뚫는 돌격: 고른 앞줄 적과 그 뒤 칸을 같은 위력으로", () => {
+    const lance = ultimate("sword.charge.b2.u");
+    const after = resolveAllies(createBattle(setup([dummy("w1", 0), dummy("w2", 3), dummy("w3", 1)], [hero({ skills: [], ultimate: lance })]), ctx), [use(lance)], ctx);
+    const damage = (id: string) => 999 - foe(after, id).hp;
+    expect(damage("w1")).toBeGreaterThan(0);
+    expect([damage("w2"), damage("w3")]).toEqual([damage("w1"), 0]);
   });
 });

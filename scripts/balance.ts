@@ -4,7 +4,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { DefensePolicy } from "../src/rules/battle/auto";
-import { buildSkill } from "../src/rules/battle/build-skill";
+import { buildSkill, buildUltimate } from "../src/rules/battle/build-skill";
 import { effectDefs } from "../src/rules/battle/effects";
 import type { AllySetup, BattleSetup } from "../src/rules/battle/engine";
 import { enemyNumbers, playerMaxHp } from "../src/rules/battle/numbers";
@@ -68,6 +68,11 @@ const grown = (basicId: string) => {
   return buildSkill(defs.skillTable, defs.effects.effects, defs.battle.words, sword, basicId, { picked: new Set(ids), choices }, "근접");
 };
 const grownPlayer: AllySetup = { ...player, skills: [grown("sword.combo"), grown("sword.charge"), grown("sword.gale")] };
+// 갈래 + 궁극기: 검풍만 깊게·빠르게 루트를 끝까지 찍고 궁극기 「칼바람 한 줄기」를 든다
+const GALE_B = ["s1", "s2", "b", "b.s1", "b.s2", "b1", "b1.s", "b1.u"].map((tail) => `sword.gale.${tail}`);
+const galeB = buildSkill(defs.skillTable, defs.effects.effects, defs.battle.words, sword, "sword.gale", { picked: new Set(GALE_B), choices: {} }, "근접");
+const gust = buildUltimate(defs.skillTable, defs.effects.effects, defs.battle.words, sword, "sword.gale.b1.u", new Set(["sword.gale", ...GALE_B]), "근접");
+const ultimatePlayer: AllySetup = { ...player, skills: [grown("sword.combo"), grown("sword.charge"), galeB], ultimate: gust };
 const mate = (n: number): AllySetup => ({ ...player, id: `mate${n}`, name: `동료 ${n}`, kind: "동료", slot: n, skills: [] });
 
 const parties: [string, AllySetup[]][] = [
@@ -75,6 +80,8 @@ const parties: [string, AllySetup[]][] = [
   ["동료 둘과", [player, mate(1), mate(2)]],
   ["혼자 (갈래 찍음)", [grownPlayer]],
   ["동료 둘과 (갈래 찍음)", [grownPlayer, mate(1), mate(2)]],
+  ["혼자 (갈래 + 궁극기)", [ultimatePlayer]],
+  ["동료 둘과 (갈래 + 궁극기)", [ultimatePlayer, mate(1), mate(2)]],
 ];
 const foes: [string, BattleSetup["enemies"]][] = [
   ["늑대 하나", [{ id: "w1", def: enemy("wolf"), slot: 0 }]],
@@ -92,6 +99,7 @@ const policies: DefensePolicy[] = ["안 누름", "자동", "늘 막기"];
 console.log(`\n조건: 검술 숙련도 ${MASTERY} · 건강 ${HEALTH} (체력 ${playerMaxHp(defs.battle, HEALTH)}), 판정은 모두 좋음`);
 console.log(`플레이어 기술: ${[player.basicAttack, ...player.skills].map((s) => `${s.name}(위력 ${+(s.baseHitPower * s.hitCount).toFixed(2)}, 쿨다운 ${s.cooldown}, 기력 ${s.energy})`).join(", ")}`);
 console.log(`갈래를 찍으면: ${grownPlayer.skills.map((s) => `${s.name}(위력 ${+(s.baseHitPower * s.hitCount).toFixed(2)}, 쿨다운 ${s.cooldown}, 기력 ${s.energy})`).join(", ")} — 기본기마다 보완 칸 둘 + 첫 갈래 + 그 보완 칸 둘 + 끝갈래 a1과 그 보완 칸`);
+console.log(`갈래 + 궁극기: 검풍을 깊게·빠르게 루트로, 궁극기 ${gust.name}(위력 ${gust.baseHitPower}, 쿨다운 ${gust.cooldown}, 기력 ${gust.energy})`);
 console.log("동료: 플레이어와 같은 체력·숙련도, 베기만 씀. 쓸 수 있는 연계를 먼저 고르고, 합은 이길 수 있을 때만 건다.");
 console.log(
   `적: ${["wolf", "deserter.shield", "deserter.crossbow"]
