@@ -1,4 +1,4 @@
-import type { BattleRules, Enemy, EnemyAction, Reach, Targeting } from "../../schema/defs/battle";
+import type { BattleRules, Enemy, EnemyAction, EnemyTrait, Reach, Targeting } from "../../schema/defs/battle";
 import type { AppliedEffect } from "../../schema/defs/effect";
 import type { DamageType, Role } from "../../schema/defs/skill";
 import type { Condition } from "../../schema/defs/tree";
@@ -25,7 +25,7 @@ import { damageOf, enemyNumbers, hitPower, masteryMultiplier, playerMaxHp, stagg
  * 전투 계산의 뼈대 (명세서 「전투」).
  * 한 턴: 턴 시작(적의 의도 공개) → 아군 차례 → 적 차례 → 턴 끝.
  * 순수 함수다. 같은 씨앗과 같은 입력이면 언제나 같은 결과가 나온다(`replayBattle`).
- * 효과와 연계까지 들어 있다. 아직 없는 것: 갈래·보완 칸·궁극기, 동료의 성향, 생포.
+ * 효과와 연계, 찍은 칸(갈래·보완 칸)까지 들어 있다. 아직 없는 것: 궁극기, 동료의 성향, 생포 보상.
  */
 
 export interface BattleContext {
@@ -60,7 +60,26 @@ export interface BattleSkill {
   /** 흐트러짐 피해에 곱하는 값 */
   staggerMultiplier?: number;
   /** 조건이 맞을 때만 걸리는 규칙 */
-  conditional?: { kind: "위력 +" | "위력 ×" | "흐트러짐 ×" | "좋음 칸"; amount: number; when: Condition }[];
+  conditional?: { kind: "위력 +" | "위력 ×" | "흐트러짐 ×" | "좋음 칸"; amount: number; when?: Condition; hit?: "마지막" }[];
+  /** 완벽 칸에 더하는 폭 (화면이 쓴다) */
+  perfectWidth?: number;
+  /** 조건이 맞을 때 드는 기력·쿨다운에 더하는 값 */
+  conditionalEnergy?: { add: number; when: Condition }[];
+  conditionalCooldown?: { add: number; when: Condition }[];
+  /** 조건이 맞을 때 늘어나는 타수 (타 위력은 그대로) */
+  extraHits?: { add: number; when?: Condition }[];
+  /** 연계 보너스가 붙을 때 더하는 값 */
+  chainBonusAdd?: number;
+  /** 끈질김: 위력 + min(턴 × perTurn, max) */
+  persistence?: { perTurn: number; max: number };
+  /** 조건이 맞을 때 붙이는 효과의 양에 곱하는 값 */
+  effectMultipliers?: { effect: string; amount: number; when?: Condition }[];
+  /** 한 타라도 맞히면 얻는 기력 */
+  onHitEnergy?: { add: number; when?: Condition }[];
+  /** 이 기술로 하나라도 쓰러뜨리면 */
+  onDown?: { cooldownMultiply?: number; energy?: number };
+  /** 이 기술로 쓰러뜨린 적은 생포한다. 보상 배율은 전리품 정산이 읽는다 */
+  capture?: { rewardBonus: number };
   /** 고른 대상이 아닌 나머지가 받는 위력·흐트러짐의 비율 (없으면 기준값) */
   othersShare?: number;
   othersStaggerShare?: number;
@@ -73,9 +92,23 @@ export interface BattleSkill {
   /** 이 기술로 붙일 때 효과의 최대 중첩에 더하는 값 */
   effectCapBonus?: Record<string, number>;
   /** 마지막 타에 대상의 효과를 터뜨려 피해로 바꾼다 */
-  burst?: { effect: string; perStackPct: number; keepShare: number; toStagger: boolean };
+  burst?: {
+    effect: string;
+    perStackPct: number;
+    keepShare: number;
+    toStagger: boolean;
+    /** 마지막 타를 완벽으로 치면 터뜨리는 피해에 곱하는 값 */
+    perfectMultiplier: number;
+    /** 마지막 타가 빗나가면 대상의 그 효과가 모두 사라진다 */
+    loseOnMiss: boolean;
+  };
   /** 맞은 적을 뒷줄로 밀어내고 그 뒤의 적을 앞으로 끌어낸다 */
-  push?: { pushedEffects: AppliedEffect[]; pulledEffects: AppliedEffect[] };
+  push?: {
+    pushedEffects: AppliedEffect[];
+    pulledEffects: AppliedEffect[];
+    /** 끌려 나온 적도 같은 위력으로 한 번 더 친다 (+powerPct) */
+    strikePulled?: { powerPct: number };
+  };
   /** 근접이지만 뒷줄의 적도 고를 수 있다. 뒷줄을 치면 위력에 곱하는 값 */
   reachBack?: { multiplier: number };
   /** 쓰고 나면 한 턴 동안 적진에 나가 있다: 이번 턴 모든 적이 먼저 노리고, 다음 턴 주는 위력이 오른다 */
@@ -93,7 +126,13 @@ export interface BattleSkill {
     /** 반격의 타수 */
     counterHits?: number;
     /** 자세를 잡으면서 찌른다: 기본 공격 위력의 share만큼 */
-    thrust?: { share: number; powerPct: number; staggerMultiplier: number; damageType?: DamageType };
+    thrust?: { share: number; powerPct: number; staggerMultiplier: number; damageType?: DamageType; effects?: AppliedEffect[] };
+    /** 받아치기에 성공하면 나에게 붙는 효과 */
+    parryEffects?: AppliedEffect[];
+    /** 자세를 잡고 있는 턴의 끝마다 나에게 붙는 효과 */
+    turnEndEffects?: AppliedEffect[];
+    /** 같은 줄 바로 옆 칸 동료를 노린 공격을 대신 받는다. 받는 피해에 곱하는 값 */
+    cover?: { damageTaken: number };
   };
 }
 
@@ -118,7 +157,20 @@ export interface AllyUnit {
   fleeing: boolean;
   fled: boolean;
   /** 잡고 있는 자세. untilTurn의 턴 끝에 풀린다 */
-  stance?: { skillId: string; power: number; damageType: DamageType; untilTurn: number; damageTaken: number; parryEnergy: number; counterHits: number };
+  stance?: {
+    skillId: string;
+    power: number;
+    damageType: DamageType;
+    untilTurn: number;
+    damageTaken: number;
+    parryEnergy: number;
+    counterHits: number;
+    parryEffects: AppliedEffect[];
+    turnEndEffects: AppliedEffect[];
+    cover?: { damageTaken: number };
+  };
+  /** 마지막으로 기술로 친 적과 그 턴 ("같은 대상" 조건) */
+  lastTarget?: { id: string; turn: number };
   /** 이번 턴에는 줄지 않는 효과 */
   held?: string[];
   /** 적진에 나가 있음: 그 턴에는 모든 적이 먼저 노리고, 다음 턴 주는 위력이 오른다 */
@@ -152,6 +204,12 @@ export interface EnemyUnit {
   effects: EffectStacks;
   /** 걸리지 않는 효과 */
   immune: string[];
+  /** 기술이 알아보는 특징 */
+  traits: EnemyTrait[];
+  /** 원거리 행동이 하나라도 있는 적 */
+  ranged: boolean;
+  /** 생포로 쓰러뜨림. 보상 배율은 전리품 정산이 읽는다 */
+  captured?: { by: string; rewardBonus: number };
   /** 이번 턴에는 줄지 않는 효과 */
   held?: string[];
 }
@@ -185,6 +243,9 @@ export type BattleEvent =
   | { turn: number; type: "버팀"; unit: string }
   | { turn: number; type: "연계"; unit: string; bonus: number }
   | { turn: number; type: "터뜨림"; from: string; to: string; effect: string; stacks: number; amount: number }
+  | { turn: number; type: "효과 사라짐"; unit: string; effect: string; stacks: number }
+  | { turn: number; type: "생포"; unit: string; by: string }
+  | { turn: number; type: "대신 받음"; ally: string; for: string; enemy: string }
   | { turn: number; type: "밀어냄"; pushed: string; pulled?: string }
   | { turn: number; type: "쓰러짐"; unit: string; injury?: Injury }
   | { turn: number; type: "반응"; ally: string; enemy: string; result: DefenseInput }
@@ -244,6 +305,9 @@ export class BattleError extends Error {
 const standingAllies = (state: BattleState) => state.allies.filter((a) => !a.down && !a.fled);
 const standingEnemies = (state: BattleState) => state.enemies.filter((e) => !e.down);
 const isStaggered = (enemy: EnemyUnit) => enemy.brokenOnTurn !== null;
+
+/** 원거리 적: 원거리 행동이 하나라도 있는 적 */
+export const isRangedEnemy = (enemy: Pick<Enemy, "actions">) => enemy.actions.some((a) => a.reach === "원거리");
 
 export function createBattle(setup: BattleSetup, ctx: BattleContext): BattleState {
   const used = { 아군: new Set<number>(), 적: new Set<number>() };
@@ -305,6 +369,8 @@ export function createBattle(setup: BattleSetup, ctx: BattleContext): BattleStat
       down: false,
       effects: {},
       immune: [...(e.def.immune ?? [])],
+      traits: [...(e.def.traits ?? [])],
+      ranged: isRangedEnemy(e.def),
     };
   });
   if (!allies.some((a) => a.kind === "플레이어")) throw new BattleError("플레이어가 없다");
@@ -511,14 +577,17 @@ export function resolveAllies(before: BattleState, actions: readonly AllyAction[
 export function chainBonus(state: BattleState, ctx: BattleContext, ally: AllyUnit, skill: BattleSkill): number {
   const chain = ally.chain;
   if (chain === undefined || chain.turn !== state.turn - 1) return 0;
-  if (skill.role === "잇는") return ctx.rules.chain.linkBonus;
-  if (skill.role === "끝내는") return chain.last === "잇는" ? ctx.rules.chain.finishBonus : ctx.rules.chain.linkBonus;
+  const add = skill.chainBonusAdd ?? 0;
+  if (skill.role === "잇는") return ctx.rules.chain.linkBonus + add;
+  if (skill.role === "끝내는") return (chain.last === "잇는" ? ctx.rules.chain.finishBonus : ctx.rules.chain.linkBonus) + add;
   return 0;
 }
 
 /** 조건이 지금 맞는가. "완벽"은 타마다 다르므로 그 타의 (고친) 판정을 넘긴다 */
-function holds(when: Condition, state: BattleState, ally: AllyUnit, target: EnemyUnit | undefined, judgement: Judgement | undefined): boolean {
+function holds(when: Condition | undefined, state: BattleState, ally: AllyUnit, target: EnemyUnit | undefined, judgement: Judgement | undefined): boolean {
   switch (when) {
+    case undefined:
+      return true;
     case "연계 중":
       return ally.chain !== undefined && ally.chain.turn === state.turn - 1;
     case "연계 아님":
@@ -529,8 +598,18 @@ function holds(when: Condition, state: BattleState, ally: AllyUnit, target: Enem
       return target !== undefined && rowOf(target.slot) === "뒷줄";
     case "완벽":
       return judgement === "완벽";
+    case "대상이 원거리":
+      return target !== undefined && target.ranged;
+    case "대상에게 방패":
+      return target !== undefined && target.traits.includes("방패");
+    case "같은 대상":
+      return target !== undefined && ally.lastTarget !== undefined && ally.lastTarget.turn === state.turn - 1 && ally.lastTarget.id === target.id;
   }
 }
+
+/** "마지막" 타에만 걸리는 규칙인가. hitIndex가 없으면(타와 무관한 계산) 타를 따지지 않는 규칙만 */
+const onHit = (hit: "마지막" | undefined, hitIndex: number | undefined, hitCount: number) =>
+  hit === undefined || (hitIndex !== undefined && hitIndex === hitCount - 1);
 
 /** 조건부 규칙을 더한 배율: 위력 또는 흐트러짐 */
 function conditionalMultiplier(
@@ -540,24 +619,48 @@ function conditionalMultiplier(
   ally: AllyUnit,
   target: EnemyUnit | undefined,
   judgement: Judgement | undefined,
+  hit?: { index: number; count: number },
 ): number {
   let pct = 0;
   let mul = 1;
   for (const rule of skill.conditional ?? []) {
     if (!holds(rule.when, state, ally, target, judgement)) continue;
+    if (!onHit(rule.hit, hit?.index, hit?.count ?? 0)) continue;
     if (rule.kind === kinds.plus) pct += rule.amount;
     else if (rule.kind === kinds.times) mul *= rule.amount;
   }
   return (1 + pct) * mul;
 }
 
-/** 판정 바의 좋음 칸에 이 기술이 더하는 폭 (화면이 쓴다) */
-export function skillGoodWidth(state: BattleState, ally: AllyUnit, skill: BattleSkill, target: EnemyUnit | undefined): number {
+/** 판정 바의 좋음 칸에 이 기술이 더하는 폭 (화면이 쓴다). hitIndex를 주면 그 타의 폭 */
+export function skillGoodWidth(state: BattleState, ally: AllyUnit, skill: BattleSkill, target: EnemyUnit | undefined, hitIndex?: number): number {
   let width = skill.goodWidth ?? 0;
+  const count = skillHitCount(state, ally, skill, target);
   for (const rule of skill.conditional ?? []) {
-    if (rule.kind === "좋음 칸" && holds(rule.when, state, ally, target, undefined)) width += rule.amount;
+    if (rule.kind === "좋음 칸" && holds(rule.when, state, ally, target, undefined) && onHit(rule.hit, hitIndex, count)) width += rule.amount;
   }
   return width;
+}
+
+/** 이번에 이 대상에게 쓰면 몇 타인가 */
+export function skillHitCount(state: BattleState, ally: AllyUnit, skill: BattleSkill, target: EnemyUnit | undefined): number {
+  let count = skill.hitCount;
+  for (const rule of skill.extraHits ?? []) if (holds(rule.when, state, ally, target, undefined)) count += rule.add;
+  return count;
+}
+
+/** 이번에 이 대상에게 쓰면 드는 기력 (0 아래로 내려가지 않는다) */
+export function skillEnergyCost(state: BattleState, ally: AllyUnit, skill: BattleSkill, target: EnemyUnit | undefined): number {
+  let cost = skill.energy;
+  for (const rule of skill.conditionalEnergy ?? []) if (holds(rule.when, state, ally, target, undefined)) cost += rule.add;
+  return Math.max(0, cost);
+}
+
+/** 이번에 이 대상에게 쓰면 걸리는 쿨다운 (0 아래로 내려가지 않는다) */
+export function skillCooldown(state: BattleState, ally: AllyUnit, skill: BattleSkill, target: EnemyUnit | undefined): number {
+  let cooldown = skill.cooldown;
+  for (const rule of skill.conditionalCooldown ?? []) if (holds(rule.when, state, ally, target, undefined)) cooldown += rule.add;
+  return Math.max(0, cooldown);
 }
 
 /** 이 기술을 이 판정들로 이 대상에게 쓰면 타마다 위력이 얼마인가 (효과·연계·찍은 칸까지 반영) */
@@ -578,22 +681,24 @@ export function skillHitPowers(
     (skill.reachBack && overFront ? skill.reachBack.multiplier : 1) *
     (1 + chainBonus(state, ctx, ally, skill)) *
     (1 + exposedBonus) *
+    (skill.persistence ? 1 + Math.min(skill.persistence.max, skill.persistence.perTurn * state.turn) : 1) *
     powerMultiplier(ctx.effects, ally.effects, target?.effects ?? {}, false);
-  return judgements.map((judgement) => {
+  return judgements.map((judgement, index) => {
     const adjusted = adjustJudgement(ctx.effects, ally.effects, judgement);
-    const conditional = conditionalMultiplier(skill, { plus: "위력 +", times: "위력 ×" }, state, ally, target, adjusted);
+    const conditional = conditionalMultiplier(skill, { plus: "위력 +", times: "위력 ×" }, state, ally, target, adjusted, { index, count: judgements.length });
     return skill.baseHitPower * judgementMultiplier(ctx.effects, ctx.table, ally.effects, adjusted) * multiplier * conditional;
   });
 }
 
 /** 대상에게 걸린 효과를 없애고, 없앤 중첩만큼 방어를 무시하는 피해를 준다 */
-function burstEffect(state: BattleState, ctx: BattleContext, ally: AllyUnit, enemy: EnemyUnit, burst: NonNullable<BattleSkill["burst"]>): void {
+function burstEffect(state: BattleState, ctx: BattleContext, ally: AllyUnit, enemy: EnemyUnit, burst: NonNullable<BattleSkill["burst"]>, judgement: Judgement | undefined): void {
   const stacks = enemy.effects[burst.effect] ?? 0;
   if (stacks <= 0) return;
   const keep = Math.floor(stacks * burst.keepShare);
   if (keep > 0) enemy.effects[burst.effect] = keep;
   else delete enemy.effects[burst.effect];
-  const amount = Math.max(1, Math.round(stacks * (1 + burst.perStackPct * stacks)));
+  const perfect = judgement === "완벽" ? burst.perfectMultiplier : 1;
+  const amount = Math.max(1, Math.round(stacks * (1 + burst.perStackPct * stacks) * perfect));
   enemy.hp = Math.max(0, enemy.hp - amount);
   state.events.push({ turn: state.turn, type: "터뜨림", from: ally.id, to: enemy.id, effect: burst.effect, stacks, amount });
   if (burst.toStagger) reduceStagger(state, enemy, stacks);
@@ -601,7 +706,16 @@ function burstEffect(state: BattleState, ctx: BattleContext, ally: AllyUnit, ene
 }
 
 /** 앞줄의 적을 같은 열의 뒷줄로 밀어낸다. 그 자리에 서 있던 적은 앞줄로 끌려 나온다 */
-function pushEnemy(state: BattleState, ctx: BattleContext, enemy: EnemyUnit, skill: BattleSkill, push: NonNullable<BattleSkill["push"]>): void {
+function pushEnemy(
+  state: BattleState,
+  ctx: BattleContext,
+  ally: AllyUnit,
+  enemy: EnemyUnit,
+  skill: BattleSkill,
+  push: NonNullable<BattleSkill["push"]>,
+  /** 밀어낸 적에게 들어간 위력의 합. 끌려 나온 적도 칠 때 쓴다 */
+  power: number,
+): void {
   if (enemy.down || rowOf(enemy.slot) !== "앞줄") return;
   const front = enemy.slot;
   const back = front + ROW_SIZE;
@@ -611,20 +725,36 @@ function pushEnemy(state: BattleState, ctx: BattleContext, enemy: EnemyUnit, ski
   state.events.push({ turn: state.turn, type: "밀어냄", pushed: enemy.id, ...(pulled ? { pulled: pulled.id } : {}) });
   for (const effect of push.pushedEffects) giveEffect(state, ctx, enemy, effect.id, effect.amount, skill);
   if (pulled) for (const effect of push.pulledEffects) giveEffect(state, ctx, pulled, effect.id, effect.amount, skill);
+  if (pulled && push.strikePulled) {
+    strikeEnemy(state, ctx, ally.id, pulled, power * (1 + push.strikePulled.powerPct), skill.damageType, skill.staggerMultiplier ?? 1);
+  }
+}
+
+/** 같은 줄 바로 옆 칸에서 이 아군을 대신 받아 줄 자세를 잡은 동료 */
+function coverFor(state: BattleState, ally: AllyUnit): AllyUnit | undefined {
+  if (ally.exposed?.turn === state.turn) return undefined;
+  return standingAllies(state)
+    .filter((a) => a.id !== ally.id && a.stance?.cover !== undefined && rowOf(a.slot) === rowOf(ally.slot) && Math.abs(a.slot - ally.slot) === 1)
+    .sort((a, b) => a.slot - b.slot)[0];
 }
 
 function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action: Extract<AllyAction, { type: "기술" }>): void {
   const skill = findSkill(ally, action.skillId);
   if (!skill) throw new BattleError(`${ally.name}: 없는 기술 ${action.skillId}`);
   if ((ally.cooldowns[skill.id] ?? 0) > 0) throw new BattleError(`${ally.name}: ${skill.name}은(는) 쿨다운 중이다`);
-  if (ally.energy < skill.energy) throw new BattleError(`${ally.name}: 기력이 모자라다`);
   if (skill.reach === "근접" && rowOf(ally.slot) === "뒷줄") throw new BattleError(`${ally.name}: 뒷줄에서는 근접 기술을 쓸 수 없다`);
   const bonus = chainBonus(state, ctx, ally, skill);
+  const maxEnergy = ctx.table.energy.max;
+  let spentCooldown = 0;
 
-  const spend = () => {
-    ally.energy -= skill.energy;
+  /** 기력과 쿨다운을 쓴다. 조건이 붙은 기력·쿨다운은 쓰는 순간(연계를 잇기 전)의 상태로 정한다 */
+  const spend = (target: EnemyUnit | undefined) => {
+    const cost = skillEnergyCost(state, ally, skill, target);
+    if (ally.energy < cost) throw new BattleError(`${ally.name}: 기력이 모자라다`);
+    ally.energy -= cost;
+    spentCooldown = skillCooldown(state, ally, skill, target);
     // 쓴 턴의 턴 끝에도 1 줄어들므로 하나 더해 둔다: 쿨다운 1이면 다음 한 턴을 쉰다
-    if (skill.cooldown > 0) ally.cooldowns[skill.id] = skill.cooldown + 1;
+    if (spentCooldown > 0) ally.cooldowns[skill.id] = spentCooldown + 1;
   };
   /** 기술이 제대로 들어갔을 때 연계를 잇는다. 순서에 맞지 않으면 끊긴다 */
   const linkChain = () => {
@@ -640,7 +770,7 @@ function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action
     // 자세를 잡으면서 찌르는 갈래는 대상이 있어야 한다
     const thrustTarget = opts.thrust ? reachable(standingEnemies(state), skill.reach).find((e) => e.id === action.targetId) : undefined;
     if (opts.thrust && !thrustTarget) throw new BattleError(`${ally.name}: 찌를 대상에게 닿지 않는다`);
-    spend();
+    spend(thrustTarget);
     const [power = 0] = skillHitPowers(state, ctx, ally, skill, undefined, ["좋음"]);
     ally.stance = {
       skillId: skill.id,
@@ -650,6 +780,9 @@ function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action
       damageTaken: opts.damageTaken ?? 1,
       parryEnergy: opts.parryEnergy ?? 0,
       counterHits: opts.counterHits ?? 1,
+      parryEffects: [...(opts.parryEffects ?? [])],
+      turnEndEffects: [...(opts.turnEndEffects ?? [])],
+      ...(opts.cover ? { cover: { ...opts.cover } } : {}),
     };
     if (opts.thrust && thrustTarget) {
       const thrust = opts.thrust;
@@ -660,15 +793,20 @@ function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action
         (1 + chainBonus(state, ctx, ally, skill)) *
         powerMultiplier(ctx.effects, ally.effects, thrustTarget.effects, false);
       strikeEnemy(state, ctx, ally.id, thrustTarget, thrustPower, thrust.damageType ?? ally.basicAttack.damageType, thrust.staggerMultiplier, "좋음");
+      if (thrustPower > 0) {
+        for (const effect of thrust.effects ?? []) {
+          if (effect.to === "나") giveEffect(state, ctx, ally, effect.id, effect.amount, skill);
+          else if (!thrustTarget.down) giveEffect(state, ctx, thrustTarget, effect.id, effect.amount, skill);
+        }
+      }
+      ally.lastTarget = { id: thrustTarget.id, turn: state.turn };
     }
     linkChain();
     used();
     return;
   }
 
-  if (action.judgements.length !== skill.hitCount) throw new BattleError(`${ally.name}: ${skill.name}은(는) ${skill.hitCount}타다`);
-
-  // 대상: 고른 적이 그사이 쓰러졌으면 같은 규칙으로 닿는 다음 적에게. 없으면 기력을 돌려주고 취소
+  // 대상: 고른 적이 그사이 쓰러졌으면 같은 규칙으로 닿는 다음 적에게. 없으면 취소
   const candidates = reachable(standingEnemies(state), skill.reachBack ? "원거리" : skill.reach);
   let target = state.enemies.find((e) => e.id === action.targetId);
   if (!target) throw new BattleError(`없는 대상: ${action.targetId}`);
@@ -689,7 +827,11 @@ function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action
     throw new BattleError(`${ally.name}: ${target.name}에게 닿지 않는다`);
   }
 
-  spend();
+  // 타수는 고른 대상으로 정한다(화면이 판정 바를 그만큼 띄운다)
+  const hitCount = skillHitCount(state, ally, skill, state.enemies.find((e) => e.id === action.targetId));
+  if (action.judgements.length !== hitCount) throw new BattleError(`${ally.name}: ${skill.name}은(는) 이번에 ${hitCount}타다`);
+
+  spend(target);
   const powers = skillHitPowers(state, ctx, ally, skill, target, action.judgements);
 
   // 합: 내 타 위력의 합과 적 의도의 위력을 맞붙인다. 대상이 바뀌었거나 의도가 없으면 그냥 공격
@@ -715,6 +857,7 @@ function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action
     }
   }
 
+  const standingBefore = new Set(standingEnemies(state).map((e) => e.id));
   const share = skill.othersShare ?? ctx.rules.range.othersShare[skill.range];
   const staggerShare = skill.othersStaggerShare ?? ctx.rules.range.staggerOthersShare;
   const hitList = targetsInRange(standingEnemies(state), target, skill.range);
@@ -724,31 +867,66 @@ function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action
     if (behind && !hitList.includes(behind)) hitList.push(behind);
   }
   const main = target;
+  // 조건(연계 중 등)은 이번 기술을 쓰기 전의 상태로 본다
+  const effectScale = (id: string, judgement: Judgement | undefined) =>
+    (skill.effectMultipliers ?? []).filter((m) => m.effect === id && holds(m.when, state, ally, main, judgement)).reduce((mul, m) => mul * m.amount, 1);
+  const onHitEnergy = (skill.onHitEnergy ?? []).filter((rule) => holds(rule.when, state, ally, main, undefined)).reduce((sum, rule) => sum + rule.add, 0);
+
   powers.forEach((power, index) => {
     const judgement = action.judgements[index];
     const adjusted = judgement !== undefined ? adjustJudgement(ctx.effects, ally.effects, judgement) : undefined;
+    const last = index === powers.length - 1;
     hitList.forEach((enemy) => {
       const isMain = enemy.id === main.id;
       const stagger =
         (isMain ? 1 : staggerShare) * (skill.staggerMultiplier ?? 1) * conditionalMultiplier(skill, { times: "흐트러짐 ×" }, state, ally, enemy, adjusted);
       strikeEnemy(state, ctx, ally.id, enemy, isMain ? power : power * share, skill.damageType, stagger, judgement);
     });
-    // 빗나간 타에는 효과가 붙지 않는다
-    if (power <= 0) return;
+    // 빗나간 타에는 효과가 붙지 않는다. 터뜨리는 마지막 타가 빗나가면 그 효과를 잃는 갈래도 있다
+    if (power <= 0) {
+      const stacks = main.effects[skill.burst?.effect ?? ""] ?? 0;
+      if (last && skill.burst?.loseOnMiss && stacks > 0 && !main.down) {
+        delete main.effects[skill.burst.effect];
+        state.events.push({ turn: state.turn, type: "효과 사라짐", unit: main.id, effect: skill.burst.effect, stacks });
+      }
+      return;
+    }
     const hitEffects = [...skill.effects.filter((e) => e.hits === undefined || e.hits.includes(index + 1)), ...(adjusted === "완벽" ? (skill.perfectEffects ?? []) : [])];
     for (const effect of hitEffects) {
-      if (effect.to === "나") giveEffect(state, ctx, ally, effect.id, effect.amount, skill);
-      else for (const enemy of hitList) if (!enemy.down) giveEffect(state, ctx, enemy, effect.id, effect.amount, skill);
+      const amount = effect.amount * effectScale(effect.id, adjusted);
+      if (effect.to === "나") giveEffect(state, ctx, ally, effect.id, amount, skill);
+      else for (const enemy of hitList) if (!enemy.down) giveEffect(state, ctx, enemy, effect.id, amount, skill);
     }
     // 마지막 타에 터뜨리기
-    if (index === powers.length - 1 && skill.burst && !main.down) burstEffect(state, ctx, ally, main, skill.burst);
+    if (last && skill.burst && !main.down) burstEffect(state, ctx, ally, main, skill.burst, adjusted);
   });
+  const landed = powers.some((p) => p > 0);
   if (extraStagger > 0) reduceStagger(state, target, extraStagger);
-  if (skill.push && powers.some((p) => p > 0)) pushEnemy(state, ctx, main, skill, skill.push);
+  if (skill.push && landed) pushEnemy(state, ctx, ally, main, skill, skill.push, powers.reduce((sum, p) => sum + p, 0));
   if (skill.intoEnemy) ally.exposed = { turn: state.turn, powerPct: skill.intoEnemy.powerPct };
+  ally.lastTarget = { id: main.id, turn: state.turn };
+  if (landed && onHitEnergy !== 0) ally.energy = Math.max(0, Math.min(maxEnergy, ally.energy + onHitEnergy));
+
+  // 이 기술로 쓰러뜨린 적: 생포, 쿨다운 줄이기, 기력
+  const downed = state.enemies.filter((e) => standingBefore.has(e.id) && e.down);
+  if (downed.length > 0) {
+    if (skill.capture) {
+      for (const enemy of downed) {
+        enemy.captured = { by: ally.id, rewardBonus: skill.capture.rewardBonus };
+        state.events.push({ turn: state.turn, type: "생포", unit: enemy.id, by: ally.id });
+      }
+    }
+    const onDown = skill.onDown;
+    if (onDown?.cooldownMultiply !== undefined && spentCooldown > 0) {
+      const left = Math.floor(spentCooldown * onDown.cooldownMultiply);
+      if (left > 0) ally.cooldowns[skill.id] = left + 1;
+      else delete ally.cooldowns[skill.id];
+    }
+    if (onDown?.energy !== undefined) ally.energy = Math.max(0, Math.min(maxEnergy, ally.energy + onDown.energy));
+  }
 
   // 모든 타가 빗나가면 연계가 끊긴다
-  if (powers.every((p) => p <= 0)) delete ally.chain;
+  if (!landed) delete ally.chain;
   else linkChain();
   used();
 }
@@ -775,8 +953,16 @@ export function resolveEnemies(before: BattleState, defenses: Defenses, ctx: Bat
     if (!main) continue;
 
     const share = ctx.rules.range.othersShare[intent.range];
+    // 노린 사람의 같은 줄 바로 옆에서 대신 받는 자세를 잡은 동료가 있으면 그 동료가 받는다(받아치기 판정도 그 동료)
+    const coverer = coverFor(state, main);
+    if (coverer) state.events.push({ turn: state.turn, type: "대신 받음", ally: coverer.id, for: main.id, enemy: enemy.id });
     targetsInRange(standingAllies(state), main, intent.range).forEach((ally, index) => {
-      strikeAlly(state, ctx, enemy, intent, ally, index === 0 ? intent.power : intent.power * share, defenses[defenseKey(enemy.id, ally.id)] ?? "없음");
+      const isMain = index === 0;
+      if (coverer && !isMain && ally.id === coverer.id) return;
+      const struck = coverer && isMain ? coverer : ally;
+      const cover = coverer && isMain ? (coverer.stance?.cover?.damageTaken ?? 1) : 1;
+      const power = (isMain ? intent.power : intent.power * share) * cover;
+      strikeAlly(state, ctx, enemy, intent, struck, power, defenses[defenseKey(enemy.id, struck.id)] ?? "없음");
     });
     checkOutcome(state);
   }
@@ -806,6 +992,8 @@ function strikeAlly(state: BattleState, ctx: BattleContext, enemy: EnemyUnit, in
     const hits = ally.stance?.counterHits ?? 1;
     for (let i = 0; i < hits; i++) strikeEnemy(state, ctx, ally.id, enemy, counter.power, counter.damageType, ctx.rules.stagger.parryMultiplier);
     ally.energy = Math.min(maxEnergy, ally.energy + (ally.stance?.parryEnergy ?? 0));
+    const stanceSkill = ally.stance ? findSkill(ally, ally.stance.skillId) : undefined;
+    for (const effect of ally.stance?.parryEffects ?? []) giveEffect(state, ctx, ally, effect.id, effect.amount, stanceSkill);
     return;
   }
   if (defense === "피하기 성공") {
@@ -862,6 +1050,11 @@ function endTurn(state: BattleState, ctx: BattleContext): void {
   }
 
   for (const ally of state.allies) {
+    // 자세를 잡고 있는 턴의 끝에 붙는 효과 (자세가 풀리기 전에)
+    if (ally.stance && !ally.down && !ally.fled) {
+      const stanceSkill = findSkill(ally, ally.stance.skillId);
+      for (const effect of ally.stance.turnEndEffects) giveEffect(state, ctx, ally, effect.id, effect.amount, stanceSkill);
+    }
     if (ally.stance && ally.stance.untilTurn <= state.turn) delete ally.stance;
     // 적진에 나가 있던 것은 다음 턴 내 차례까지만 이어진다
     if (ally.exposed && ally.exposed.turn < state.turn) delete ally.exposed;

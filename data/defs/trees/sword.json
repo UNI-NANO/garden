@@ -1,7 +1,7 @@
 {
   "id": "sword",
   "name": "검술",
-  "version": 5,
+  "version": 6,
   "description": "한손 장검. 가장 기본이 되는 균형형 나무로, 넓게 베기·받아치기·연계·진형 다루기를 고루 쓴다. 피해는 자상이 기본이고, 관통은 돌진 베기의 찌르기 루트와 밀어붙이기 택1에서만. 가문 갈래 자리는 비어 있다.",
   "basicAttack": {
     "id": "sword.cut",
@@ -273,14 +273,28 @@
       "name": "흐름",
       "prev": "sword.combo.a.s2",
       "description": "연계 중이면 출혈 2배.",
-      "axis": "흐름 / 홀로"
+      "axis": "흐름 / 홀로",
+      "mods": [
+        {
+          "kind": "효과 ×",
+          "effect": "bleed",
+          "amount": 2,
+          "when": "연계 중"
+        }
+      ]
     },
     {
       "id": "sword.combo.a1.s",
       "kind": "보완",
       "name": "연계 보너스 +10%",
       "prev": "sword.combo.a1",
-      "description": "연계 보너스 +10%"
+      "description": "연계 보너스 +10%",
+      "mods": [
+        {
+          "kind": "연계 보너스",
+          "amount": 0.1
+        }
+      ]
     },
     {
       "id": "sword.combo.a1.u",
@@ -295,14 +309,28 @@
       "name": "홀로",
       "prev": "sword.combo.a.s2",
       "description": "연계 없이 쓰면 4타.",
-      "axis": "흐름 / 홀로"
+      "axis": "흐름 / 홀로",
+      "mods": [
+        {
+          "kind": "타수",
+          "add": 1,
+          "when": "연계 아님"
+        }
+      ]
     },
     {
       "id": "sword.combo.a2.s",
       "kind": "보완",
       "name": "혼자 쓸 때 쿨다운 −1",
       "prev": "sword.combo.a2",
-      "description": "혼자 쓸 때 쿨다운 −1"
+      "description": "혼자 쓸 때 쿨다운 −1",
+      "mods": [
+        {
+          "kind": "쿨다운",
+          "add": -1,
+          "when": "연계 아님"
+        }
+      ]
     },
     {
       "id": "sword.combo.a2.u",
@@ -373,14 +401,27 @@
       "name": "확실",
       "prev": "sword.combo.b.s2",
       "description": "판정 칸이 넓어짐.",
-      "axis": "확실 / 도박"
+      "axis": "확실 / 도박",
+      "mods": [
+        {
+          "kind": "좋음 칸",
+          "amount": "판정 칸 넓게"
+        }
+      ]
     },
     {
       "id": "sword.combo.b1.s",
       "kind": "보완",
       "name": "마지막 타 판정 칸 더 넓게",
       "prev": "sword.combo.b1",
-      "description": "마지막 타 판정 칸 더 넓게"
+      "description": "마지막 타 판정 칸 더 넓게",
+      "mods": [
+        {
+          "kind": "좋음 칸",
+          "amount": "판정 칸 조금 넓게",
+          "hit": "마지막"
+        }
+      ]
     },
     {
       "id": "sword.combo.b1.u",
@@ -395,14 +436,34 @@
       "name": "도박",
       "prev": "sword.combo.b.s2",
       "description": "완벽이면 2배, 빗나가면 출혈 사라짐.",
-      "axis": "확실 / 도박"
+      "axis": "확실 / 도박",
+      "mods": [
+        {
+          "kind": "위력 ×",
+          "amount": 2,
+          "when": "완벽"
+        },
+        {
+          "kind": "터뜨리기 완벽",
+          "amount": 2
+        },
+        {
+          "kind": "터뜨리기 빗나감"
+        }
+      ]
     },
     {
       "id": "sword.combo.b2.s",
       "kind": "보완",
       "name": "완벽 칸 조금 넓게",
       "prev": "sword.combo.b2",
-      "description": "완벽 칸 조금 넓게"
+      "description": "완벽 칸 조금 넓게",
+      "mods": [
+        {
+          "kind": "완벽 칸",
+          "amount": "완벽 칸 조금 넓게"
+        }
+      ]
     },
     {
       "id": "sword.combo.b2.u",
@@ -1035,14 +1096,25 @@
       "name": "연타",
       "prev": "sword.charge.a.s2",
       "description": "밀려난 적과 끌려 나온 적 둘 다 한 번씩.",
-      "axis": "연타 / 일격"
+      "axis": "연타 / 일격",
+      "mods": [
+        {
+          "kind": "끌려 나온 적 치기"
+        }
+      ]
     },
     {
       "id": "sword.charge.a1.s",
       "kind": "보완",
       "name": "두 번째 타 위력 +10%",
       "prev": "sword.charge.a1",
-      "description": "두 번째 타 위력 +10%"
+      "description": "두 번째 타 위력 +10%",
+      "mods": [
+        {
+          "kind": "끌려 나온 적 치기",
+          "power": 0.1
+        }
+      ]
     },
     {
       "id": "sword.charge.a1.u",
@@ -1060,14 +1132,30 @@
       "axis": "연타 / 일격",
       "overrides": {
         "role": "끝내는"
-      }
+      },
+      "mods": [
+        {
+          "kind": "밀어내기 없음"
+        },
+        {
+          "kind": "흐트러짐 ×",
+          "amount": "흐트러짐 크게"
+        }
+      ]
     },
     {
       "id": "sword.charge.a2.s",
       "kind": "보완",
       "name": "방패를 든 적에게 위력 +",
       "prev": "sword.charge.a2",
-      "description": "방패를 든 적에게 위력 +"
+      "description": "방패를 든 적에게 위력 +",
+      "mods": [
+        {
+          "kind": "위력 +",
+          "amount": "방패 상대 위력",
+          "when": "대상에게 방패"
+        }
+      ]
     },
     {
       "id": "sword.charge.a2.u",
@@ -1134,14 +1222,28 @@
       "name": "조건",
       "prev": "sword.charge.b.s2",
       "description": "대상이 원거리 적이면 2배.",
-      "axis": "조건 / 상시"
+      "axis": "조건 / 상시",
+      "mods": [
+        {
+          "kind": "위력 ×",
+          "amount": 2,
+          "when": "대상이 원거리"
+        }
+      ]
     },
     {
       "id": "sword.charge.b1.s",
       "kind": "보완",
       "name": "원거리 적을 찌르면 기력 +1",
       "prev": "sword.charge.b1",
-      "description": "원거리 적을 찌르면 기력 +1"
+      "description": "원거리 적을 찌르면 기력 +1",
+      "mods": [
+        {
+          "kind": "맞히면 기력",
+          "add": 1,
+          "when": "대상이 원거리"
+        }
+      ]
     },
     {
       "id": "sword.charge.b1.u",
@@ -1156,14 +1258,26 @@
       "name": "상시",
       "prev": "sword.charge.b.s2",
       "description": "뒷줄 위력 감소 없음.",
-      "axis": "조건 / 상시"
+      "axis": "조건 / 상시",
+      "mods": [
+        {
+          "kind": "뒷줄까지",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "sword.charge.b2.s",
       "kind": "보완",
       "name": "판정 칸 조금 넓게",
       "prev": "sword.charge.b2",
-      "description": "판정 칸 조금 넓게"
+      "description": "판정 칸 조금 넓게",
+      "mods": [
+        {
+          "kind": "좋음 칸",
+          "amount": "판정 칸 조금 넓게"
+        }
+      ]
     },
     {
       "id": "sword.charge.b2.u",

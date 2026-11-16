@@ -93,6 +93,9 @@ export const EnemyActionSchema = z.strictObject({
 });
 export type EnemyAction = z.infer<typeof EnemyActionSchema>;
 
+export const EnemyTraitSchema = z.enum(["방패"]);
+export type EnemyTrait = z.infer<typeof EnemyTraitSchema>;
+
 export const EnemySchema = z.strictObject({
   id: DefIdSchema,
   name: z.string().min(1),
@@ -106,6 +109,8 @@ export const EnemySchema = z.strictObject({
   actions: z.array(EnemyActionSchema).min(1),
   /** 걸리지 않는 효과 */
   immune: z.array(DefIdSchema).optional(),
+  /** 기술이 알아보는 특징 (방패: 방패를 든 적) */
+  traits: z.array(EnemyTraitSchema).optional(),
   /** 등급 공식 대신 직접 정한 값 (튀어야 하는 적만) */
   overrides: z.strictObject({ hp: z.number().positive().optional(), stagger: z.number().positive().optional(), power: z.number().min(0).optional() }).optional(),
 });

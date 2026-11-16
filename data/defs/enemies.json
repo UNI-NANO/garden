@@ -1,7 +1,7 @@
 {
   "id": "enemies",
   "name": "적",
-  "version": 2,
+  "version": 3,
   "enemies": [
     {
       "id": "wolf",
@@ -81,6 +81,9 @@
           "range": "단일",
           "weight": 1
         }
+      ],
+      "traits": [
+        "방패"
       ]
     },
     {

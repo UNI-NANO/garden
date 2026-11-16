@@ -56,18 +56,58 @@ export function buildSkill(
       case "흐트러짐 ×":
       case "좋음 칸": {
         const value = amount(mod.amount);
-        if (mod.when !== undefined) (skill.conditional ??= []).push({ kind: mod.kind, amount: value, when: mod.when });
+        const hit = "hit" in mod ? mod.hit : undefined;
+        if (mod.when !== undefined || hit !== undefined) {
+          (skill.conditional ??= []).push({ kind: mod.kind, amount: value, ...(mod.when !== undefined ? { when: mod.when } : {}), ...(hit !== undefined ? { hit } : {}) });
+        }
         else if (mod.kind === "위력 +") powerPct += value;
         else if (mod.kind === "위력 ×") powerMul *= value;
         else if (mod.kind === "흐트러짐 ×") skill.staggerMultiplier = (skill.staggerMultiplier ?? 1) * value;
         else skill.goodWidth = (skill.goodWidth ?? 0) + value;
         return;
       }
+      case "완벽 칸":
+        skill.perfectWidth = (skill.perfectWidth ?? 0) + amount(mod.amount);
+        return;
       case "기력":
-        energy += mod.add;
+        if (mod.when !== undefined) (skill.conditionalEnergy ??= []).push({ add: mod.add, when: mod.when });
+        else energy += mod.add;
         return;
       case "쿨다운":
-        cooldown += mod.add;
+        if (mod.when !== undefined) (skill.conditionalCooldown ??= []).push({ add: mod.add, when: mod.when });
+        else cooldown += mod.add;
+        return;
+      case "타수":
+        (skill.extraHits ??= []).push({ add: mod.add, ...(mod.when !== undefined ? { when: mod.when } : {}) });
+        return;
+      case "연계 보너스":
+        skill.chainBonusAdd = (skill.chainBonusAdd ?? 0) + amount(mod.amount);
+        return;
+      case "끈질김":
+        skill.persistence = { perTurn: amount(mod.perTurn), max: amount(mod.max) };
+        return;
+      case "끈질김 최대":
+        if (!skill.persistence) throw new BuildSkillError(`${skill.name}: 끈질김이 없는데 끈질김 최대를 바꾸려 한다`);
+        skill.persistence.max += amount(mod.amount);
+        return;
+      case "맞히면 기력":
+        (skill.onHitEnergy ??= []).push({ add: mod.add, ...(mod.when !== undefined ? { when: mod.when } : {}) });
+        return;
+      case "쓰러뜨리면 쿨다운":
+        (skill.onDown ??= {}).cooldownMultiply = mod.multiply;
+        return;
+      case "쓰러뜨리면 기력":
+        (skill.onDown ??= {}).energy = (skill.onDown.energy ?? 0) + mod.add;
+        return;
+      case "생포":
+        skill.capture ??= { rewardBonus: 0 };
+        return;
+      case "생포 보상":
+        if (!skill.capture) throw new BuildSkillError(`${skill.name}: 생포가 없는데 생포 보상을 바꾸려 한다`);
+        skill.capture.rewardBonus += amount(mod.amount);
+        return;
+      case "효과 ×":
+        (skill.effectMultipliers ??= []).push({ effect: mod.effect, amount: amount(mod.amount), ...(mod.when !== undefined ? { when: mod.when } : {}) });
         return;
       case "효과":
         if (mod.when === "완벽") (skill.perfectEffects ??= []).push(mod.effect);
@@ -80,10 +120,10 @@ export function buildSkill(
         (skill.holdEffects ??= []).push(mod.effect);
         return;
       case "효과 상한":
-        (skill.effectCapBonus ??= {})[mod.effect] = (skill.effectCapBonus[mod.effect] ?? 0) + mod.add;
+        (skill.effectCapBonus ??= {})[mod.effect] = (skill.effectCapBonus[mod.effect] ?? 0) + amount(mod.add);
         return;
       case "터뜨리기":
-        skill.burst = { effect: mod.effect, perStackPct: 0, keepShare: 0, toStagger: false, ...skill.burst };
+        skill.burst = { effect: mod.effect, perStackPct: 0, keepShare: 0, toStagger: false, perfectMultiplier: 1, loseOnMiss: false, ...skill.burst };
         return;
       case "터뜨리기 강화":
         burstOf(skill).perStackPct += amount(mod.perStack);
@@ -93,6 +133,12 @@ export function buildSkill(
         return;
       case "터뜨리기 흐트러짐":
         burstOf(skill).toStagger = true;
+        return;
+      case "터뜨리기 완벽":
+        burstOf(skill).perfectMultiplier = amount(mod.amount);
+        return;
+      case "터뜨리기 빗나감":
+        burstOf(skill).loseOnMiss = true;
         return;
       case "나머지 대상":
         skill.othersShare = mod.share;
@@ -112,6 +158,14 @@ export function buildSkill(
       case "끌려 나온 적 효과":
         pushOf(skill).pulledEffects.push(mod.effect);
         return;
+      case "밀어내기 없음":
+        delete skill.push;
+        return;
+      case "끌려 나온 적 치기": {
+        const push = pushOf(skill);
+        push.strikePulled = { powerPct: (push.strikePulled?.powerPct ?? 0) + (mod.power !== undefined ? amount(mod.power) : 0) };
+        return;
+      }
       case "뒷줄까지":
         skill.reachBack = { multiplier: amount(mod.amount) };
         return;
@@ -130,6 +184,20 @@ export function buildSkill(
       case "자세 찌르기":
         (skill.stanceOpts ??= {}).thrust = { share: amount(mod.amount), powerPct: 0, staggerMultiplier: 1, ...skill.stanceOpts.thrust };
         return;
+      case "찌르기 효과":
+        (thrustOf(skill).effects ??= []).push(mod.effect);
+        return;
+      case "받아치면 효과":
+        ((skill.stanceOpts ??= {}).parryEffects ??= []).push(mod.effect);
+        return;
+      case "자세 중 효과":
+        ((skill.stanceOpts ??= {}).turnEndEffects ??= []).push(mod.effect);
+        return;
+      case "대신 받기": {
+        const opts = (skill.stanceOpts ??= {});
+        opts.cover = { damageTaken: (opts.cover?.damageTaken ?? 1) * (mod.damageTaken !== undefined ? amount(mod.damageTaken) : 1) };
+        return;
+      }
       case "찌르기": {
         const thrust = thrustOf(skill);
         if (mod.power !== undefined) thrust.powerPct += amount(mod.power);

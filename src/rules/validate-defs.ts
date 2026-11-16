@@ -283,9 +283,8 @@ function validateLinks(
 }
 
 /** 숫자 자리에 말을 적을 수 있는 규칙들 */
-const wordKinds = new Set(["위력 +", "위력 ×", "흐트러짐 ×", "좋음 칸", "터뜨리기 강화", "뒷줄까지", "적진으로", "자세", "자세 찌르기", "찌르기"]);
-/** 말이 아니라 정해진 낱말인 값 (조건, 피해 타입) */
-const KNOWN_TEXT = new Set(["연계 중", "연계 아님", "대상이 흐트러짐", "대상이 뒷줄", "완벽", "자상", "관통", "파열"]);
+/** 말이 들어갈 수 있는 항목이 아닌 것: 종류, 효과 ID, 조건, 타, 피해 종류 */
+const NOT_AMOUNT_KEYS = new Set(["kind", "effect", "when", "hit", "damageType"]);
 
 function validateNodes(
   file: string,
@@ -328,8 +327,8 @@ function validateNodes(
     if (node.choice !== undefined && node.mods !== undefined) add(node.id, "mods와 choice를 함께 적을 수 없다 (고르는 칸이면 choice 안에 적는다)");
     // 규칙이 가리키는 말과 효과가 실제로 있는지
     for (const mod of [...(node.mods ?? []), ...(node.choice ?? []).flatMap((option) => option.mods ?? [])]) {
-      for (const value of Object.values(mod)) {
-        if (typeof value === "string" && wordKinds.has(mod.kind) && value !== mod.kind && !KNOWN_TEXT.has(value) && !(value in words)) {
+      for (const [key, value] of Object.entries(mod)) {
+        if (typeof value === "string" && !NOT_AMOUNT_KEYS.has(key) && !(value in words)) {
           add(node.id, `기준값에 없는 말: ${value}`);
         }
       }

@@ -19,13 +19,14 @@ export function masteryMultiplier(rules: BattleRules, mastery: number): number {
 export function judgementWidths(
   rules: BattleRules,
   mastery: number,
-  modifiers: { goodWidth: number; shake: number; noPerfect: boolean } = { goodWidth: 0, shake: 0, noPerfect: false },
+  modifiers: { goodWidth: number; shake: number; noPerfect: boolean; perfectWidth?: number } = { goodWidth: 0, shake: 0, noPerfect: false },
 ): { perfect: number; good: number; normalEachSide: number; shake: number } {
   const bar = rules.judgementBar;
   const good = Math.min(bar.length, Math.max(0, bar.goodBase + mastery * bar.goodPerMastery + modifiers.goodWidth));
   return {
     good,
-    perfect: modifiers.noPerfect ? 0 : good * bar.perfectShare,
+    // 완벽 칸은 좋음 칸 안에 있으므로 좋음 칸보다 넓어지지 않는다
+    perfect: modifiers.noPerfect ? 0 : Math.min(good, Math.max(0, good * bar.perfectShare + (modifiers.perfectWidth ?? 0))),
     normalEachSide: Math.min((bar.length - good) / 2, good * bar.normalShareEachSide),
     shake: modifiers.shake,
   };

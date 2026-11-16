@@ -11,8 +11,23 @@ export const AmountSchema = z.union([z.number(), z.string().min(1)]);
 export type Amount = z.infer<typeof AmountSchema>;
 
 /** 규칙이 걸리는 조건. 없으면 늘 */
-export const ConditionSchema = z.enum(["연계 중", "연계 아님", "대상이 흐트러짐", "대상이 뒷줄", "완벽"]);
+export const ConditionSchema = z.enum([
+  "연계 중",
+  "연계 아님",
+  "대상이 흐트러짐",
+  "대상이 뒷줄",
+  "완벽",
+  /** 원거리 행동이 하나라도 있는 적 */
+  "대상이 원거리",
+  /** 적 카드의 특징에 방패가 있는 적 */
+  "대상에게 방패",
+  /** 바로 앞 내 차례에 친 적과 같은 적 */
+  "같은 대상",
+]);
 export type Condition = z.infer<typeof ConditionSchema>;
+
+/** 규칙이 걸리는 타. 없으면 모든 타 */
+export const HitSchema = z.literal("마지막");
 
 /**
  * 칸이 기술을 바꾸는 규칙 하나. 칸을 찍으면 그 루트의 기술에 차례로 적용된다.
@@ -20,21 +35,35 @@ export type Condition = z.infer<typeof ConditionSchema>;
  */
 export const ModSchema = z.discriminatedUnion("kind", [
   // 숫자
-  z.strictObject({ kind: z.literal("위력 +"), amount: AmountSchema, when: ConditionSchema.optional() }),
-  z.strictObject({ kind: z.literal("위력 ×"), amount: AmountSchema, when: ConditionSchema.optional() }),
+  z.strictObject({ kind: z.literal("위력 +"), amount: AmountSchema, when: ConditionSchema.optional(), hit: HitSchema.optional() }),
+  z.strictObject({ kind: z.literal("위력 ×"), amount: AmountSchema, when: ConditionSchema.optional(), hit: HitSchema.optional() }),
   z.strictObject({ kind: z.literal("흐트러짐 ×"), amount: AmountSchema, when: ConditionSchema.optional() }),
-  z.strictObject({ kind: z.literal("좋음 칸"), amount: AmountSchema, when: ConditionSchema.optional() }),
-  z.strictObject({ kind: z.literal("기력"), add: z.number().int() }),
-  z.strictObject({ kind: z.literal("쿨다운"), add: z.number().int() }),
+  z.strictObject({ kind: z.literal("좋음 칸"), amount: AmountSchema, when: ConditionSchema.optional(), hit: HitSchema.optional() }),
+  z.strictObject({ kind: z.literal("완벽 칸"), amount: AmountSchema }),
+  z.strictObject({ kind: z.literal("기력"), add: z.number().int(), when: ConditionSchema.optional() }),
+  z.strictObject({ kind: z.literal("쿨다운"), add: z.number().int(), when: ConditionSchema.optional() }),
+  z.strictObject({ kind: z.literal("타수"), add: z.number().int().min(1), when: ConditionSchema.optional() }),
+  z.strictObject({ kind: z.literal("연계 보너스"), amount: AmountSchema }),
+  z.strictObject({ kind: z.literal("끈질김"), perTurn: AmountSchema, max: AmountSchema }),
+  z.strictObject({ kind: z.literal("끈질김 최대"), amount: AmountSchema }),
+  // 맞히거나 쓰러뜨렸을 때
+  z.strictObject({ kind: z.literal("맞히면 기력"), add: z.number().int(), when: ConditionSchema.optional() }),
+  z.strictObject({ kind: z.literal("쓰러뜨리면 쿨다운"), multiply: z.number().min(0) }),
+  z.strictObject({ kind: z.literal("쓰러뜨리면 기력"), add: z.number().int() }),
+  z.strictObject({ kind: z.literal("생포") }),
+  z.strictObject({ kind: z.literal("생포 보상"), amount: AmountSchema }),
   // 효과
   z.strictObject({ kind: z.literal("효과"), effect: AppliedEffectSchema, when: z.literal("완벽").optional() }),
   z.strictObject({ kind: z.literal("효과 교체"), effects: z.array(AppliedEffectSchema) }),
   z.strictObject({ kind: z.literal("효과 유지"), effect: DefIdSchema }),
-  z.strictObject({ kind: z.literal("효과 상한"), effect: DefIdSchema, add: z.number().int() }),
+  z.strictObject({ kind: z.literal("효과 ×"), effect: DefIdSchema, amount: AmountSchema, when: ConditionSchema.optional() }),
+  z.strictObject({ kind: z.literal("효과 상한"), effect: DefIdSchema, add: AmountSchema }),
   z.strictObject({ kind: z.literal("터뜨리기"), effect: DefIdSchema }),
   z.strictObject({ kind: z.literal("터뜨리기 강화"), perStack: AmountSchema }),
   z.strictObject({ kind: z.literal("터뜨리기 남김"), share: z.number().min(0).max(1) }),
   z.strictObject({ kind: z.literal("터뜨리기 흐트러짐") }),
+  z.strictObject({ kind: z.literal("터뜨리기 완벽"), amount: AmountSchema }),
+  z.strictObject({ kind: z.literal("터뜨리기 빗나감") }),
   // 범위와 자리
   z.strictObject({ kind: z.literal("나머지 대상"), share: z.number().min(0).max(1) }),
   z.strictObject({ kind: z.literal("나머지 흐트러짐"), share: z.number().min(0).max(1) }),
@@ -42,6 +71,8 @@ export const ModSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("밀어내기") }),
   z.strictObject({ kind: z.literal("밀려난 적 효과"), effect: AppliedEffectSchema }),
   z.strictObject({ kind: z.literal("끌려 나온 적 효과"), effect: AppliedEffectSchema }),
+  z.strictObject({ kind: z.literal("밀어내기 없음") }),
+  z.strictObject({ kind: z.literal("끌려 나온 적 치기"), power: AmountSchema.optional() }),
   z.strictObject({ kind: z.literal("뒷줄까지"), amount: AmountSchema }),
   z.strictObject({ kind: z.literal("적진으로"), amount: AmountSchema }),
   // 자세
@@ -55,6 +86,10 @@ export const ModSchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({ kind: z.literal("자세 찌르기"), amount: AmountSchema }),
   z.strictObject({ kind: z.literal("찌르기"), power: AmountSchema.optional(), damageType: DamageTypeSchema.optional(), stagger: AmountSchema.optional() }),
+  z.strictObject({ kind: z.literal("찌르기 효과"), effect: AppliedEffectSchema }),
+  z.strictObject({ kind: z.literal("받아치면 효과"), effect: AppliedEffectSchema }),
+  z.strictObject({ kind: z.literal("자세 중 효과"), effect: AppliedEffectSchema }),
+  z.strictObject({ kind: z.literal("대신 받기"), damageTaken: AmountSchema.optional() }),
 ]);
 export type Mod = z.infer<typeof ModSchema>;
 

@@ -1,5 +1,5 @@
 import { reachable, rowOf } from "./formation";
-import { canUseSkill, chainBonus, defenseKey, skillHitPowers, type AllyAction, type BattleContext, type BattleSkill, type BattleState, type Defenses } from "./engine";
+import { canUseSkill, chainBonus, defenseKey, skillHitCount, skillHitPowers, type AllyAction, type BattleContext, type BattleSkill, type BattleState, type Defenses } from "./engine";
 
 /**
  * 스스로 고르는 규칙 (명세서 「자동 전투」). 자동 전투, 동료, 시간 초과 때 함께 쓴다.
@@ -17,7 +17,7 @@ export function autoAllyActions(state: BattleState, ctx: BattleContext): AllyAct
       .filter((skill) => !skill.stance && canUseSkill(ally, skill))
       .filter((skill) => skill.reach === "원거리" || rowOf(ally.slot) === "앞줄");
     // 쓸 수 있는 연계를 먼저, 그다음 위력이 가장 큰 기술
-    const score = (skill: BattleSkill) => skill.baseHitPower * skill.hitCount * (1 + chainBonus(state, ctx, ally, skill));
+    const score = (skill: BattleSkill) => skill.baseHitPower * skillHitCount(state, ally, skill, undefined) * (1 + chainBonus(state, ctx, ally, skill));
     const linked = usable.filter((skill) => chainBonus(state, ctx, ally, skill) > 0);
     const skill = (linked.length > 0 ? linked : usable).sort((a, b) => score(b) - score(a))[0];
     const target = skill ? [...reachable(enemies, skill.reach)].sort((a, b) => a.hp - b.hp || a.slot - b.slot)[0] : undefined;
@@ -25,7 +25,7 @@ export function autoAllyActions(state: BattleState, ctx: BattleContext): AllyAct
       actions.push({ unitId: ally.id, type: "쉬기" });
       continue;
     }
-    const judgements = Array.from({ length: skill.hitCount }, () => "좋음" as const);
+    const judgements = Array.from({ length: skillHitCount(state, ally, skill, target) }, () => "좋음" as const);
     const mine = skillHitPowers(state, ctx, ally, skill, target, judgements).reduce((sum, p) => sum + p, 0);
     const intent = state.intents.find((i) => i.enemyId === target.id && !i.cancelled);
     actions.push({ unitId: ally.id, type: "기술", skillId: skill.id, targetId: target.id, judgements, clash: intent !== undefined && mine > intent.power });

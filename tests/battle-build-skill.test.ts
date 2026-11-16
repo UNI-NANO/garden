@@ -5,11 +5,18 @@ import {
   playTurn,
   resolveAllies,
   resolveEnemies,
+  chainBonus,
+  skillCooldown,
+  skillEnergyCost,
   skillGoodWidth,
+  skillHitCount,
+  skillHitPowers,
   type AllyAction,
   type BattleSkill,
   type BattleState,
 } from "../src/rules/battle/engine";
+import { judgementWidths } from "../src/rules/battle/numbers";
+import type { Judgement } from "../src/schema/defs/skill-table";
 import { built, ctx, enemyDef, hero, rules, setup, skill, swordTree, table } from "./helpers/fake-battle";
 
 const wolf = (id = "w1", slot = 0, over = {}) => ({ id, def: enemyDef("wolf", over), slot });
@@ -284,5 +291,150 @@ describe("조건이 붙은 규칙", () => {
     expect(skillGoodWidth(b, ally(b), { ...s, goodWidth: 3 }, foe(b))).toBe(3);
     foe(b).brokenOnTurn = 1;
     expect(skillGoodWidth(b, ally(b), { ...s, goodWidth: 3 }, foe(b))).toBe(9);
+  });
+});
+
+/** 이 전투에서 플레이어가 바로 앞 턴에 여는 기술을 썼다고 놓는다 (연계 중) */
+const chained = (b: BattleState) => {
+  ally(b).chain = { last: "여는", turn: b.turn - 1 };
+  return b;
+};
+const shield = (id = "s1", slot = 0) => ({ id, def: enemyDef("deserter.shield", { overrides: { hp: 999, power: 0, stagger: 9999 } }), slot });
+const crossbow = (id = "c1", slot = 3) => ({ id, def: enemyDef("deserter.crossbow", { overrides: { hp: 999, power: 0, stagger: 9999 } }), slot });
+const powersOf = (b: BattleState, s: BattleSkill, targetId = "w1", judgements: Judgement[] = good(s.hitCount)) =>
+  skillHitPowers(b, ctx, ally(b), s, foe(b, targetId), judgements);
+
+describe("끝갈래와 그 보완 칸: 연속 베기", () => {
+  it("흐름: 연계 중이면 붙이는 출혈 2배, 보완 칸은 연계 보너스 +10%", () => {
+    const flow = built("sword.combo", ["a", "a1"]);
+    expect(foe(resolveAllies(startWith(flow), [use(flow)], ctx)).effects).toEqual({ bleed: 3 });
+    expect(foe(resolveAllies(chained(startWith(flow)), [use(flow)], ctx)).effects).toEqual({ bleed: 6 });
+    const more = built("sword.combo", ["a", "a1", "a1.s"]);
+    const b = chained(startWith(more));
+    expect(chainBonus(b, ctx, ally(b), more)).toBeCloseTo(0.2, 10);
+    expect(chainBonus(startWith(more), ctx, ally(startWith(more)), more)).toBe(0);
+  });
+  it("홀로: 연계가 아닐 때 4타, 보완 칸은 그때 쿨다운 −1", () => {
+    const alone = built("sword.combo", ["a", "a2"]);
+    const b = startWith(alone);
+    expect(skillHitCount(b, ally(b), alone, foe(b))).toBe(4);
+    const c = chained(startWith(alone));
+    expect(skillHitCount(c, ally(c), alone, foe(c))).toBe(3);
+    expect(() => resolveAllies(startWith(alone), [use(alone)], ctx)).toThrow("4타");
+    expect(foe(resolveAllies(startWith(alone), [use(alone, "w1", { judgements: good(4) })], ctx)).effects).toEqual({ bleed: 4 });
+    const quick = built("sword.combo", ["a", "a2", "a2.s"]);
+    const d = startWith(quick);
+    expect([skillCooldown(d, ally(d), quick, foe(d)), quick.cooldown]).toEqual([0, 1]);
+    expect(ally(resolveAllies(startWith(quick), [use(quick, "w1", { judgements: good(4) })], ctx)).cooldowns).toEqual({});
+    const e = chained(startWith(quick));
+    expect(ally(resolveAllies(e, [use(quick)], ctx)).cooldowns).toEqual({ "sword.combo": 2 });
+  });
+  it("확실: 좋음 칸 +6, 보완 칸은 마지막 타만 +3 더", () => {
+    const sure = built("sword.combo", ["b", "b1", "b1.s"]);
+    const b = startWith(sure);
+    expect([0, 1, 2].map((i) => skillGoodWidth(b, ally(b), sure, foe(b), i))).toEqual([6, 6, 9]);
+    // 타를 따지지 않으면 모든 타에 걸리는 것만
+    expect(skillGoodWidth(b, ally(b), sure, foe(b))).toBe(6);
+  });
+  it("도박: 완벽으로 친 타는 2배, 터뜨리는 피해도 2배. 마지막 타가 빗나가면 출혈이 사라진다", () => {
+    const gamble = built("sword.combo", ["b", "b2"]);
+    const b = startWith(gamble);
+    const [first = 0, , third = 0] = powersOf(b, gamble, "w1", ["좋음", "좋음", "완벽"]);
+    expect(third / first).toBeCloseTo(1.3 * 2, 10);
+    const run = (judgements: ("좋음" | "완벽" | "빗나감")[]) => {
+      const s = startWith(gamble);
+      foe(s).effects = { bleed: 4 };
+      return resolveAllies(s, [use(gamble, "w1", { judgements })], ctx);
+    };
+    // 터뜨린 출혈 6(4 + 앞 두 타가 붙인 2): 보통은 6, 마지막 타가 완벽이면 12
+    expect(run(["좋음", "좋음", "좋음"]).events.find((e) => e.type === "터뜨림")).toMatchObject({ amount: 6 });
+    expect(run(["좋음", "좋음", "완벽"]).events.find((e) => e.type === "터뜨림")).toMatchObject({ amount: 12 });
+    const missed = run(["좋음", "좋음", "빗나감"]);
+    expect(foe(missed).effects).toEqual({});
+    expect(missed.events.find((e) => e.type === "효과 사라짐")).toMatchObject({ effect: "bleed", stacks: 6 });
+    expect(missed.events.some((e) => e.type === "터뜨림")).toBe(false);
+    // 도박을 찍지 않았으면 빗나가도 출혈은 남는다
+    const plain = built("sword.combo", ["b"]);
+    const p = startWith(plain);
+    foe(p).effects = { bleed: 4 };
+    expect(foe(resolveAllies(p, [use(plain, "w1", { judgements: ["좋음", "좋음", "빗나감"] })], ctx)).effects).toEqual({ bleed: 6 });
+  });
+  it("도박의 보완 칸: 완벽 칸 +2, 좋음 칸을 넘지는 않는다", () => {
+    const wide = built("sword.combo", ["b", "b2", "b2.s"]);
+    expect(wide.perfectWidth).toBe(2);
+    const plain = judgementWidths(rules, 30);
+    const more = judgementWidths(rules, 30, { goodWidth: 0, shake: 0, noPerfect: false, perfectWidth: wide.perfectWidth ?? 0 });
+    expect(more.perfect - plain.perfect).toBeCloseTo(2, 10);
+    expect(judgementWidths(rules, 0, { goodWidth: 0, shake: 0, noPerfect: false, perfectWidth: 99 }).perfect).toBe(16);
+    expect(judgementWidths(rules, 0, { goodWidth: 0, shake: 0, noPerfect: true, perfectWidth: 2 }).perfect).toBe(0);
+  });
+});
+
+describe("끝갈래와 그 보완 칸: 돌진 베기", () => {
+  it("연타: 끌려 나온 적도 같은 위력으로 한 번, 보완 칸은 그 타 +10%", () => {
+    const two = [dummy("w1", 0), dummy("w2", 3)];
+    const both = built("sword.charge", ["a", "a1"]);
+    let b = resolveAllies(startWith(both, two), [use(both)], ctx);
+    // 14.3 × 1.09 × 1.5 = 23.38 → 23 둘 다
+    expect([999 - foe(b, "w1").hp, 999 - foe(b, "w2").hp]).toEqual([23, 23]);
+    expect([foe(b, "w1").slot, foe(b, "w2").slot]).toEqual([3, 0]);
+    const harder = built("sword.charge", ["a", "a1", "a1.s"]);
+    b = resolveAllies(startWith(harder, two), [use(harder)], ctx);
+    // 23.38 × 1.1 = 25.7 → 26
+    expect(999 - foe(b, "w2").hp).toBe(26);
+    // 뒤가 비어 있으면 한 번만
+    b = resolveAllies(startWith(both), [use(both)], ctx);
+    expect(b.events.filter((e) => e.type === "피해")).toHaveLength(1);
+  });
+  it("일격: 끝내는 기술, 밀어내지 않고 흐트러짐 ×1.5", () => {
+    const strike = built("sword.charge", ["a", "a.s2", "a2"], { "a.s2": 0 });
+    expect(strike).toMatchObject({ role: "끝내는", staggerMultiplier: 1.5 });
+    expect(strike.push).toBeUndefined();
+    const b = resolveAllies(startWith(strike, [dummy("w1", 0), dummy("w2", 3)]), [use(strike)], ctx);
+    expect([foe(b, "w1").slot, foe(b, "w1").effects]).toEqual([0, {}]);
+  });
+  it("일격의 보완 칸: 방패를 든 적에게만 위력 +30%", () => {
+    const strike = built("sword.charge", ["a", "a2"]);
+    const shieldBreaker = built("sword.charge", ["a", "a2", "a2.s"]);
+    const b = startWith(strike, [shield(), dummy("w1", 1)]);
+    expect(powersOf(b, shieldBreaker, "s1")[0]! / powersOf(b, strike, "s1")[0]!).toBeCloseTo(1.3, 10);
+    expect(powersOf(b, shieldBreaker, "w1")[0]! / powersOf(b, strike, "w1")[0]!).toBeCloseTo(1, 10);
+  });
+  it("조건: 원거리 적이면 위력 ×2, 보완 칸은 원거리 적을 맞히면 기력 +1", () => {
+    const hunt = built("sword.charge", ["b", "b1"]);
+    const b = startWith(hunt, [shield(), crossbow()]);
+    const plain = built("sword.charge", ["b"]);
+    expect(powersOf(b, hunt, "c1")[0]! / powersOf(b, plain, "c1")[0]!).toBeCloseTo(2, 10);
+    expect(powersOf(b, hunt, "s1")[0]! / powersOf(b, plain, "s1")[0]!).toBeCloseTo(1, 10);
+    const refund = built("sword.charge", ["b", "b1", "b1.s"]);
+    const energyAfter = (targetId: string, judgements: ("좋음" | "빗나감")[] = ["좋음"]) =>
+      ally(resolveAllies(startWith(refund, [shield(), crossbow()]), [use(refund, targetId, { judgements })], ctx)).energy;
+    const full = ctx.table.energy.max;
+    expect(energyAfter("s1")).toBe(full - refund.energy);
+    expect(energyAfter("c1")).toBe(Math.min(full, full - refund.energy + 1));
+    expect(energyAfter("c1", ["빗나감"])).toBe(full - refund.energy);
+  });
+  it("상시: 뒷줄을 쳐도 위력이 줄지 않는다, 보완 칸은 좋음 칸 +3", () => {
+    const always = built("sword.charge", ["b", "b2", "b2.s"]);
+    expect(always.reachBack).toEqual({ multiplier: 1 });
+    expect(always.goodWidth).toBe(3);
+    const b = startWith(always, [shield(), crossbow()]);
+    expect(powersOf(b, always, "c1")[0]!).toBeCloseTo(powersOf(b, always, "s1")[0]!, 10);
+  });
+});
+
+describe("적 카드의 특징", () => {
+  it("방패 특징과 원거리 행동을 알아본다", () => {
+    const b = createBattle(setup([shield(), crossbow(), wolf("w1", 1)]), ctx);
+    expect(b.enemies.map((e) => [e.id, e.traits, e.ranged])).toEqual([
+      ["s1", ["방패"], false],
+      ["c1", [], true],
+      ["w1", [], false],
+    ]);
+  });
+  it("조건이 붙은 기력은 대상을 보고 정한다", () => {
+    const s: BattleSkill = { ...skill("sword.cut"), conditionalEnergy: [{ add: -1, when: "대상이 원거리" }], energy: 1 };
+    const b = startWith(s, [shield(), crossbow()]);
+    expect([skillEnergyCost(b, ally(b), s, foe(b, "s1")), skillEnergyCost(b, ally(b), s, foe(b, "c1"))]).toEqual([1, 0]);
   });
 });
