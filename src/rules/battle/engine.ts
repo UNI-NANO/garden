@@ -74,8 +74,8 @@ export interface EnemyUnit {
   /** 흐트러진 턴. 흐트러지지 않았으면 null */
   brokenOnTurn: number | null;
   targeting: Targeting;
-  /** 바로 앞 턴에 노린 대상. 다른 대상이 있으면 같은 사람을 연달아 노리지 않는다 */
-  lastTargetId: string | null;
+  /** 이번 바퀴에 이미 노린 대상들. 닿는 상대를 한 번씩 다 노린 뒤에야 같은 사람을 다시 노린다 */
+  recentTargets: string[];
   actions: EnemyAction[];
   down: boolean;
 }
@@ -215,7 +215,7 @@ export function createBattle(setup: BattleSetup, ctx: BattleContext): BattleStat
       maxStagger: numbers.maxStagger,
       brokenOnTurn: null,
       targeting: e.def.targeting,
-      lastTargetId: null,
+      recentTargets: [],
       actions: e.def.actions,
       down: false,
     };
@@ -236,9 +236,11 @@ function rollIntents(state: BattleState): Intent[] {
     if (enemy.brokenOnTurn !== null && enemy.brokenOnTurn < state.turn) continue;
     const rng = createRng(`${state.seed}:${state.turn}:${enemy.id}`);
     const action = pickAction(enemy.actions, rng.next());
-    const target = pickTarget(state, enemy.targeting, action.reach, rng.next(), enemy.lastTargetId);
+    const target = pickTarget(state, enemy.targeting, action.reach, rng.next(), enemy.recentTargets);
     if (target === undefined) continue;
-    enemy.lastTargetId = target.id;
+    // 한 바퀴를 다 돌았으면 새 바퀴를 시작한다
+    const fresh = enemy.recentTargets.includes(target.id);
+    enemy.recentTargets = fresh ? [target.id] : [...enemy.recentTargets, target.id];
     intents.push({
       enemyId: enemy.id,
       actionName: action.name,
@@ -267,12 +269,13 @@ function pickAction(actions: readonly EnemyAction[], roll: number): EnemyAction 
 }
 
 /**
- * 성향대로 대상을 고른다. `avoidId`(직전에 노린 대상)는 다른 대상이 있을 때만 피한다:
- * 한 사람만 계속 맞지 않고, 다음에 누가 노려질지 읽을 수 있다.
+ * 성향대로 대상을 고른다. `avoid`(이번 바퀴에 이미 노린 대상들)는 남은 대상이 있을 때만 피한다:
+ * 닿는 상대를 성향 순서대로 한 번씩 돌아가며 노리고, 다 돌면 처음부터 다시 돈다.
+ * 굴림이 없어서 다음에 누가 노려질지 읽을 수 있다.
  */
-function pickTarget(state: BattleState, targeting: Targeting, reach: Reach, roll: number, avoidId: string | null = null): AllyUnit | undefined {
+function pickTarget(state: BattleState, targeting: Targeting, reach: Reach, roll: number, avoid: readonly string[] = []): AllyUnit | undefined {
   const all = reachable(standingAllies(state), reach);
-  const others = all.filter((a) => a.id !== avoidId);
+  const others = all.filter((a) => !avoid.includes(a.id));
   const candidates = others.length > 0 ? others : all;
   if (candidates.length === 0) return undefined;
   switch (targeting) {

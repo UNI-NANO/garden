@@ -346,29 +346,41 @@ describe("적이 노리는 대상", () => {
     expect(ally(s, "mate").down).toBe(true);
     expect(ally(s).hp).toBe(48);
   });
-  it("바로 앞 턴에 노린 대상은 피한다 (다른 대상이 있을 때만)", () => {
+  it("닿는 상대를 한 번씩 돌아가며 노리고, 다 돌면 처음부터 다시 돈다", () => {
     const tough = { overrides: { hp: 999, power: 1 } };
-    // 짐승: 가장 약한 쪽 → 그다음으로 약한 쪽 → 다시 가장 약한 쪽
-    let s = start([wolf("w1", 0, tough)], [hero(), mate({ health: 0 }), hero({ id: "third", kind: "동료", slot: 2, health: 20, skills: [] })]);
-    const targets: string[] = [];
+    const third = (over = {}) => hero({ id: "third", name: "셋째", kind: "동료", slot: 2, skills: [], ...over });
     const idle: AllyAction[] = ["hero", "mate", "third"].map((unitId) => ({ unitId, type: "쉬기" }));
+    const watch = (s: BattleState, turns: number, actions = idle) => {
+      const targets: string[] = [];
+      for (let i = 0; i < turns; i++) {
+        targets.push(s.intents[0]!.targetId);
+        s = playTurn(s, { actions, defenses: {} }, ctx);
+      }
+      return targets;
+    };
+    // 병사: 앞줄 1 → 2 → 3 → 1 → 2 → 3
+    const soldier = start([{ id: "s1", def: enemyDef("deserter.shield", tough), slot: 0 }], [hero(), mate(), third()]);
+    expect(watch(soldier, 7)).toEqual(["hero", "mate", "third", "hero", "mate", "third", "hero"]);
+    // 짐승: 약한 쪽부터 차례로 한 바퀴
+    const beast = start([wolf("w1", 0, tough)], [hero(), mate({ health: 0 }), third({ health: 20 })]);
+    expect(watch(beast, 6)).toEqual(["mate", "third", "hero", "mate", "third", "hero"]);
+    // 둘이면 번갈아, 혼자면 계속 같은 사람
+    const two = start([{ id: "s1", def: enemyDef("deserter.shield", tough), slot: 0 }], [hero(), mate()]);
+    expect(watch(two, 4, idle.slice(0, 2))).toEqual(["hero", "mate", "hero", "mate"]);
+    expect(watch(start([wolf("w1", 0, tough)]), 3, idle.slice(0, 1))).toEqual(["hero", "hero", "hero"]);
+  });
+  it("돌던 중에 누가 쓰러지면 남은 사람끼리 이어서 돈다", () => {
+    const third = hero({ id: "third", name: "셋째", kind: "동료", slot: 2, skills: [] });
+    // 둘째만 한 방에 쓰러진다
+    let s = start([{ id: "s1", def: enemyDef("deserter.shield", { overrides: { hp: 999, power: 31 } }), slot: 0 }], [hero(), mate({ health: 0 }), third]);
+    const targets: string[] = [];
     for (let i = 0; i < 4; i++) {
       targets.push(s.intents[0]!.targetId);
-      s = playTurn(s, { actions: idle, defenses: {} }, ctx);
+      const actions: AllyAction[] = s.allies.filter((a) => !a.down).map((a) => ({ unitId: a.id, type: "쉬기" }));
+      s = playTurn(s, { actions, defenses: { "s1>hero": "막기 성공", "s1>third": "막기 성공" } }, ctx);
     }
-    expect(targets).toEqual(["mate", "third", "mate", "third"]);
-    // 병사: 앞줄 첫 칸 → 다음 칸 → 다시 첫 칸
-    let soldier = start([{ id: "s1", def: enemyDef("deserter.shield", tough), slot: 0 }], [hero(), mate()]);
-    const order: string[] = [];
-    for (let i = 0; i < 3; i++) {
-      order.push(soldier.intents[0]!.targetId);
-      soldier = playTurn(soldier, { actions: idle.slice(0, 2), defenses: {} }, ctx);
-    }
-    expect(order).toEqual(["hero", "mate", "hero"]);
-    // 혼자면 계속 같은 사람을 노린다
-    let solo = start([wolf("w1", 0, tough)]);
-    solo = wait(solo, 2);
-    expect(solo.intents[0]?.targetId).toBe("hero");
+    expect(targets).toEqual(["hero", "mate", "third", "hero"]);
+    expect(ally(s, "mate").down).toBe(true);
   });
   it("무작위 성향도 씨앗이 같으면 같은 대상을 고른다", () => {
     const random = () => start([wolf("w1", 0, { targeting: "무작위" })], [hero(), mate(), hero({ id: "third", kind: "동료", slot: 2, skills: [] })]);
