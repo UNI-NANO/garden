@@ -12,13 +12,14 @@
     "test:e2e": "firebase emulators:exec --only auth,database --project demo-garden \"playwright test\"",
     "build": "vite build",
     "check:defs": "tsx scripts/check-defs.ts",
+    "check:scenes": "tsx scripts/check-scenes.ts",
     "check:private": "tsx scripts/check-no-private-data.ts",
     "balance": "tsx scripts/balance.ts",
     "migrate": "tsx scripts/migrate.ts",
     "daily": "tsx scripts/daily.ts",
     "check:build": "tsx scripts/check-build.ts",
     "build:rules": "tsx scripts/build-rules.ts",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run check:defs && npm run check:private && npm run build && npm run check:build"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:defs && npm run check:scenes && npm run check:private && npm run build && npm run check:build"
   },
   "dependencies": {
     "firebase": "^13.3.0",
