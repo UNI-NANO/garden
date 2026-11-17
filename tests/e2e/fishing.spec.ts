@@ -81,7 +81,7 @@ test("낚시: 던지고, 톡톡은 참고, 잠기면 채고, 줄을 아끼며 �
   const status = page.getByRole("status");
   await expect(status).toContainText("누르고 있다가 떼면 던져요");
   await shot("1-ready");
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 10));
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
 
   // 짧게 눌러 얕은 곳으로
   await down(page);
@@ -151,7 +151,7 @@ test("낚시: 찌가 잠기기 전에 채면 놓친다 (피로는 오른다)", a
   await page.clock.install();
   await enterWithCharacter(page, `낚시 B ${p}`, `fish-b-${p}`);
   await page.getByRole("button", { name: "낚시 (시험 환경)" }).click();
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 10));
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   await down(page);
   await page.clock.runFor(300);
   await page.mouse.up();
