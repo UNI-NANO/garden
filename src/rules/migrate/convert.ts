@@ -1,3 +1,4 @@
+import { zoneKeyOf } from "../chat";
 import { CHARACTER_SCHEMA_VERSION, type Character } from "../../schema/character";
 import type { Item } from "../../schema/defs/item";
 import type { Limits } from "../../schema/defs/limits";
@@ -247,7 +248,7 @@ export function convertCharacter(bundle: OldBundle, ctx: ConvertContext): Conver
       imperialResident: false,
       ...(sheet?.family ? { family: sheet.family } : {}),
       ...(char.job ? { job: { name: char.job, stage: char.stage ?? "", ...(char.workplace ? { workplace: char.workplace } : {}) } } : {}),
-      ...(region && place ? { location: { region, place } } : {}),
+      ...(region && place ? { location: { region, place, zone: zoneKeyOf({ region, place }) } } : {}),
       marks: [...(sheet?.marks ?? [])],
       ...(detail ? { detail } : {}),
     },

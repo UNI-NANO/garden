@@ -2,14 +2,16 @@ import { useEffect, useState } from "preact/hooks";
 import type { Firebase } from "../data/firebase-app";
 import { reportError, signOut, type Session } from "../data/session";
 import { watchWorldClock } from "../data/world";
+import type { Limits } from "../schema/defs/limits";
 import type { WorldClock } from "../schema/world";
 import { buildHomeView, type HomeView } from "../rules/home-view";
+import { ChatPanel } from "./ChatPanel";
 import { Paper } from "./parts";
 
 type SignedIn = Extract<Session, { status: "signedIn" }>;
 type Tab = "card" | "life";
 
-export function LibraryHome(props: { fb: Firebase; session: SignedIn; onPractice?: () => void; onScenes?: () => void }) {
+export function LibraryHome(props: { fb: Firebase; limits: Limits; session: SignedIn; onPractice?: () => void; onScenes?: () => void }) {
   const { session } = props;
   const [tab, setTab] = useState<Tab>("card");
   const [clock, setClock] = useState<WorldClock>();
@@ -65,6 +67,9 @@ export function LibraryHome(props: { fb: Firebase; session: SignedIn; onPractice
             <button class="button home__practice" type="button" onClick={props.onScenes}>
               장면 보기 (시험 환경)
             </button>
+          )}
+          {session.character && session.characterId && (
+            <ChatPanel fb={props.fb} limits={props.limits} uid={session.uid} characterId={session.characterId} character={session.character} />
           )}
         </div>
 

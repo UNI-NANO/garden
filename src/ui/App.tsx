@@ -90,7 +90,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       ) : session.status === "signedOut" ? (
         <LoginScreen fb={props.fb} />
       ) : (
-        <LibraryHome fb={props.fb} session={session} {...(PRACTICE ? { onPractice: openPractice, onScenes: openScenes } : {})} />
+        <LibraryHome fb={props.fb} limits={props.limits} session={session} {...(PRACTICE ? { onPractice: openPractice, onScenes: openScenes } : {})} />
       )}
     </ErrorBoundary>
   );

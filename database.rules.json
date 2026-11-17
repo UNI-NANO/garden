@@ -1,6 +1,47 @@
 {
   "rules": {
     ".read": false,
+    "chat": {
+      "$zone": {
+        ".read": "(auth != null && root.child('gm').child(auth.uid).val() === true) || (auth != null && root.child('accounts').child(auth.uid).child('characterId').val() != null && (root.child('characters').child(root.child('accounts').child(auth.uid).child('characterId').val()).child('profile/location/zone').exists() ? root.child('characters').child(root.child('accounts').child(auth.uid).child('characterId').val()).child('profile/location/zone').val() : 'library') === $zone)",
+        ".indexOn": [
+          "at"
+        ],
+        "$id": {
+          ".write": "(auth != null && root.child('accounts').child(auth.uid).child('characterId').val() != null && (root.child('characters').child(root.child('accounts').child(auth.uid).child('characterId').val()).child('profile/location/zone').exists() ? root.child('characters').child(root.child('accounts').child(auth.uid).child('characterId').val()).child('profile/location/zone').val() : 'library') === $zone) && !data.exists() && newData.exists() && (!root.child('chatMutes').child(root.child('accounts').child(auth.uid).child('characterId').val()).exists() || root.child('chatMutes').child(root.child('accounts').child(auth.uid).child('characterId').val()).val() <= now) && newData.parent().parent().parent().child('chatRate').child(auth.uid).val() === newData.child('at').val() && (!root.child('chatRate').child(auth.uid).exists() || newData.child('at').val() - root.child('chatRate').child(auth.uid).val() >= 500)",
+          ".validate": "$id.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['at', 'uid', 'cid', 'name', 'text', 'kind']) && newData.child('at').isNumber() && newData.child('at').val() <= now + 60000 && newData.child('at').val() >= now - 60000 && newData.child('uid').val() === auth.uid && newData.child('cid').val() === root.child('accounts').child(auth.uid).child('characterId').val() && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 200 && (newData.child('kind').val() === '말' || newData.child('kind').val() === '표정')"
+        }
+      }
+    },
+    "whispers": {
+      "$cid": {
+        ".read": "(auth != null && root.child('gm').child(auth.uid).val() === true) || (auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid)",
+        "$id": {
+          ".write": "auth != null && !data.exists() && newData.exists() && (!root.child('chatMutes').child(root.child('accounts').child(auth.uid).child('characterId').val()).exists() || root.child('chatMutes').child(root.child('accounts').child(auth.uid).child('characterId').val()).val() <= now) && newData.parent().parent().parent().child('chatRate').child(auth.uid).val() === newData.child('at').val() && (!root.child('chatRate').child(auth.uid).exists() || newData.child('at').val() - root.child('chatRate').child(auth.uid).val() >= 500) && (root.child('characters').child(newData.child('to').val()).child('profile/location/zone').exists() ? root.child('characters').child(newData.child('to').val()).child('profile/location/zone').val() : 'library') === (root.child('characters').child(root.child('accounts').child(auth.uid).child('characterId').val()).child('profile/location/zone').exists() ? root.child('characters').child(root.child('accounts').child(auth.uid).child('characterId').val()).child('profile/location/zone').val() : 'library') && ($cid === newData.child('to').val() || $cid === root.child('accounts').child(auth.uid).child('characterId').val())",
+          ".validate": "$id.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['at', 'uid', 'cid', 'name', 'text', 'to', 'toName']) && newData.child('at').isNumber() && newData.child('at').val() <= now + 60000 && newData.child('at').val() >= now - 60000 && newData.child('uid').val() === auth.uid && newData.child('cid').val() === root.child('accounts').child(auth.uid).child('characterId').val() && newData.child('name').isString() && newData.child('name').val().length <= 40 && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 200 && newData.child('to').isString() && newData.child('toName').isString()"
+        }
+      }
+    },
+    "chatRate": {
+      "$uid": {
+        ".read": "(auth != null && auth.uid === $uid)",
+        ".write": "(auth != null && auth.uid === $uid) && newData.isNumber() && newData.val() <= now + 60000 && newData.val() >= now - 60000"
+      }
+    },
+    "chatMutes": {
+      ".read": "auth != null",
+      ".write": "(auth != null && root.child('gm').child(auth.uid).val() === true)",
+      "$cid": {
+        ".validate": "newData.isNumber()"
+      }
+    },
+    "chatReports": {
+      ".read": "(auth != null && root.child('gm').child(auth.uid).val() === true)",
+      "$id": {
+        ".write": "auth != null && !data.exists() && newData.exists() && newData.child('by').val() === auth.uid",
+        ".validate": "$id.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['at', 'by', 'zone', 'line']) && newData.child('at').isNumber()"
+      }
+    },
     ".write": false,
     "gm": {
       ".read": "auth != null"

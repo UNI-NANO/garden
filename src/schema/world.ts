@@ -4,7 +4,7 @@ import { z } from "zod";
 export const DateKeySchema = z.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
 
 /** 하루 계산의 단계 (명세서 「하루 계산」). 새 시스템이 생기면 그 단계가 여기 더해진다 */
-export const DAILY_STEPS = ["백업", "달 넘어감", "마무리"] as const;
+export const DAILY_STEPS = ["백업", "달 넘어감", "정리", "마무리"] as const;
 export const DailyStepSchema = z.enum(DAILY_STEPS);
 export type DailyStep = z.infer<typeof DailyStepSchema>;
 

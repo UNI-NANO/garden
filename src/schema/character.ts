@@ -107,7 +107,14 @@ export function characterSchema(limits: Limits) {
       family: z.string().min(1).optional(),
       job: z.strictObject({ name: z.string().min(1), stage: z.string(), workplace: z.string().min(1).optional() }).optional(),
       /** 지금 있는 곳 */
-      location: z.strictObject({ region: z.string().min(1), place: z.string().min(1) }).optional(),
+      location: z
+        .strictObject({
+          region: z.string().min(1),
+          place: z.string().min(1),
+          /** 구역 대화의 구역 키 (zoneKeyOf). 보안 규칙이 같은 구역인지 이것으로 본다 */
+          zone: KeySchema.optional(),
+        })
+        .optional(),
       /** 기억 표시와 평판 꼬리표 (재능이 아니라 기록) */
       marks: z.array(z.string().min(1)).default([]),
       /** 성격·외형·말버릇·그 밖 */

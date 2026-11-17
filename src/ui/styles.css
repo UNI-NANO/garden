@@ -721,3 +721,91 @@ input:focus-visible {
   font-size: 14px;
   text-align: center;
 }
+
+/* 구역 대화 */
+.chat__title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.chat__lines {
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.chat__line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+  overflow-wrap: anywhere;
+}
+
+.chat__line--whisper {
+  color: var(--gold-deep);
+}
+
+.chat__emote,
+.chat__empty {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.chat__report {
+  flex: none;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chat__form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat__input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  background: #f6f1e4;
+  color: var(--ink);
+  font: inherit;
+}
+
+.chat__count {
+  flex: none;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.chat__count--over {
+  color: #9b2a1f;
+}
+
+.chat__notice {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #9b2a1f;
+}
+
+@media (max-width: 767px) {
+  .chat__form {
+    flex-wrap: wrap;
+  }
+
+  .chat__input {
+    flex-basis: 100%;
+  }
+}

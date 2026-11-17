@@ -153,9 +153,69 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
   const requestCreatedNow =
     `${rootAfter}.child('requests').child($cid).child($rid).exists()` + ` && !root.child('requests').child($cid).child($rid).exists()`;
 
+  // 구역 대화: 같은 구역(캐릭터 위치의 zone, 없으면 도서관)의 캐릭터 주인만 읽고 쓴다
+  const chat = limits.chat;
+  const MY_CID = "root.child('accounts').child(auth.uid).child('characterId').val()";
+  const zoneOf = (cid: string) => {
+    const zone = `root.child('characters').child(${cid}).child('profile/location/zone')`;
+    return `(${zone}.exists() ? ${zone}.val() : 'library')`;
+  };
+  const IN_ZONE = (zone: string) => `(${AUTH} && ${MY_CID} != null && ${zoneOf(MY_CID)} === ${zone})`;
+  const NOT_MUTED = `(!root.child('chatMutes').child(${MY_CID}).exists() || root.child('chatMutes').child(${MY_CID}).val() <= now)`;
+  /** 같은 쓰기에서 /chatRate/{uid}를 이 줄의 시각으로 올리고, 앞 줄과 최소 간격을 지킨다 */
+  const rateOk = (rootAfterLine: string) =>
+    `${rootAfterLine}.child('chatRate').child(auth.uid).val() === newData.child('at').val()` +
+    ` && (!root.child('chatRate').child(auth.uid).exists() || newData.child('at').val() - root.child('chatRate').child(auth.uid).val() >= ${chat.minGapMs})`;
+  const line = (extra: string[]) =>
+    `newData.hasChildren(['at', 'uid', 'cid', 'name', 'text'${extra.map((e) => `, '${e}'`).join("")}])` +
+    " && newData.child('at').isNumber() && newData.child('at').val() <= now + 60000 && newData.child('at').val() >= now - 60000" +
+    ` && newData.child('uid').val() === auth.uid && newData.child('cid').val() === ${MY_CID}` +
+    " && newData.child('name').isString() && newData.child('name').val().length <= 40" +
+    ` && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= ${chat.maxLength}`;
+  const rootAfterLine = "newData.parent().parent().parent()";
+
   return {
     rules: {
       ".read": false,
+      chat: {
+        $zone: {
+          ".read": `${GM} || ${IN_ZONE("$zone")}`,
+          ".indexOn": ["at"],
+          $id: {
+            // 남긴 말은 고치거나 지울 수 없다 (지우기는 하루 계산의 정리만)
+            ".write": `${IN_ZONE("$zone")} && !data.exists() && newData.exists() && ${NOT_MUTED} && ${rateOk(rootAfterLine)}`,
+            ".validate": `$id.matches(${KEY}) && ${line(["kind"])} && (newData.child('kind').val() === '말' || newData.child('kind').val() === '표정')`,
+          },
+        },
+      },
+      whispers: {
+        $cid: {
+          ".read": `${GM} || ${OWNER}`,
+          $id: {
+            // 같은 구역의 한 사람에게. 받는 쪽과 보낸 쪽 사본을 같은 쓰기로
+            ".write":
+              `${AUTH} && !data.exists() && newData.exists() && ${NOT_MUTED} && ${rateOk(rootAfterLine)}` +
+              ` && ${zoneOf("newData.child('to').val()")} === ${zoneOf(MY_CID)}` +
+              ` && ($cid === newData.child('to').val() || $cid === ${MY_CID})`,
+            ".validate": `$id.matches(${KEY}) && ${line(["to", "toName"])} && newData.child('to').isString() && newData.child('toName').isString()`,
+          },
+        },
+      },
+      chatRate: {
+        $uid: {
+          ".read": SELF,
+          ".write": `${SELF} && newData.isNumber() && newData.val() <= now + 60000 && newData.val() >= now - 60000`,
+        },
+      },
+      // 말 막기: GM만. 막힌 동안은 말·귓속말을 쓸 수 없다
+      chatMutes: { ".read": AUTH, ".write": GM, $cid: { ".validate": "newData.isNumber()" } },
+      chatReports: {
+        ".read": GM,
+        $id: {
+          ".write": `${AUTH} && !data.exists() && newData.exists() && newData.child('by').val() === auth.uid`,
+          ".validate": `$id.matches(${KEY}) && newData.hasChildren(['at', 'by', 'zone', 'line']) && newData.child('at').isNumber()`,
+        },
+      },
       ".write": false,
       gm: { ".read": AUTH },
       defs: { ".read": AUTH, ".write": GM },

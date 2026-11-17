@@ -13,6 +13,16 @@ export const LimitsSchema = z.strictObject({
   talents: z.strictObject({ chosen: count.min(1) }),
   loadout: z.strictObject({ basics: count.min(1) }),
   month: z.strictObject({ mainActions: count, minorActions: count, savedActionsMax: count, careerMax: count }),
+  /** 구역 대화: 한 줄 길이, 빨리 보내기(burstSeconds 안에 burstLines를 넘으면 muteSeconds 막힘), 들어올 때 보여 줄 줄 수, 보관 날수, 규칙이 강제하는 최소 간격 */
+  chat: z.strictObject({
+    maxLength: count.min(1),
+    burstLines: count.min(1),
+    burstSeconds: count.min(1),
+    muteSeconds: count.min(1),
+    historyLines: count.min(1),
+    keepDays: count.min(1),
+    minGapMs: count,
+  }),
   /** 세계 시계: 처음 연도(성력), 하루 경계(현실 시간대의 UTC와의 차, 시간). 한국 시간 자정이면 9 */
   clock: z.strictObject({ startYear: count.min(1), utcOffsetHours: z.number().int().min(-12).max(14) }),
   exchange: z.strictObject({

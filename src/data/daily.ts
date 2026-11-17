@@ -2,12 +2,13 @@ import { advanceMonth, dateKeyAt, initialClock, missingDays, monthKeyOf, rollove
 import { characterSchema } from "../schema/character";
 import type { Limits } from "../schema/defs/limits";
 import { DailyRunSchema, WORLD_CLOCK_PATH, WorldClockSchema, type DailyStep, type WorldClock } from "../schema/world";
+import { cleanupChat } from "./chat";
 import type { AdminPort } from "./migrate-write";
 
 /**
  * 하루 계산 (명세서 「하루 계산」·「세계 시계와 달 행동」). GitHub Actions의 예약 실행이 관리자 키로 돌린다.
  *
- * 순서: 계산 중 켜기 → 빠진 날마다 [백업 → 달 넘어감 → 마무리] → 계산 중 끄기 → 실행 기록.
+ * 순서: 계산 중 켜기 → 빠진 날마다 [백업 → 달 넘어감 → 정리 → 마무리] → 계산 중 끄기 → 실행 기록.
  * 날마다 단계를 끝낼 때 진행(`progress`)을 같은 쓰기에 남긴다. 도중에 실패하면 다음 실행이 끝난 단계를 건너뛰고 이어서 한다.
  * 「달 넘어감」은 세계의 달과 모든 캐릭터를 한 번의 쓰기로 바꾼다(다 되거나 하나도 안 된다).
  * 생활비·신선도·시장·레이드·월보·칭호·검증·정리는 그 시스템이 생길 때 단계로 더한다.
@@ -90,6 +91,13 @@ export async function runDaily(db: AdminPort, options: DailyOptions): Promise<Da
           `${dateKey}: ${monthKeyOf(next)}${next.yearEnd ? " (한 해 정리)" : ""} — 캐릭터 ${counts.rolled}명 넘어감` +
             (counts.skipped.length > 0 ? `, 읽지 못해 건너뜀: ${counts.skipped.join(", ")}` : ""),
         );
+      }
+
+      // 정리: 보관 기간이 지난 구역 대화·귓속말 (실행 시각 기준)
+      if (!finished.has("정리")) {
+        const removed = await cleanupChat(db, options.limits, options.now);
+        await db.update(mark("정리"));
+        if (removed > 0) notes.push(`${dateKey}: 지난 대화 ${removed}줄 지움`);
       }
 
       // 마무리: 날짜를 기록하고 진행을 지운다
