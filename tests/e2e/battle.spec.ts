@@ -252,3 +252,11 @@ test("모바일 배치: 적이 위, 아군이 아래, 의도는 적 칸 아래, 
   // 실제 휴대폰 화면 크기 그대로 (전체 페이지 캡처는 아래 고정 패널 자리를 다르게 그린다)
   await page.screenshot({ path: join(shots, `battle-8-phone-${info.project.name}.png`) });
 });
+
+test("시험 환경에서는 #practice로 로그인 없이 연습장이 열린다", async ({ page }) => {
+  await page.goto("/#practice");
+  await expect(page.getByRole("heading", { name: "연습 전투" })).toBeVisible();
+  await page.getByRole("button", { name: "돌아가기" }).click();
+  // 나가면 원래 첫 화면(로그인)으로
+  await expect(page.getByRole("heading", { name: "도서관 입구" })).toBeVisible();
+});

@@ -41,6 +41,10 @@ export function App(props: { fb: Firebase; limits: Limits }) {
   const [session, setSession] = useState<Session>({ status: "loading" });
   const [practice, setPractice] = useState<PracticeScreen | "loading">();
   useEffect(() => watchSession(props.fb, props.limits, setSession), [props.fb, props.limits]);
+  // 시험 환경에서는 주소 끝에 #practice를 붙이면 로그인 없이 연습장이 바로 열린다 (숫자를 직접 쳐 보는 용도)
+  useEffect(() => {
+    if (PRACTICE && window.location.hash === "#practice") openPractice();
+  }, []);
 
   const openPractice = () => {
     if (!PRACTICE) return;
@@ -53,16 +57,21 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       });
   };
 
+  const closePractice = () => {
+    setPractice(undefined);
+    if (window.location.hash === "#practice") history.replaceState(null, "", window.location.pathname + window.location.search);
+  };
+
   return (
     <ErrorBoundary fb={props.fb}>
-      {session.status === "loading" ? (
+      {PRACTICE && practice === "loading" ? (
+        <Notice title="연습 전투">연습장을 여는 중…</Notice>
+      ) : PRACTICE && practice ? (
+        h(practice, { fb: props.fb, onExit: closePractice })
+      ) : session.status === "loading" ? (
         <Notice title="저편의 정원">문을 여는 중…</Notice>
       ) : session.status === "signedOut" ? (
         <LoginScreen fb={props.fb} />
-      ) : PRACTICE && practice === "loading" ? (
-        <Notice title="연습 전투">연습장을 여는 중…</Notice>
-      ) : PRACTICE && practice ? (
-        h(practice, { fb: props.fb, onExit: () => setPractice(undefined) })
       ) : (
         <LibraryHome fb={props.fb} session={session} {...(PRACTICE ? { onPractice: openPractice } : {})} />
       )}
