@@ -2,6 +2,7 @@ import type { z } from "zod";
 import { BattleRulesSchema, EnemyListSchema, type BattleRules, type EnemyList } from "../schema/defs/battle";
 import { DungeonListSchema, type DungeonList } from "../schema/defs/dungeon";
 import { CAST_ZONES, FishingDefsSchema, SeasonSchema, type FishingDefs } from "../schema/defs/fishing";
+import { GatheringDefsSchema, type GatheringDefs } from "../schema/defs/gathering";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -571,4 +572,30 @@ export function checkFishing(raw: unknown, defs: { items: ItemList }): { ok: tru
     }
   }
   return issues.length > 0 ? { ok: false, issues } : { ok: true, fishing: parsed.data };
+}
+
+const GATHERING_FILE = "gathering.json";
+
+/** 채집 검사: 모양, 독초는 잎 뒤가 늘 다르고, 계절마다 나올 약초(독초 짝이 있는)가 있고, 약초가 묶음 물건인지 */
+export function checkGathering(raw: unknown, defs: { items: ItemList }): { ok: true; gathering: GatheringDefs } | { ok: false; issues: DefIssue[] } {
+  const parsed = GatheringDefsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(GATHERING_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  const items = new Map(defs.items.items.map((i) => [i.id, i]));
+  const ids = new Set<string>();
+  for (const spot of parsed.data.spots) {
+    const add = (where: string, message: string) => issues.push({ file: GATHERING_FILE, where: `${spot.id}.${where}`, message });
+    if (ids.has(spot.id)) add("id", "ID가 겹친다");
+    ids.add(spot.id);
+    for (const herb of spot.herbs) {
+      const item = items.get(herb.item);
+      if (!item) add(herb.item, "없는 물건");
+      else if (item.kind !== "묶음") add(herb.item, "약초는 묶음 물건이어야 한다");
+      if (herb.lookalike && herb.lookalike.tells.back === herb.tells.back) add(herb.item, "닮은 독초는 잎 뒤가 달라야 한다 (잎 뒤 보기로 가려낼 수 있게)");
+    }
+    for (const season of SeasonSchema.options) {
+      if (!spot.herbs.some((h) => h.lookalike !== undefined && h.seasons.includes(season))) add("herbs", `${season}에 나올 약초가 없다`);
+    }
+  }
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, gathering: parsed.data };
 }

@@ -1,0 +1,55 @@
+{
+  "id": "gathering",
+  "name": "채집",
+  "version": 1,
+  "rules": {
+    "plants": { "min": 7, "max": 9 },
+    "lookalikeShare": 0.4,
+    "rareChance": 0.15,
+    "time": 12,
+    "cost": { "back": 1, "quick": 1, "careful": 3 },
+    "quality": { "quick": "하", "quickChecked": "중", "careful": "상", "carefulChecked": "최상" }
+  },
+  "spots": [
+    {
+      "id": "south-arm-slope",
+      "name": "남쪽 팔 산비탈",
+      "region": "남쪽 팔",
+      "place": "산비탈",
+      "description": "구름이 낮게 깔린 비탈. 비가 오기 전에 내려가야 한다.",
+      "herbs": [
+        {
+          "item": "silver-willow-leaf",
+          "seasons": ["봄", "여름", "가을"],
+          "weight": 3,
+          "quantity": { "min": 2, "max": 3 },
+          "tells": { "stem": "연두", "edge": "매끈", "back": "은빛" },
+          "lookalike": { "name": "붉은뒤버들", "tells": { "stem": "연두", "edge": "매끈", "back": "붉음" } }
+        },
+        {
+          "item": "hill-mugwort",
+          "seasons": ["봄", "여름", "가을", "겨울"],
+          "weight": 3,
+          "quantity": { "min": 2, "max": 4 },
+          "tells": { "stem": "연두", "edge": "갈라짐", "back": "솜털" },
+          "lookalike": { "name": "개쑥", "tells": { "stem": "자주", "edge": "갈라짐", "back": "연두" } }
+        },
+        {
+          "item": "bloodstop-herb",
+          "seasons": ["여름", "가을", "겨울"],
+          "weight": 2,
+          "quantity": { "min": 1, "max": 2 },
+          "tells": { "stem": "갈색", "edge": "톱니", "back": "연두" },
+          "lookalike": { "name": "뱀피풀", "tells": { "stem": "갈색", "edge": "매끈", "back": "붉음" } }
+        },
+        {
+          "item": "dew-blossom",
+          "seasons": ["봄", "여름", "가을", "겨울"],
+          "weight": 1,
+          "quantity": { "min": 1, "max": 1 },
+          "tells": { "stem": "연두", "edge": "매끈", "back": "은빛" }
+        }
+      ]
+    }
+  ]
+}

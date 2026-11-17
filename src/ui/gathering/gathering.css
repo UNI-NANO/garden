@@ -1,0 +1,160 @@
+/* 채집 (docs/ui/Gather.dc.html) */
+.gt__info {
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.gt .bar__button {
+  white-space: nowrap;
+}
+
+.gt__time {
+  max-width: 1180px;
+  margin: 12px auto 0;
+  padding: 0 32px;
+  color: var(--light);
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.gt__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 24px;
+  align-items: start;
+  max-width: 1180px;
+  margin: 12px auto 0;
+  padding: 0 32px 32px;
+}
+
+.gt__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.gt__plant {
+  cursor: pointer;
+}
+
+.gt__plant-ring {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 3;
+}
+
+.gt__plant:hover .gt__plant-ring,
+.gt__plant:focus-visible .gt__plant-ring {
+  stroke: rgba(184, 134, 46, 0.6);
+}
+
+.gt__plant:focus-visible {
+  outline: none;
+}
+
+.gt__plant--picked .gt__plant-ring {
+  stroke: var(--gold-deep);
+  fill: rgba(236, 229, 211, 0.18);
+}
+
+.gt__rain {
+  stroke: rgba(220, 228, 232, 0.6);
+  stroke-width: 2;
+}
+
+.gt__notice {
+  margin: 10px 0 0;
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.gt__side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.gt__title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 22px;
+}
+
+.gt__subtitle {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 16px;
+}
+
+.gt__closeup {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto 10px;
+  border: 1px solid var(--line);
+}
+
+.gt__tells {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 0 0 8px;
+}
+
+.gt__tells dt {
+  color: var(--ink-soft);
+}
+
+.gt__tells dd {
+  margin: 0;
+}
+
+.gt__known,
+.gt__hint {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.gt__nose {
+  color: var(--gold-deep);
+  font-size: 14px;
+}
+
+.gt__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.gt__gains {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.gt__gains li {
+  padding: 2px 0;
+}
+
+.gt__wasted,
+.gt__problem {
+  color: #9b2a1f;
+}
+
+@media (max-width: 767px) {
+  .gt__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 0 4px 24px;
+  }
+
+  .gt__time {
+    padding: 0 12px;
+  }
+
+  .gt__info {
+    display: none;
+  }
+}

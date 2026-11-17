@@ -1,7 +1,7 @@
 {
   "id": "items",
   "name": "물건",
-  "version": 4,
+  "version": 5,
   "items": [
     {
       "id": "sea-eel",
@@ -131,6 +131,34 @@
       "kind": "묶음",
       "weight": 1.5,
       "value": 45
+    },
+    {
+      "id": "silver-willow-leaf",
+      "name": "은버들잎",
+      "kind": "묶음",
+      "weight": 0.1,
+      "value": 5
+    },
+    {
+      "id": "hill-mugwort",
+      "name": "산쑥",
+      "kind": "묶음",
+      "weight": 0.1,
+      "value": 3
+    },
+    {
+      "id": "bloodstop-herb",
+      "name": "피멈춤풀",
+      "kind": "묶음",
+      "weight": 0.1,
+      "value": 9
+    },
+    {
+      "id": "dew-blossom",
+      "name": "이슬꽃",
+      "kind": "묶음",
+      "weight": 0.05,
+      "value": 40
     }
   ]
 }

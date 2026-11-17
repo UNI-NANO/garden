@@ -19,6 +19,7 @@ export function LibraryHome(props: {
   onScenes?: () => void;
   onDungeon?: () => void;
   onFishing?: () => void;
+  onGathering?: () => void;
 }) {
   const { session } = props;
   const [tab, setTab] = useState<Tab>("card");
@@ -121,6 +122,15 @@ export function LibraryHome(props: {
               onClick={props.onFishing}
             >
               낚시 (시험 환경)
+            </button>
+          )}
+          {import.meta.env.VITE_GARDEN_ENV !== "prod" && props.onGathering && (
+            <button
+              class="button home__practice"
+              type="button"
+              onClick={props.onGathering}
+            >
+              채집 (시험 환경)
             </button>
           )}
           {session.character && session.characterId && (

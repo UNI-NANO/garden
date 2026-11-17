@@ -65,6 +65,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
   const [scenes, setScenes] = useState<ScenesScreen | "loading">();
   const [dungeon, setDungeon] = useState<DungeonView | "loading">();
   const [fishing, setFishing] = useState<DungeonView | "loading">();
+  const [gathering, setGathering] = useState<DungeonView | "loading">();
   useEffect(
     () => watchSession(props.fb, props.limits, setSession),
     [props.fb, props.limits],
@@ -120,6 +121,18 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       });
   };
 
+  // 채집도 지도(9단계)가 생기기 전까지 시험 환경에서만
+  const openGathering = () => {
+    if (!PRACTICE) return;
+    setGathering("loading");
+    import("./gathering/GatheringScreen")
+      .then((module) => setGathering(() => module.GatheringScreen))
+      .catch((error: unknown) => {
+        reportError(props.fb, error, "채집 열기");
+        setGathering(undefined);
+      });
+  };
+
   const closePractice = () => {
     setPractice(undefined);
     if (window.location.hash === "#practice")
@@ -143,6 +156,15 @@ export function App(props: { fb: Firebase; limits: Limits }) {
           fb: props.fb,
           session: session.status === "signedIn" ? session : undefined,
           onExit: () => setScenes(undefined),
+        })
+      ) : PRACTICE && gathering === "loading" ? (
+        <Notice title="채집">산비탈로 가는 중…</Notice>
+      ) : PRACTICE && gathering && session.status === "signedIn" ? (
+        h(gathering, {
+          fb: props.fb,
+          limits: props.limits,
+          session,
+          onExit: () => setGathering(undefined),
         })
       ) : PRACTICE && fishing === "loading" ? (
         <Notice title="낚시">물가로 가는 중…</Notice>
@@ -177,6 +199,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
                 onScenes: openScenes,
                 onDungeon: openDungeon,
                 onFishing: openFishing,
+                onGathering: openGathering,
               }
             : {})}
         />
