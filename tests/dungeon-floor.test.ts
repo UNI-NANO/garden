@@ -91,7 +91,7 @@ describe("던전 층 만들기", () => {
     expect(seen.secret).toBeGreaterThan(1000);
     expect(seen.bomb).toBeGreaterThan(1000);
     expect(seen.trap).toBeGreaterThan(1000);
-  });
+  }, 60_000); // 씨앗이 많아 CI 기계에서는 5초를 넘는다
 
   it("피로 배율은 묶음·잎전 수량에만 (내림, 최소 1), 낱개는 그대로", () => {
     for (let s = 0; s < 200; s++) {
