@@ -642,7 +642,7 @@ function MiniMap(props: { floor: Floor; state: Expedition }) {
         const mark =
           r.index === state.at
             ? "●"
-            : r.kind === "보물"
+            : r.kind === "보물" && !s.cleared
               ? "🔒"
               : r.kind === "쉼터"
                 ? "♨"
