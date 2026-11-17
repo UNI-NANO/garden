@@ -13,6 +13,8 @@ export const LimitsSchema = z.strictObject({
   talents: z.strictObject({ chosen: count.min(1) }),
   loadout: z.strictObject({ basics: count.min(1) }),
   month: z.strictObject({ mainActions: count, minorActions: count, savedActionsMax: count, careerMax: count }),
+  /** 세계 시계: 처음 연도(성력), 하루 경계(현실 시간대의 UTC와의 차, 시간). 한국 시간 자정이면 9 */
+  clock: z.strictObject({ startYear: count.min(1), utcOffsetHours: z.number().int().min(-12).max(14) }),
   exchange: z.strictObject({
     /** 지갑이 가질 수 있는 최대 (잎전) */
     walletMax: count.max(Number.MAX_SAFE_INTEGER),
