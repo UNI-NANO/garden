@@ -202,6 +202,21 @@
           },
           "career": {
             ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 2"
+          },
+          "fatigue": {
+            "$field": {
+              ".validate": "$field.matches(/^[A-Za-z0-9_-]+$/) && newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 1000 && ((auth != null && root.child('gm').child(auth.uid).val() === true) || newData.val() >= (data.exists() ? data.val() : 0))"
+            }
+          }
+        },
+        "expedition": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && ((newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && (!data.exists() || !newData.exists())) || (data.exists() && newData.exists() && newData.child('id').val() === data.child('id').val() && newData.child('seed').val() === data.child('seed').val() && newData.child('startedAt').val() === data.child('startedAt').val()))",
+          ".validate": "newData.hasChildren(['id', 'dungeonId', 'seed', 'startedAt', 'floor', 'at', 'hp', 'maxHp', 'status']) && newData.child('id').isString() && newData.child('id').val().matches(/^[A-Za-z0-9_-]+$/) && newData.child('startedAt').isNumber() && newData.child('startedAt').val() <= now + 300000"
+        },
+        "life": {
+          "$n": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['kind', 'text']) && newData.child('text').isString()"
           }
         },
         "scenes": {

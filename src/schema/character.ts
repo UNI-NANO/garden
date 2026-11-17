@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DefIdSchema } from "./defs/common";
 import type { Limits } from "./defs/limits";
+import { ExpeditionSchema } from "./expedition";
 import { KeySchema } from "./keys";
 
 /**
@@ -193,6 +194,8 @@ export function characterSchema(limits: Limits) {
     /** 받을 자리가 아직 없어 보류된 장면 결과 (그 시스템이 생기면 적용) */
     pendingResults: z.array(z.strictObject({ scene: z.string().min(1), cmd: z.string().min(1), args: z.array(z.string()) })).default([]),
     mailbox: z.record(KeySchema, MailSchema).default({}),
+    /** 진행 중인 던전 탐험 (하나만) */
+    expedition: ExpeditionSchema.optional(),
     /** 인물과 친밀도 */
     people: z
       .record(KeySchema, z.strictObject({ name: z.string().min(1), relation: z.string(), intimacy: z.number().int(), note: z.string() }))
@@ -205,7 +208,7 @@ export function characterSchema(limits: Limits) {
     life: z
       .array(
         z.strictObject({
-          kind: z.enum(["전투", "이야기", "달", "기록"]),
+          kind: z.enum(["전투", "이야기", "달", "기록", "던전"]),
           /** 게임 속 때 (예: "513-10"). 모르면 없음 */
           when: z.string().min(1).optional(),
           text: z.string().min(1),

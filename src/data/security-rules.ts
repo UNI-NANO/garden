@@ -118,6 +118,29 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
       minorActions: { ".validate": int(0, limits.month.minorActions) },
       savedActions: { ".validate": int(0, limits.month.savedActionsMax) },
       career: { ".validate": int(0, limits.month.careerMax) },
+      // 오늘의 피로: 주인은 올리기만 (내리면 보상 곡선을 피한다). 하루마다 0으로는 하루 계산(관리자)이
+      fatigue: {
+        $field: { ".validate": `$field.matches(${KEY}) && ${int(0, 1000)} && (${GM} || newData.val() >= (data.exists() ? data.val() : 0))` },
+      },
+    },
+    // 진행 중인 던전 탐험 (명세서 「던전」). 만들기·지우기는 수정 번호·요청 기록과 함께(들어가기·정산),
+    // 진행 저장은 같은 탐험 ID·씨앗·시작 시각일 때만. 돈·물건은 정산 때 「주고받기」로만 가방에 들어간다
+    expedition: {
+      ".write":
+        `${OWNER} && ((${envelope(1)} && (!data.exists() || !newData.exists()))` +
+        " || (data.exists() && newData.exists() && newData.child('id').val() === data.child('id').val()" +
+        " && newData.child('seed').val() === data.child('seed').val() && newData.child('startedAt').val() === data.child('startedAt').val()))",
+      ".validate":
+        "newData.hasChildren(['id', 'dungeonId', 'seed', 'startedAt', 'floor', 'at', 'hp', 'maxHp', 'status'])" +
+        ` && newData.child('id').isString() && newData.child('id').val().matches(${KEY})` +
+        " && newData.child('startedAt').isNumber() && newData.child('startedAt').val() <= now + 300000",
+    },
+    // 일생 기록: 주인은 한 줄씩 덧붙이기만
+    life: {
+      $n: {
+        ".write": ownerWrite(2, " && !data.exists() && newData.exists()"),
+        ".validate": "newData.hasChildren(['kind', 'text']) && newData.child('text').isString()",
+      },
     },
     // 장면 결과 (명세서 「장면」: 끝날 때 한 번에). 본 장면은 더하기만: 지우면 같은 결과를 또 받을 수 있다
     scenes: {
