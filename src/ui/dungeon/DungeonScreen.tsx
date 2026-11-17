@@ -348,173 +348,165 @@ function DungeonRun(props: {
   const room = floor.rooms[state.at]!;
   const roomState = state.rooms[state.at] ?? {};
   const here = pickups(state, floor);
-  const ways = exits(state, floor).map((to) => ({
-    to,
-    dir: direction(room, floor.rooms[to]!),
-  }));
+  const free = !ended && state.fight === undefined;
+  const crackHere =
+    room.secret !== undefined &&
+    seesCracks &&
+    !state.rooms[room.secret]?.cleared;
 
   return (
     <main class="stage dg">
       {header}
       {notice}
       <div class="dg__body">
-        <Paper class="dg__room" label="지금 있는 방">
-          <h2 class="dg__room-title">
-            {roomTitle(room)}
-            {roomState.cleared &&
-            (room.kind === "전투" ||
-              room.kind === "정예" ||
-              room.kind === "보스")
-              ? " · 정리됨"
-              : ""}
+        <Paper class="dg__map" label="던전 지도">
+          <h2 class="dg__map-title">
+            {floorName(state.floor)} · 들어간 방{" "}
+            {Object.values(state.rooms).filter((r) => r.entered).length} /{" "}
+            {floor.rooms.length}
           </h2>
-          <p class="dg__room-text">
-            {roomText(room, roomState.cleared === true, state, floor)}
+          <DungeonMap
+            floor={floor}
+            state={state}
+            seesCracks={seesCracks}
+            canAct={free}
+            onMove={(to) => step((s, f) => move(s, f, to, ctx))}
+            onBlast={() => step((s, f) => blastWall(s, f, ctx))}
+          />
+          <p class="dg__legend">
+            이어진 방을 눌러 옮겨 가요 · ▭ 문 · 🔒 잠긴 문(열쇠) · ⚡ 금 간
+            벽(폭약) · ♨ 쉼터 · ✦ 끝방
           </p>
-          <p class="dg__vitals">
-            체력 {state.hp}/{state.maxHp} · 기력 {state.energy}/
-            {state.maxEnergy} · 열쇠 {state.keys} · 폭약 {state.bombs} · 압박{" "}
-            {state.pressure}
-          </p>
-
-          {ended ? (
-            <div class="dg__end">
-              <p>{endText(state, autoReturnDue(state, Date.now(), limits))}</p>
-              <button
-                class="button button--main"
-                type="button"
-                disabled={busy}
-                onClick={() => void settle()}
-              >
-                정리하기
-              </button>
-            </div>
-          ) : state.fight !== undefined ? (
-            <div class="dg__actions">
-              <p>문이 닫혔다. 이겨야 열린다.</p>
-              <button
-                class="button button--main"
-                type="button"
-                onClick={() => startFight(room)}
-              >
-                싸우기
-              </button>
-            </div>
-          ) : (
-            <>
-              {here.length > 0 && (
-                <ul class="dg__loot" aria-label="주울 것">
-                  {here.map(({ index, pickup }) => (
-                    <li key={index}>
-                      <span>{pickupLabel(pickup, defs)}</span>
-                      <button
-                        class="button"
-                        type="button"
-                        onClick={() => step((s, f) => take(s, f, index, ctx))}
-                      >
-                        줍기
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {room.secret !== undefined &&
-                seesCracks &&
-                !state.rooms[room.secret]?.cleared && (
-                  <p class="dg__crack">
-                    벽에 금이 가 있다.
-                    <button
-                      class="button"
-                      type="button"
-                      disabled={state.bombs < 1}
-                      onClick={() => step((s, f) => blastWall(s, f, ctx))}
-                    >
-                      폭약으로 부수기
-                    </button>
-                  </p>
-                )}
-              {room.kind === "쉼터" && !state.restUsed && (
-                <div class="dg__actions">
-                  <button
-                    class="button"
-                    type="button"
-                    onClick={() => step((s, f) => useRest(s, f, "쉬기", ctx))}
-                  >
-                    쉬기
-                  </button>
-                  <button
-                    class="button"
-                    type="button"
-                    onClick={() => step((s, f) => useRest(s, f, "귀환", ctx))}
-                  >
-                    귀환 (전부 가져감)
-                  </button>
-                </div>
-              )}
-              {state.at === floor.end && state.stairs && !floor.last && (
-                <button
-                  class="button button--main"
-                  type="button"
-                  onClick={() =>
-                    step((s, f) =>
-                      descend(
-                        s,
-                        f,
-                        generateFloor(
-                          dungeon,
-                          s.floor + 1,
-                          s.seed,
-                          defs.items,
-                          fatigueMultiplier(s.fatigueIndex, limits),
-                        ),
-                      ),
-                    )
-                  }
-                >
-                  다음 층으로 내려가기
-                </button>
-              )}
-              <nav class="dg__ways" aria-label="길">
-                {ways.map(({ to, dir }) => (
-                  <button
-                    key={to}
-                    class="button"
-                    type="button"
-                    onClick={() => step((s, f) => move(s, f, to, ctx))}
-                  >
-                    {dir} {lockedLabel(floor.rooms[to]!, state)}
-                  </button>
-                ))}
-              </nav>
-            </>
-          )}
         </Paper>
 
         <div class="dg__side">
-          <Paper class="dg__map" label="작은 지도">
-            <h2 class="dg__side-title">
-              {floorName(state.floor)} · 방{" "}
-              {Object.values(state.rooms).filter((r) => r.entered).length} /{" "}
-              {floor.rooms.length}
+          <Paper class="dg__room" label="지금 있는 방">
+            <h2 class="dg__room-title">
+              {roomTitle(room)}
+              {roomState.cleared &&
+              (room.kind === "전투" ||
+                room.kind === "정예" ||
+                room.kind === "보스")
+                ? " · 정리됨"
+                : ""}
             </h2>
-            <MiniMap floor={floor} state={state} />
-            <p class="dg__legend">
-              ● 지금 · ■ 지나온 방 · □ 보이는 방 · 🔒 보물방 · ♨ 쉼터 · ✦ 끝방
+            <p class="dg__room-text">
+              {roomText(room, roomState.cleared === true, state, floor)}
             </p>
+            <p class="dg__vitals">
+              체력 {state.hp}/{state.maxHp} · 기력 {state.energy}/
+              {state.maxEnergy}
+              <br />
+              열쇠 {state.keys} · 폭약 {state.bombs} · 압박 {state.pressure}
+            </p>
+
+            {ended ? (
+              <div class="dg__end">
+                <p>
+                  {endText(state, autoReturnDue(state, Date.now(), limits))}
+                </p>
+                <button
+                  class="button button--main"
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void settle()}
+                >
+                  정리하기
+                </button>
+              </div>
+            ) : state.fight !== undefined ? (
+              <div class="dg__actions">
+                <p>문이 닫혔다. 이겨야 열린다.</p>
+                <button
+                  class="button button--main"
+                  type="button"
+                  onClick={() => startFight(room)}
+                >
+                  싸우기
+                </button>
+              </div>
+            ) : (
+              <>
+                {here.length > 0 && (
+                  <ul class="dg__loot" aria-label="주울 것">
+                    {here.map(({ index, pickup }) => (
+                      <li key={index}>
+                        <span>{pickupLabel(pickup, defs)}</span>
+                        <button
+                          class="button button--small"
+                          type="button"
+                          onClick={() => step((s, f) => take(s, f, index, ctx))}
+                        >
+                          줍기
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {crackHere && (
+                  <p class="dg__crack">
+                    벽에 금이 가 있다. 지도에서 금 간 벽을 누르면 폭약을 써요.
+                  </p>
+                )}
+                {room.kind === "쉼터" && !state.restUsed && (
+                  <div class="dg__actions">
+                    <button
+                      class="button"
+                      type="button"
+                      onClick={() => step((s, f) => useRest(s, f, "쉬기", ctx))}
+                    >
+                      쉬기
+                    </button>
+                    <button
+                      class="button"
+                      type="button"
+                      onClick={() => step((s, f) => useRest(s, f, "귀환", ctx))}
+                    >
+                      귀환 (전부 가져감)
+                    </button>
+                  </div>
+                )}
+                {state.at === floor.end && state.stairs && !floor.last && (
+                  <div class="dg__actions">
+                    <button
+                      class="button button--main"
+                      type="button"
+                      onClick={() =>
+                        step((s, f) =>
+                          descend(
+                            s,
+                            f,
+                            generateFloor(
+                              dungeon,
+                              s.floor + 1,
+                              s.seed,
+                              defs.items,
+                              fatigueMultiplier(s.fatigueIndex, limits),
+                            ),
+                          ),
+                        )
+                      }
+                    >
+                      다음 층으로 내려가기
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </Paper>
           <Paper class="dg__bag" label="던전 가방">
             <h2 class="dg__side-title">
               던전 가방 {usedSlots(state.gains)} / {limits.dungeon.lootSlots} 칸
             </h2>
-            <p class="dg__note">
-              얻은 것은 쉼터에서 귀환해야 다 가져가요. 쓰러지면 절반을 잃어요.
-            </p>
             <ul class="dg__gains">
               {state.gains.length === 0 && <li>아직 없음</li>}
               {state.gains.map((gain, i) => (
                 <li key={i}>{gainLabel(gain, defs)}</li>
               ))}
             </ul>
+            <p class="dg__note">
+              쉼터에서 귀환해야 다 가져가요. 쓰러지면 절반을 잃어요.
+            </p>
           </Paper>
         </div>
       </div>
@@ -621,62 +613,175 @@ function Settled(props: {
   );
 }
 
-/** 작은 지도: 밝혀진 방만. 지금 방 ●, 들어간 방 ■, 보이기만 한 방 □ */
-function MiniMap(props: { floor: Floor; state: Expedition }) {
+const UNIT = 100;
+const ROOM = 70;
+const GAP = UNIT - ROOM;
+const DIR_NAMES = { 북: "북쪽", 남: "남쪽", 동: "동쪽", 서: "서쪽" } as const;
+const dirOf = (from: Room, to: Room): keyof typeof DIR_NAMES =>
+  to.x > from.x ? "동" : to.x < from.x ? "서" : to.y < from.y ? "북" : "남";
+
+type Door = { a: Room; b: Room; kind: "문" | "잠긴 문" | "금 간 벽" };
+
+/**
+ * 던전 지도 (밝혀진 방만). 방과 방 사이 벽에 작은 문 칸: 문 / 잠긴 문(보물방, 열쇠) / 금 간 벽(비밀방, 눈치가 있을 때, 폭약).
+ * 지금 방과 이어진 방을 누르면 옮겨 간다. 지금 방의 금 간 벽을 누르면 폭약을 쓴다.
+ */
+function DungeonMap(props: {
+  floor: Floor;
+  state: Expedition;
+  seesCracks: boolean;
+  canAct: boolean;
+  onMove: (to: number) => void;
+  onBlast: () => void;
+}) {
   const { floor, state } = props;
-  const shown = floor.rooms.filter((r) => state.rooms[r.index]?.seen);
-  const xs = shown.map((r) => r.x);
-  const ys = shown.map((r) => r.y);
-  const [minX, minY] = [Math.min(...xs), Math.min(...ys)];
+  const roomState = (r: Room) => state.rooms[r.index] ?? {};
+  const shown = floor.rooms.filter((r) => roomState(r).seen);
+  const here = floor.rooms[state.at]!;
+  const reachable = new Set(props.canAct ? exits(state, floor) : []);
+
+  const doors: Door[] = [];
+  for (const r of shown) {
+    for (const to of r.doors) {
+      const other = floor.rooms[to]!;
+      if (
+        to < r.index ||
+        !roomState(other).seen ||
+        !(roomState(r).entered || roomState(other).entered)
+      )
+        continue;
+      const locked = [r, other].find(
+        (x) => x.kind === "보물" && !roomState(x).cleared,
+      );
+      doors.push({ a: r, b: other, kind: locked ? "잠긴 문" : "문" });
+    }
+    if (r.secret !== undefined && roomState(r).entered) {
+      const secret = floor.rooms[r.secret]!;
+      if (roomState(secret).cleared)
+        doors.push({ a: r, b: secret, kind: "문" });
+      else if (props.seesCracks)
+        doors.push({ a: r, b: secret, kind: "금 간 벽" });
+    }
+  }
+
+  const all = [...shown, ...doors.map((d) => d.b)];
+  const minX = Math.min(...all.map((r) => r.x));
+  const minY = Math.min(...all.map((r) => r.y));
+  const maxX = Math.max(...all.map((r) => r.x));
+  const maxY = Math.max(...all.map((r) => r.y));
+  const px = (x: number) => (x - minX) * UNIT + GAP / 2;
+  const py = (y: number) => (y - minY) * UNIT + GAP / 2;
+  const width = (maxX - minX + 1) * UNIT;
+  const height = (maxY - minY + 1) * UNIT;
+
+  const activate = (handler: () => void) => ({
+    onClick: handler,
+    onKeyDown: (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handler();
+      }
+    },
+  });
+
   return (
-    <div
-      class="dg__grid"
-      role="img"
-      aria-label="밝혀진 방들"
-      style={{
-        gridTemplateColumns: `repeat(${Math.max(...xs) - minX + 1}, 34px)`,
-      }}
+    <svg
+      class="dg__svg"
+      viewBox={`0 0 ${width} ${height}`}
+      role="group"
+      aria-label="던전 지도"
+      style={{ maxWidth: `${width * 1.3}px` }}
     >
-      {shown.map((r) => {
-        const s = state.rooms[r.index]!;
-        const mark =
-          r.index === state.at
-            ? "●"
-            : r.kind === "보물" && !s.cleared
-              ? "🔒"
-              : r.kind === "쉼터"
-                ? "♨"
-                : r.index === floor.end
-                  ? "✦"
-                  : s.entered
-                    ? "■"
-                    : "□";
+      {doors.map((door) => {
+        const horizontal = door.a.y === door.b.y;
+        const [left, top] = horizontal
+          ? [
+              px(Math.max(door.a.x, door.b.x)) - GAP - 2,
+              py(door.a.y) + ROOM / 2 - 11,
+            ]
+          : [
+              px(door.a.x) + ROOM / 2 - 11,
+              py(Math.max(door.a.y, door.b.y)) - GAP - 2,
+            ];
+        const [w, h] = horizontal ? [GAP + 4, 22] : [22, GAP + 4];
+        const crackHere =
+          door.kind === "금 간 벽" && door.a.index === state.at && props.canAct;
+        const cls = `dg__door dg__door--${door.kind === "문" ? "open" : door.kind === "잠긴 문" ? "locked" : "crack"}`;
         return (
-          <span
-            key={r.index}
-            class={`dg__cell ${r.index === state.at ? "dg__cell--here" : s.entered ? "dg__cell--entered" : ""}`}
-            style={{ gridColumn: r.x - minX + 1, gridRow: r.y - minY + 1 }}
+          <g
+            key={`${door.a.index}-${door.b.index}`}
+            class={`${cls} ${crackHere ? "dg__door--act" : ""}`}
+            {...(crackHere
+              ? {
+                  role: "button",
+                  tabIndex: 0,
+                  "aria-label": `${DIR_NAMES[dirOf(door.a, door.b)]} 금 간 벽 부수기 (폭약 ${state.bombs})`,
+                  ...activate(props.onBlast),
+                }
+              : {})}
           >
-            {mark}
-          </span>
+            <rect x={left} y={top} width={w} height={h} rx="3" />
+            {door.kind !== "문" && (
+              <text
+                x={left + w / 2}
+                y={top + h / 2 + 5}
+                text-anchor="middle"
+                class="dg__door-mark"
+              >
+                {door.kind === "잠긴 문" ? "🔒" : "⚡"}
+              </text>
+            )}
+          </g>
         );
       })}
-    </div>
+      {shown.map((r) => {
+        const s = roomState(r);
+        const isHere = r.index === state.at;
+        const canGo = reachable.has(r.index);
+        const name = s.entered
+          ? roomTitle(r)
+          : r.kind === "보물"
+            ? "잠긴 방"
+            : "방";
+        const mark = isHere
+          ? "●"
+          : r.kind === "쉼터"
+            ? "♨"
+            : r.index === floor.end
+              ? "✦"
+              : r.kind === "보물" && s.cleared
+                ? "✧"
+                : "";
+        const cls = `dg__cell ${isHere ? "dg__cell--here" : s.entered ? "dg__cell--entered" : "dg__cell--seen"} ${canGo ? "dg__cell--go" : ""}`;
+        return (
+          <g
+            key={r.index}
+            class={cls}
+            {...(canGo
+              ? {
+                  role: "button",
+                  tabIndex: 0,
+                  "aria-label": `${DIR_NAMES[dirOf(here, r)]} ${name}으로 가기`,
+                  ...activate(() => props.onMove(r.index)),
+                }
+              : {})}
+          >
+            <rect x={px(r.x)} y={py(r.y)} width={ROOM} height={ROOM} rx="4" />
+            {mark && (
+              <text
+                x={px(r.x) + ROOM / 2}
+                y={py(r.y) + ROOM / 2 + 8}
+                text-anchor="middle"
+                class="dg__cell-mark"
+              >
+                {mark}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
   );
-}
-
-function direction(from: Room, to: Room): string {
-  if (to.x > from.x) return "동 ▶";
-  if (to.x < from.x) return "◀ 서";
-  if (to.y < from.y) return "북 ▲";
-  return "남 ▼";
-}
-
-function lockedLabel(room: Room, state: Expedition): string {
-  if (room.kind === "보물" && !state.rooms[room.index]?.cleared)
-    return "(잠김 · 열쇠 1)";
-  if (room.kind === "비밀") return "(부순 벽)";
-  return "";
 }
 
 const ROOM_TITLES: Record<Room["kind"], string> = {

@@ -109,6 +109,13 @@ function pickSeed() {
 const dirOf = (from: { x: number; y: number }, to: { x: number; y: number }) =>
   to.x > from.x ? "동" : to.x < from.x ? "서" : to.y < from.y ? "북" : "남";
 
+/** 던전 지도에서 그 방향의 이어진 방을 누른다 */
+const go = (page: Page, dir: string) =>
+  page
+    .getByRole("group", { name: "던전 지도" })
+    .getByRole("button", { name: new RegExp(`^${dir}쪽 .*으로 가기$`) })
+    .click();
+
 test("던전 입구: 들어가면 시작방과 작은 지도, 새로 고쳐도 이어진다", async ({
   page,
 }, info) => {
@@ -128,7 +135,12 @@ test("던전 입구: 들어가면 시작방과 작은 지도, 새로 고쳐도 �
 
   const room = page.getByRole("region", { name: "지금 있는 방" });
   await expect(room.getByRole("heading", { name: "시작방" })).toBeVisible();
-  await expect(page.getByRole("img", { name: "밝혀진 방들" })).toBeVisible();
+  const map = page.getByRole("group", { name: "던전 지도" });
+  await expect(map).toBeVisible();
+  // 시작방과 문으로 이어진 방은 눌러서 갈 수 있다
+  await expect(
+    map.getByRole("button", { name: /으로 가기$/ }).first(),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: /국경 숲길 · 첫째 층/ }),
   ).toBeVisible();
@@ -176,11 +188,8 @@ test("던전 탐험: 싸워 이기고, 줍고, 쉼터에서 귀환하면 가방�
 
   const room = page.getByRole("region", { name: "지금 있는 방" });
   const start = floor.rooms[floor.start]!;
-  await room
-    .getByRole("button", {
-      name: new RegExp(`^.*${dirOf(start, floor.rooms[wolf]!)}`),
-    })
-    .click();
+  // 지도에서 이어진 방을 눌러 옮겨 간다
+  await go(page, dirOf(start, floor.rooms[wolf]!));
   await expect(room).toContainText("문이 닫혔다");
   await page.screenshot({
     path: join(shots, `dungeon-2-room-${p}.png`),
@@ -212,14 +221,8 @@ test("던전 탐험: 싸워 이기고, 줍고, 쉼터에서 귀환하면 가방�
   await expect(loot).toHaveCount(0);
 
   // 시작방으로 돌아가 쉼터로
-  await room
-    .getByRole("button", { name: new RegExp(dirOf(floor.rooms[wolf]!, start)) })
-    .click();
-  await room
-    .getByRole("button", {
-      name: new RegExp(dirOf(start, floor.rooms[floor.rest]!)),
-    })
-    .click();
+  await go(page, dirOf(floor.rooms[wolf]!, start));
+  await go(page, dirOf(start, floor.rooms[floor.rest]!));
   await expect(room.getByRole("heading", { name: "쉼터방" })).toBeVisible();
   await page.screenshot({
     path: join(shots, `dungeon-3-rest-${p}.png`),
