@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import { BattleRulesSchema, EnemyListSchema, type BattleRules, type EnemyList } from "../schema/defs/battle";
 import { DungeonListSchema, type DungeonList } from "../schema/defs/dungeon";
+import { CAST_ZONES, FishingDefsSchema, SeasonSchema, type FishingDefs } from "../schema/defs/fishing";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -540,4 +541,34 @@ export function checkDungeons(raw: unknown, defs: { enemies: EnemyList; items: I
     for (const item of lootItems) if (!items.has(item)) add("loot", `없는 물건: ${item}`);
   }
   return issues.length > 0 ? { ok: false, issues } : { ok: true, dungeons: parsed.data };
+}
+
+const FISHING_FILE = "fishing.json";
+
+/** 낚시 검사: 모양, 구역마다 모든 계절에 나오는 고기가 있는지, 물고기가 묶음 물건인지, 구역 경계 순서 */
+export function checkFishing(raw: unknown, defs: { items: ItemList }): { ok: true; fishing: FishingDefs } | { ok: false; issues: DefIssue[] } {
+  const parsed = FishingDefsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(FISHING_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  const items = new Map(defs.items.items.map((i) => [i.id, i]));
+  const { rules } = parsed.data;
+  if (rules.zoneEdges[0] >= rules.zoneEdges[1]) issues.push({ file: FISHING_FILE, where: "rules.zoneEdges", message: "구역 경계는 커지는 순서여야 한다" });
+  if (rules.startDistance.max >= rules.lineLength) issues.push({ file: FISHING_FILE, where: "rules.startDistance", message: "시작 거리는 줄 길이보다 짧아야 한다" });
+  const ids = new Set<string>();
+  for (const spot of parsed.data.spots) {
+    if (ids.has(spot.id)) issues.push({ file: FISHING_FILE, where: spot.id, message: "ID가 겹친다" });
+    ids.add(spot.id);
+    for (const zone of CAST_ZONES) {
+      const fishes = spot.zones[zone];
+      for (const season of SeasonSchema.options) {
+        if (!fishes.some((f) => f.seasons.includes(season))) issues.push({ file: FISHING_FILE, where: `${spot.id}.${zone}`, message: `${season}에 나오는 고기가 없다` });
+      }
+      for (const fish of fishes) {
+        const item = items.get(fish.item);
+        if (!item) issues.push({ file: FISHING_FILE, where: `${spot.id}.${zone}`, message: `없는 물건: ${fish.item}` });
+        else if (item.kind !== "묶음") issues.push({ file: FISHING_FILE, where: `${spot.id}.${zone}`, message: `물고기는 묶음 물건이어야 한다: ${fish.item}` });
+      }
+    }
+  }
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, fishing: parsed.data };
 }

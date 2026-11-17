@@ -1,7 +1,7 @@
 {
   "id": "items",
   "name": "물건",
-  "version": 3,
+  "version": 4,
   "items": [
     {
       "id": "sea-eel",
@@ -103,6 +103,34 @@
       "kind": "낱개",
       "weight": 0.5,
       "value": 60
+    },
+    {
+      "id": "reed-minnow",
+      "name": "갈대피라미",
+      "kind": "묶음",
+      "weight": 0.1,
+      "value": 2
+    },
+    {
+      "id": "marsh-crucian",
+      "name": "늪붕어",
+      "kind": "묶음",
+      "weight": 0.4,
+      "value": 6
+    },
+    {
+      "id": "marsh-catfish",
+      "name": "늪메기",
+      "kind": "묶음",
+      "weight": 2,
+      "value": 18
+    },
+    {
+      "id": "mist-trout",
+      "name": "안개송어",
+      "kind": "묶음",
+      "weight": 1.5,
+      "value": 45
     }
   ]
 }

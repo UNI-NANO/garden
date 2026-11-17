@@ -1,0 +1,49 @@
+{
+  "id": "fishing",
+  "name": "낚시",
+  "version": 1,
+  "rules": {
+    "zoneEdges": [0.4, 0.75],
+    "castCycleMs": 1600,
+    "firstWaitMs": { "min": 1500, "max": 3000 },
+    "nibbles": { "min": 0, "max": 3 },
+    "nibbleGapMs": { "min": 700, "max": 1500 },
+    "biteWindowMs": 700,
+    "lineLength": 30,
+    "startDistance": { "min": 6, "max": 20 },
+    "reelSpeed": 2.5,
+    "payoutSpeed": 1.2,
+    "tensionUp": 0.3,
+    "tensionDown": 0.6,
+    "surgeFirstMs": { "min": 1200, "max": 2500 },
+    "surgeGapMs": { "min": 1800, "max": 3200 },
+    "surgeWarnMs": 700,
+    "surgeMs": 1100,
+    "surgePullMultiplier": 2.5,
+    "surgeTensionUp": 1.2,
+    "quality": { "최상": 0.8, "상": 0.6, "중": 0.4 }
+  },
+  "spots": [
+    {
+      "id": "ostren-marsh",
+      "name": "오스트렌 늪가",
+      "region": "뮈르가스트",
+      "place": "오스트렌",
+      "description": "갈대가 우거진 늪가. 안개가 낮게 깔려 찌가 잘 보이지 않는다.",
+      "zones": {
+        "얕은 곳": [
+          { "item": "reed-minnow", "seasons": ["봄", "여름", "가을", "겨울"], "weight": 3, "size": { "min": 6, "max": 12 }, "pull": 0.2, "surges": { "min": 0, "max": 0 } },
+          { "item": "marsh-crucian", "seasons": ["봄", "여름", "가을"], "weight": 2, "size": { "min": 14, "max": 26 }, "pull": 0.35, "surges": { "min": 0, "max": 1 } }
+        ],
+        "갈대 사이": [
+          { "item": "marsh-crucian", "seasons": ["봄", "여름", "가을", "겨울"], "weight": 3, "size": { "min": 18, "max": 32 }, "pull": 0.4, "surges": { "min": 0, "max": 1 } },
+          { "item": "marsh-catfish", "seasons": ["여름", "가을"], "weight": 1, "size": { "min": 35, "max": 70 }, "pull": 0.6, "surges": { "min": 2, "max": 3 } }
+        ],
+        "깊은 곳": [
+          { "item": "marsh-catfish", "seasons": ["봄", "여름", "가을", "겨울"], "weight": 3, "size": { "min": 40, "max": 90 }, "pull": 0.65, "surges": { "min": 2, "max": 4 } },
+          { "item": "mist-trout", "seasons": ["가을"], "weight": 1, "size": { "min": 45, "max": 75 }, "pull": 0.55, "surges": { "min": 3, "max": 5 } }
+        ]
+      }
+    }
+  ]
+}

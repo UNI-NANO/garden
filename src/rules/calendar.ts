@@ -26,3 +26,14 @@ export function monthLabel(key: string): string {
   const name = ORDINALS[month.index];
   return `성력 ${month.year}년 · ${name !== undefined ? `${name} 달` : "이름 없는 다섯 날"}`;
 }
+
+/**
+ * 달 순번의 계절 (총람 「달력」 표): 은방울꽃·철쭉·델피니움 봄, 붉은 양귀비~만다라화 여름,
+ * 해바라기·안개꽃·자작나무 가을, 흑장미·이름 없는 다섯 날 겨울.
+ */
+export function seasonOf(index: number): "봄" | "여름" | "가을" | "겨울" {
+  if (index <= 2) return "봄";
+  if (index <= 6) return "여름";
+  if (index <= 9) return "가을";
+  return "겨울";
+}

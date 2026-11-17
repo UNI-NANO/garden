@@ -275,6 +275,7 @@ export function convertCharacter(bundle: OldBundle, ctx: ConvertContext): Conver
     quests: [],
     pendingResults: [],
     mailbox: {},
+    records: { fish: {} },
     people,
     growth,
     evolutions,

@@ -1,0 +1,233 @@
+/* 낚시 (docs/ui/Fish.dc.html) */
+.fs__info {
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.fs .bar__button {
+  white-space: nowrap;
+}
+
+.fs__scene {
+  position: relative;
+  max-width: 1100px;
+  margin: 16px auto 0;
+  padding: 0 32px;
+}
+
+.fs__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  max-height: 62vh;
+  object-fit: cover;
+  border: 1.5px solid var(--line);
+}
+
+.fs__reed {
+  fill: none;
+  stroke: #5d6b4f;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.fs__line {
+  fill: none;
+  stroke: rgba(236, 229, 211, 0.6);
+  stroke-width: 1.5;
+}
+
+.fs__bobber--nibble {
+  animation: fs-nibble 0.25s;
+}
+
+.fs__bobber--sink {
+  transform: translateY(12px);
+  opacity: 0.55;
+  transition:
+    transform 0.15s,
+    opacity 0.15s;
+}
+
+@keyframes fs-nibble {
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+.fs__shadow {
+  fill: rgba(10, 14, 16, 0.6);
+}
+
+.fs__shadow--surge {
+  fill: rgba(10, 14, 16, 0.85);
+}
+
+.fs__ripple {
+  fill: none;
+  stroke: rgba(236, 229, 211, 0.55);
+  stroke-width: 2;
+  animation: fs-ripple 0.6s infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes fs-ripple {
+  from {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.fs__caught {
+  fill: #0d1113;
+  transition: fill 0.6s;
+}
+
+.fs__caught--shown {
+  fill: #8a8f7c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs__bobber--nibble,
+  .fs__ripple {
+    animation: none;
+  }
+}
+
+.fs__message {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  margin: 0;
+  padding: 8px 18px;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--serif);
+  font-size: 18px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.fs__message--alert {
+  color: #9b2a1f;
+  font-weight: 700;
+}
+
+/* 화면 아무 데나: 그림 위 전체를 덮는 투명 단추 */
+.fs__surface {
+  position: absolute;
+  inset: 0 32px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fs__surface:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: -4px;
+}
+
+.fs__gauges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 12px auto 0;
+  padding: 0 32px;
+}
+
+.fs__meter {
+  flex: 1 1 240px;
+  color: var(--light);
+}
+
+.fs__meter-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.fs__meter-bar {
+  display: block;
+  height: 14px;
+  border: 1px solid var(--line);
+  background: rgba(236, 229, 211, 0.15);
+}
+
+.fs__meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+}
+
+.fs__meter--danger .fs__meter-fill {
+  background: #b5402c;
+}
+
+.fs__result {
+  max-width: 520px;
+  margin: 16px auto;
+  padding: 20px 24px;
+}
+
+.fs__catch {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-size: 24px;
+}
+
+.fs__catch--shadow {
+  color: var(--ink-soft);
+}
+
+.fs__reason {
+  color: var(--ink-soft);
+}
+
+.fs__problem {
+  color: #9b2a1f;
+}
+
+.fs__buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 767px) {
+  .fs__scene,
+  .fs__gauges {
+    padding: 0 6px;
+  }
+
+  .fs__surface {
+    inset: 0 6px;
+  }
+
+  .fs__message {
+    font-size: 15px;
+    white-space: normal;
+    width: max-content;
+    max-width: 90%;
+    text-align: center;
+  }
+
+  .fs__info {
+    display: none;
+  }
+
+  .fs__result {
+    margin: 12px 4px;
+  }
+}

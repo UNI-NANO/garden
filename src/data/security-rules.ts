@@ -135,6 +135,15 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
         ` && newData.child('id').isString() && newData.child('id').val().matches(${KEY})` +
         " && newData.child('startedAt').isNumber() && newData.child('startedAt').val() <= now + 300000",
     },
+    // 내 기록 (가장 큰 물고기 등): 주인은 수정 번호와 함께, 커지기만
+    records: {
+      fish: {
+        $item: {
+          ".write": ownerWrite(3, " && newData.exists()"),
+          ".validate": `$item.matches(${KEY}) && newData.isNumber() && newData.val() > 0 && newData.val() <= 10000 && (!data.exists() || newData.val() > data.val())`,
+        },
+      },
+    },
     // 일생 기록: 주인은 한 줄씩 덧붙이기만
     life: {
       $n: {
