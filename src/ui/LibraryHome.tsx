@@ -11,13 +11,23 @@ import { Paper } from "./parts";
 type SignedIn = Extract<Session, { status: "signedIn" }>;
 type Tab = "card" | "life";
 
-export function LibraryHome(props: { fb: Firebase; limits: Limits; session: SignedIn; onPractice?: () => void; onScenes?: () => void }) {
+export function LibraryHome(props: {
+  fb: Firebase;
+  limits: Limits;
+  session: SignedIn;
+  onPractice?: () => void;
+  onScenes?: () => void;
+  onDungeon?: () => void;
+}) {
   const { session } = props;
   const [tab, setTab] = useState<Tab>("card");
   const [clock, setClock] = useState<WorldClock>();
   useEffect(() => watchWorldClock(props.fb, setClock), [props.fb]);
   const view = session.character ? buildHomeView(session.character) : undefined;
-  const leave = () => void signOut(props.fb).catch((error: unknown) => reportError(props.fb, error, "로그아웃"));
+  const leave = () =>
+    void signOut(props.fb).catch((error: unknown) =>
+      reportError(props.fb, error, "로그아웃"),
+    );
 
   return (
     <main class="stage home">
@@ -26,7 +36,9 @@ export function LibraryHome(props: { fb: Firebase; limits: Limits; session: Sign
           <h1 class="bar__title">세계수 도서관</h1>
           <div class="bar__side">
             {session.isGm && <span class="tag">GM</span>}
-            <span class="bar__name">{session.displayName || "이름 없는 이방인"}</span>
+            <span class="bar__name">
+              {session.displayName || "이름 없는 이방인"}
+            </span>
             <button class="bar__button" type="button" onClick={leave}>
               나가기
             </button>
@@ -36,7 +48,8 @@ export function LibraryHome(props: { fb: Firebase; limits: Limits; session: Sign
 
       {clock?.computing && (
         <p class="home__computing" role="status">
-          세계의 시간이 흐르는 중이에요. 잠시 뒤 새 달이 열리면 달 행동을 할 수 있어요.
+          세계의 시간이 흐르는 중이에요. 잠시 뒤 새 달이 열리면 달 행동을 할 수
+          있어요.
         </p>
       )}
 
@@ -47,41 +60,89 @@ export function LibraryHome(props: { fb: Firebase; limits: Limits; session: Sign
             <p class="speech__text">{greeting(session, view)}</p>
           </div>
           <nav class="books" aria-label="도서관 서가">
-            <button class={`book ${tab === "life" ? "book--open" : ""}`} type="button" disabled={!view} onClick={() => setTab(tab === "life" ? "card" : "life")}>
+            <button
+              class={`book ${tab === "life" ? "book--open" : ""}`}
+              type="button"
+              disabled={!view}
+              onClick={() => setTab(tab === "life" ? "card" : "life")}
+            >
               <span>내 일생</span>
             </button>
-            <button class="book book--soon" type="button" disabled title="준비 중">
+            <button
+              class="book book--soon"
+              type="button"
+              disabled
+              title="준비 중"
+            >
               <span>열람실</span>
             </button>
-            <button class="book book--soon" type="button" disabled title="준비 중">
+            <button
+              class="book book--soon"
+              type="button"
+              disabled
+              title="준비 중"
+            >
               <span>월보</span>
             </button>
           </nav>
           <p class="home__soon">열람실과 월보는 아직 준비 중이에요.</p>
           {import.meta.env.VITE_GARDEN_ENV !== "prod" && props.onPractice && (
-            <button class="button home__practice" type="button" onClick={props.onPractice}>
+            <button
+              class="button home__practice"
+              type="button"
+              onClick={props.onPractice}
+            >
               연습 전투 (시험 환경)
             </button>
           )}
           {import.meta.env.VITE_GARDEN_ENV !== "prod" && props.onScenes && (
-            <button class="button home__practice" type="button" onClick={props.onScenes}>
+            <button
+              class="button home__practice"
+              type="button"
+              onClick={props.onScenes}
+            >
               장면 보기 (시험 환경)
             </button>
           )}
+          {import.meta.env.VITE_GARDEN_ENV !== "prod" && props.onDungeon && (
+            <button
+              class="button home__practice"
+              type="button"
+              onClick={props.onDungeon}
+            >
+              던전 (시험 환경)
+            </button>
+          )}
           {session.character && session.characterId && (
-            <ChatPanel fb={props.fb} limits={props.limits} uid={session.uid} characterId={session.characterId} character={session.character} />
+            <ChatPanel
+              fb={props.fb}
+              limits={props.limits}
+              uid={session.uid}
+              characterId={session.characterId}
+              character={session.character}
+            />
           )}
         </div>
 
-        {view ? tab === "life" ? <LifeBook view={view} onClose={() => setTab("card")} /> : <ReaderCard view={view} /> : <Waiting problem={session.problem} />}
+        {view ? (
+          tab === "life" ? (
+            <LifeBook view={view} onClose={() => setTab("card")} />
+          ) : (
+            <ReaderCard view={view} />
+          )
+        ) : (
+          <Waiting problem={session.problem} />
+        )}
       </div>
     </main>
   );
 }
 
 function greeting(session: SignedIn, view: HomeView | undefined): string {
-  if (session.problem !== undefined) return "책장이 조금 흐트러졌네요. 곧 바로잡을게요.";
-  if (!view) return "어서 오세요. 열람증을 준비하고 있으니 조금만 기다려 주세요.";
+  if (session.problem !== undefined)
+    return "책장이 조금 흐트러졌네요. 곧 바로잡을게요.";
+  if (!view)
+    return "어서 오세요. 열람증을 준비하고 있으니 조금만 기다려 주세요.";
   if (view.stageNote !== undefined) return "이 책은 지금 펼칠 수 없어요.";
   return "깨셨군요. 오늘은 어디서부터 읽을까요.";
 }
@@ -92,7 +153,9 @@ function ReaderCard(props: { view: HomeView }) {
     <Paper class="card" label="열람증">
       <div class="card__head">
         <h2 class="paper__heading">열람증</h2>
-        {view.badge !== undefined && <span class="card__badge">{view.badge}</span>}
+        {view.badge !== undefined && (
+          <span class="card__badge">{view.badge}</span>
+        )}
       </div>
       <div class="card__who">
         <div class="card__portrait" aria-hidden="true">
@@ -116,7 +179,9 @@ function ReaderCard(props: { view: HomeView }) {
               </>
             )}
           </p>
-          {view.stageNote !== undefined && <p class="card__stage">{view.stageNote}</p>}
+          {view.stageNote !== undefined && (
+            <p class="card__stage">{view.stageNote}</p>
+          )}
         </div>
       </div>
       <dl class="card__facts">
@@ -127,7 +192,9 @@ function ReaderCard(props: { view: HomeView }) {
         <dt>남은 행동</dt>
         <dd>
           {view.actions}
-          {view.savedActions !== undefined && <span class="card__saved"> · {view.savedActions}</span>}
+          {view.savedActions !== undefined && (
+            <span class="card__saved"> · {view.savedActions}</span>
+          )}
         </dd>
       </dl>
       <div class="card__story">
@@ -135,7 +202,12 @@ function ReaderCard(props: { view: HomeView }) {
           <p class="card__story-label">가문 이야기</p>
           <p class="card__story-title">아직 준비 중이에요</p>
         </div>
-        <button class="button button--main" type="button" disabled title="준비 중">
+        <button
+          class="button button--main"
+          type="button"
+          disabled
+          title="준비 중"
+        >
           이어하기
         </button>
       </div>
@@ -161,7 +233,9 @@ function LifeBook(props: { view: HomeView; onClose: () => void }) {
             <li class="life__line">
               <span class="life__kind">{line.kind}</span>
               <span class="life__text">
-                {line.when !== undefined && <span class="life__when">{line.when}</span>}
+                {line.when !== undefined && (
+                  <span class="life__when">{line.when}</span>
+                )}
                 {line.text}
               </span>
             </li>
@@ -185,7 +259,10 @@ function Waiting(props: { problem: string | undefined }) {
       ) : (
         <>
           <p class="waiting__text">사서가 열람증을 준비하고 있어요.</p>
-          <p class="waiting__hint">준비가 끝나면 이 자리에 열람증이 놓입니다. 창을 열어 두면 저절로 바뀌어요.</p>
+          <p class="waiting__hint">
+            준비가 끝나면 이 자리에 열람증이 놓입니다. 창을 열어 두면 저절로
+            바뀌어요.
+          </p>
         </>
       )}
     </Paper>

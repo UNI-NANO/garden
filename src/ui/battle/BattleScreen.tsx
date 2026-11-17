@@ -59,9 +59,20 @@ interface Judging {
 }
 
 /** 전투 화면. 계산은 모두 rules/battle의 순수 함수가 하고, 화면은 고른 것을 넘기고 결과를 그린다 */
-export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: BattleSetup; title: string; onRetry: () => void; onExit: () => void }) {
+export function BattleScreen(props: {
+  fb: Firebase;
+  defs: BattleDefs;
+  setup: BattleSetup;
+  title: string;
+  onRetry: () => void;
+  onExit: () => void;
+  /** 실제 전투(던전): 그만두기·도망·다시 없이, 끝나면 결과를 넘긴다 */
+  onFinish?: (battle: BattleState) => void;
+}) {
   const { ctx } = props.defs;
-  const [battle, setBattle] = useState<BattleState>(() => createBattle(props.setup, ctx));
+  const [battle, setBattle] = useState<BattleState>(() =>
+    createBattle(props.setup, ctx),
+  );
   const [picked, setPicked] = useState<string>();
   const [clash, setClash] = useState(false);
   const [judging, setJudging] = useState<Judging>();
@@ -70,26 +81,41 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
 
   const player = battle.allies.find((a) => a.kind === "플레이어");
   const names = {
-    unit: (id: string) => [...battle.allies, ...battle.enemies].find((x) => x.id === id)?.name ?? id,
+    unit: (id: string) =>
+      [...battle.allies, ...battle.enemies].find((x) => x.id === id)?.name ??
+      id,
     effect: (id: string) => props.defs.effectNames.get(id) ?? id,
-    skill: (id: string) => (player ? allySkills(player).find((s) => s.id === id)?.name : undefined) ?? id,
+    skill: (id: string) =>
+      (player
+        ? allySkills(player).find((s) => s.id === id)?.name
+        : undefined) ?? id,
   };
-  const pickedSkill = player && picked ? allySkills(player).find((s) => s.id === picked) : undefined;
-  const targets = player && pickedSkill ? skillTargets(battle, player, pickedSkill) : [];
+  const pickedSkill =
+    player && picked
+      ? allySkills(player).find((s) => s.id === picked)
+      : undefined;
+  const targets =
+    player && pickedSkill ? skillTargets(battle, player, pickedSkill) : [];
 
   const [reacting, setReacting] = useState<Reacting>();
   const [moving, setMoving] = useState(false);
   const [info, setInfo] = useState<string>();
   const showEffect = (unitName: string, id: string) => {
     const effect = props.defs.practice.effects.find((e) => e.id === id);
-    if (effect) setInfo(`${unitName}의 ${effect.name}: ${props.defs.effectInfo.get(id) ?? ""}`);
+    if (effect)
+      setInfo(
+        `${unitName}의 ${effect.name}: ${props.defs.effectInfo.get(id) ?? ""}`,
+      );
   };
   const [auto, setAuto] = useState(false);
   const allySeconds = ctx.rules.timers.allySeconds;
   const [left, setLeft] = useState(allySeconds);
   const turnStart = useRef(performance.now());
 
-  const linesOf = (before: BattleState, after: BattleState) => after.events.slice(before.events.length).flatMap((e) => describeEvent(e, names) ?? []);
+  const linesOf = (before: BattleState, after: BattleState) =>
+    after.events
+      .slice(before.events.length)
+      .flatMap((e) => describeEvent(e, names) ?? []);
   const fail = (error: unknown) => {
     reportError(props.fb, error, "전투");
     setProblem("이 행동은 지금 할 수 없어요. 다른 것을 골라 주세요.");
@@ -105,12 +131,28 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
     setLeft(allySeconds);
   };
   /** 적 차례: 플레이어를 노린 공격마다 반응을 묻고, 다 모이면 실행한다. 자동이면 자동 규칙으로 */
-  const enemyPhase = (before: BattleState, afterAllies: BattleState, byAuto: boolean) => {
+  const enemyPhase = (
+    before: BattleState,
+    afterAllies: BattleState,
+    byAuto: boolean,
+  ) => {
     if (afterAllies.phase !== "적 차례") return finish(before, afterAllies);
-    if (byAuto) return finish(before, resolveEnemies(afterAllies, autoDefenses(afterAllies, ctx, "자동"), ctx));
+    if (byAuto)
+      return finish(
+        before,
+        resolveEnemies(
+          afterAllies,
+          autoDefenses(afterAllies, ctx, "자동"),
+          ctx,
+        ),
+      );
     const me = afterAllies.allies.find((a) => a.kind === "플레이어");
-    const mine = me && !me.down ? incomingAttacks(afterAllies, ctx).filter((a) => a.allyId === me.id) : [];
-    if (mine.length === 0) return finish(before, resolveEnemies(afterAllies, {}, ctx));
+    const mine =
+      me && !me.down
+        ? incomingAttacks(afterAllies, ctx).filter((a) => a.allyId === me.id)
+        : [];
+    if (mine.length === 0)
+      return finish(before, resolveEnemies(afterAllies, {}, ctx));
     setLog(linesOf(before, afterAllies));
     setBattle(afterAllies);
     setReacting({ before, state: afterAllies, queue: mine, defenses: {} });
@@ -125,8 +167,14 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
     setInfo(undefined);
     turnStart.current = performance.now();
     try {
-      const mates = autoAllyActions(battle, ctx).filter((a) => a.unitId !== player?.id);
-      enemyPhase(battle, resolveAllies(battle, [...(mine ? [mine] : []), ...mates], ctx), false);
+      const mates = autoAllyActions(battle, ctx).filter(
+        (a) => a.unitId !== player?.id,
+      );
+      enemyPhase(
+        battle,
+        resolveAllies(battle, [...(mine ? [mine] : []), ...mates], ctx),
+        false,
+      );
     } catch (error) {
       fail(error);
     }
@@ -135,7 +183,11 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
   /** 자동: 모두 자동 규칙으로 */
   const runAuto = () => {
     try {
-      enemyPhase(battle, resolveAllies(battle, autoAllyActions(battle, ctx), ctx), true);
+      enemyPhase(
+        battle,
+        resolveAllies(battle, autoAllyActions(battle, ctx), ctx),
+        true,
+      );
     } catch (error) {
       fail(error);
       setAuto(false);
@@ -146,7 +198,10 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
     if (!reacting) return;
     const [attack, ...rest] = reacting.queue;
     if (!attack) return;
-    const defenses = { ...reacting.defenses, [defenseKey(attack.enemyId, attack.allyId)]: input };
+    const defenses = {
+      ...reacting.defenses,
+      [defenseKey(attack.enemyId, attack.allyId)]: input,
+    };
     if (rest.length > 0) {
       setReacting({ ...reacting, queue: rest, defenses });
       return;
@@ -164,13 +219,16 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
   live.current = {
     idle,
     timeout: () => {
-      const action = player ? autoAllyActions(battle, ctx).find((a) => a.unitId === player.id) : undefined;
+      const action = player
+        ? autoAllyActions(battle, ctx).find((a) => a.unitId === player.id)
+        : undefined;
       runTurn(action);
     },
   };
   useEffect(() => {
     const timer = setInterval(() => {
-      const remain = allySeconds - (performance.now() - turnStart.current) / 1000;
+      const remain =
+        allySeconds - (performance.now() - turnStart.current) / 1000;
       setLeft(Math.max(0, Math.ceil(remain)));
       if (remain <= 0 && live.current.idle) live.current.timeout();
     }, 250);
@@ -187,13 +245,28 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
   const strikeWith = (skill: BattleSkill, target: EnemyUnit | undefined) => {
     if (!player) return;
     if (skill.stance) {
-      const targetId = target?.id ?? battle.enemies.find((e) => !e.down)?.id ?? "";
-      runTurn({ unitId: player.id, type: "기술", skillId: skill.id, targetId, judgements: [] });
+      const targetId =
+        target?.id ?? battle.enemies.find((e) => !e.down)?.id ?? "";
+      runTurn({
+        unitId: player.id,
+        type: "기술",
+        skillId: skill.id,
+        targetId,
+        judgements: [],
+      });
       return;
     }
     if (!target) return;
-    const withClash = clash && battle.intents.some((i) => i.enemyId === target.id && !i.cancelled);
-    setJudging({ skill, targetId: target.id, clash: withClash, hitCount: skillHitCount(battle, player, skill, target), done: [] });
+    const withClash =
+      clash &&
+      battle.intents.some((i) => i.enemyId === target.id && !i.cancelled);
+    setJudging({
+      skill,
+      targetId: target.id,
+      clash: withClash,
+      hitCount: skillHitCount(battle, player, skill, target),
+      done: [],
+    });
   };
 
   const choose = (skill: BattleSkill) => {
@@ -215,10 +288,21 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
       setJudging({ ...judging, done });
       return;
     }
-    runTurn({ unitId: player.id, type: "기술", skillId: judging.skill.id, targetId: judging.targetId, judgements: done, clash: judging.clash });
+    runTurn({
+      unitId: player.id,
+      type: "기술",
+      skillId: judging.skill.id,
+      targetId: judging.targetId,
+      judgements: done,
+      clash: judging.clash,
+    });
   };
 
-  const turnLabel = battle.outcome ? "전투 끝" : reacting ? `제${battle.turn}턴 · 적 차례` : `제${battle.turn}턴 · 아군 차례`;
+  const turnLabel = battle.outcome
+    ? "전투 끝"
+    : reacting
+      ? `제${battle.turn}턴 · 적 차례`
+      : `제${battle.turn}턴 · 아군 차례`;
 
   return (
     <main class="battle" aria-label="전투">
@@ -232,13 +316,20 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
             </span>
           )}
           {!battle.outcome && (
-            <button class="battle__leave" type="button" aria-pressed={auto} onClick={() => setAuto(!auto)}>
+            <button
+              class="battle__leave"
+              type="button"
+              aria-pressed={auto}
+              onClick={() => setAuto(!auto)}
+            >
               {auto ? "자동 끄기" : "자동"}
             </button>
           )}
-          <button class="battle__leave" type="button" onClick={props.onExit}>
-            그만두기
-          </button>
+          {!props.onFinish && (
+            <button class="battle__leave" type="button" onClick={props.onExit}>
+              그만두기
+            </button>
+          )}
         </span>
       </header>
 
@@ -246,15 +337,30 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
         <Formation
           side="아군"
           units={battle.allies}
-          render={(a) => <AllyCard battle={battle} ally={a} me={a.id === player?.id} names={props.defs.effectNames} onEffect={showEffect} />}
-          onEmpty={moving && player ? (slot) => runTurn({ unitId: player.id, type: "자리 옮기기", slot }) : undefined}
+          render={(a) => (
+            <AllyCard
+              battle={battle}
+              ally={a}
+              me={a.id === player?.id}
+              names={props.defs.effectNames}
+              onEffect={showEffect}
+            />
+          )}
+          onEmpty={
+            moving && player
+              ? (slot) =>
+                  runTurn({ unitId: player.id, type: "자리 옮기기", slot })
+              : undefined
+          }
         />
         <Intents battle={battle} names={names.unit} />
         <Formation
           side="적"
           units={battle.enemies}
           render={(e) => {
-            const intent = battle.intents.find((i) => i.enemyId === e.id && !i.cancelled);
+            const intent = battle.intents.find(
+              (i) => i.enemyId === e.id && !i.cancelled,
+            );
             return (
               <EnemyCard
                 enemy={e}
@@ -279,7 +385,12 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
       </section>
 
       {battle.outcome ? (
-        <Result battle={battle} onRetry={props.onRetry} onExit={props.onExit} />
+        <Result
+          battle={battle}
+          onRetry={props.onRetry}
+          onExit={props.onExit}
+          {...(props.onFinish ? { onFinish: props.onFinish } : {})}
+        />
       ) : (
         player &&
         !auto && (
@@ -299,6 +410,7 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
             }}
             onRest={() => runTurn({ unitId: player.id, type: "쉬기" })}
             onFlee={() => runTurn({ unitId: player.id, type: "도망" })}
+            canFlee={!props.onFinish}
           />
         )
       )}
@@ -310,11 +422,20 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
           enemyName={names.unit(reacting.queue[0].enemyId)}
           allyName={player.name}
           turn={battle.turn}
-          canDodge={reacting.queue[0].big && canMove(ctx.effects, player.effects)}
+          canDodge={
+            reacting.queue[0].big && canMove(ctx.effects, player.effects)
+          }
           seconds={ctx.rules.timers.reactionSeconds}
           length={ctx.rules.judgementBar.length}
           sweepMs={ctx.rules.judgementBar.sweepMs}
-          widthsFor={(kind) => reactionWidths(ctx.rules.reaction, kind, player.stance?.parryWidth ?? 0, ctx.rules.judgementBar.length)}
+          widthsFor={(kind) =>
+            reactionWidths(
+              ctx.rules.reaction,
+              kind,
+              player.stance?.parryWidth ?? 0,
+              ctx.rules.judgementBar.length,
+            )
+          }
           onDone={reacted}
         />
       )}
@@ -326,7 +447,10 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
           hitCount={judging.hitCount}
           done={judging.done}
           length={ctx.rules.judgementBar.length}
-          sweepMs={sweepTime(ctx.rules.judgementBar.sweepMs, skillBarSpeed(judging.skill))}
+          sweepMs={sweepTime(
+            ctx.rules.judgementBar.sweepMs,
+            skillBarSpeed(judging.skill),
+          )}
           widths={barWidths(battle, props.defs, player, judging)}
           onJudge={judged}
         />
@@ -336,11 +460,28 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
 }
 
 /** 이번 타의 판정 칸 폭: 숙련도, 효과(집중·위압·공포·침식), 찍은 칸 */
-function barWidths(battle: BattleState, defs: BattleDefs, player: AllyUnit, judging: Judging) {
+function barWidths(
+  battle: BattleState,
+  defs: BattleDefs,
+  player: AllyUnit,
+  judging: Judging,
+) {
   const target = battle.enemies.find((e) => e.id === judging.targetId);
-  const mods = barModifiers(defs.ctx.effects, player.effects, target?.effects ?? {});
+  const mods = barModifiers(
+    defs.ctx.effects,
+    player.effects,
+    target?.effects ?? {},
+  );
   return judgementWidths(defs.ctx.rules, player.mastery, {
-    goodWidth: mods.goodWidth + skillGoodWidth(battle, player, judging.skill, target, judging.done.length),
+    goodWidth:
+      mods.goodWidth +
+      skillGoodWidth(
+        battle,
+        player,
+        judging.skill,
+        target,
+        judging.done.length,
+      ),
     shake: mods.shake,
     noPerfect: mods.noPerfect,
     perfectWidth: judging.skill.perfectWidth ?? 0,
@@ -348,7 +489,9 @@ function barWidths(battle: BattleState, defs: BattleDefs, player: AllyUnit, judg
 }
 
 /** 진형 6칸. 아군은 뒷줄 | 앞줄, 적은 앞줄 | 뒷줄 (서로 마주 본다). 빈 칸은 옮겨 갈 수 있을 때 누를 수 있다 */
-function Formation<T extends { id: string; slot: number; down: boolean }>(props: {
+function Formation<
+  T extends { id: string; slot: number; down: boolean },
+>(props: {
   side: "아군" | "적";
   units: readonly T[];
   render: (unit: T) => preact.JSX.Element;
@@ -360,21 +503,39 @@ function Formation<T extends { id: string; slot: number; down: boolean }>(props:
     return props.side === "아군" ? [back, front] : [front, back];
   });
   return (
-    <div class={`formation formation--${props.side === "아군" ? "ally" : "enemy"}`} role="group" aria-label={props.side}>
-      <p class="formation__label">{props.side === "아군" ? "아군 · 뒷줄 　 앞줄" : "앞줄 　 뒷줄 · 적"}</p>
+    <div
+      class={`formation formation--${props.side === "아군" ? "ally" : "enemy"}`}
+      role="group"
+      aria-label={props.side}
+    >
+      <p class="formation__label">
+        {props.side === "아군" ? "아군 · 뒷줄 　 앞줄" : "앞줄 　 뒷줄 · 적"}
+      </p>
       <div class="formation__grid">
         {cells.map((slot) => {
-          const unit = props.units.find((u) => u.slot === slot && !(u as { fled?: boolean }).fled);
+          const unit = props.units.find(
+            (u) => u.slot === slot && !(u as { fled?: boolean }).fled,
+          );
           if (unit) {
             return (
-              <div key={slot} class={`cell ${unit.down ? "cell--down" : ""}`} data-row={rowOf(slot)}>
+              <div
+                key={slot}
+                class={`cell ${unit.down ? "cell--down" : ""}`}
+                data-row={rowOf(slot)}
+              >
                 {props.render(unit)}
               </div>
             );
           }
           const onEmpty = props.onEmpty;
           return onEmpty ? (
-            <button key={slot} class="cell cell--empty cell--move" type="button" data-row={rowOf(slot)} onClick={() => onEmpty(slot)}>
+            <button
+              key={slot}
+              class="cell cell--empty cell--move"
+              type="button"
+              data-row={rowOf(slot)}
+              onClick={() => onEmpty(slot)}
+            >
               {rowOf(slot)} {(slot % 3) + 1}번 칸으로
             </button>
           ) : (
@@ -389,9 +550,18 @@ function Formation<T extends { id: string; slot: number; down: boolean }>(props:
 }
 
 function Gauge(props: { value: number; max: number; kind: "hp" | "stagger" }) {
-  const pct = props.max > 0 ? Math.max(0, Math.min(100, (props.value / props.max) * 100)) : 0;
+  const pct =
+    props.max > 0
+      ? Math.max(0, Math.min(100, (props.value / props.max) * 100))
+      : 0;
   return (
-    <div class={`gauge gauge--${props.kind}`} role="meter" aria-valuenow={Math.round(props.value)} aria-valuemin={0} aria-valuemax={props.max}>
+    <div
+      class={`gauge gauge--${props.kind}`}
+      role="meter"
+      aria-valuenow={Math.round(props.value)}
+      aria-valuemin={0}
+      aria-valuemax={props.max}
+    >
       <div class="gauge__fill" style={{ width: `${pct}%` }} />
     </div>
   );
@@ -400,22 +570,36 @@ function Gauge(props: { value: number; max: number; kind: "hp" | "stagger" }) {
 /** 지금 이어지고 있는 상태: 연계, 자세, 적진, 흔들리지 않는 자, 여러 턴 기술 */
 function allyStates(battle: BattleState, ally: AllyUnit): string[] {
   const states: string[] = [];
-  if (ally.chain && ally.chain.turn === battle.turn - 1) states.push(`연계 중 · ${ally.chain.last}`);
+  if (ally.chain && ally.chain.turn === battle.turn - 1)
+    states.push(`연계 중 · ${ally.chain.last}`);
   if (ally.stance) states.push("자세");
-  if (ally.exposed) states.push(ally.exposed.turn === battle.turn ? "적진에 나감" : `적진 위력 +${Math.round(ally.exposed.powerPct * 100)}%`);
+  if (ally.exposed)
+    states.push(
+      ally.exposed.turn === battle.turn
+        ? "적진에 나감"
+        : `적진 위력 +${Math.round(ally.exposed.powerPct * 100)}%`,
+    );
   if (ally.steady) states.push(`흔들림 없음 ${ally.steady}`);
   if (ally.lingering) states.push("기술 이어짐");
   return states;
 }
 
-function AllyCard(props: { battle: BattleState; ally: AllyUnit; me: boolean; names: ReadonlyMap<string, string>; onEffect: (unitName: string, id: string) => void }) {
+function AllyCard(props: {
+  battle: BattleState;
+  ally: AllyUnit;
+  me: boolean;
+  names: ReadonlyMap<string, string>;
+  onEffect: (unitName: string, id: string) => void;
+}) {
   const { ally } = props;
   const states = ally.down ? [] : allyStates(props.battle, ally);
   return (
     <div class={`unit unit--ally ${props.me ? "unit--me" : ""}`}>
       <div class="unit__head">
         <span class="unit__name">{ally.name}</span>
-        <span class="unit__note">{ally.down ? (ally.injury ?? "쓰러짐") : props.me ? "차례" : "동료"}</span>
+        <span class="unit__note">
+          {ally.down ? (ally.injury ?? "쓰러짐") : props.me ? "차례" : "동료"}
+        </span>
       </div>
       <Gauge value={ally.hp} max={ally.maxHp} kind="hp" />
       <div class="unit__nums">
@@ -430,7 +614,11 @@ function AllyCard(props: { battle: BattleState; ally: AllyUnit; me: boolean; nam
           ))}
         </div>
       )}
-      <Effects stacks={ally.effects} names={props.names} onEffect={(id) => props.onEffect(ally.name, id)} />
+      <Effects
+        stacks={ally.effects}
+        names={props.names}
+        onEffect={(id) => props.onEffect(ally.name, id)}
+      />
     </div>
   );
 }
@@ -448,33 +636,65 @@ function EnemyCard(props: {
   const broken = enemy.brokenOnTurn !== null;
   return (
     <div class={`unit unit--enemy ${props.selectable ? "unit--target" : ""}`}>
-      <button class="unit__pick" type="button" disabled={!props.selectable} aria-label={`${enemy.name}${props.selectable ? " 고르기" : ""}`} onClick={props.onPick}>
+      <button
+        class="unit__pick"
+        type="button"
+        disabled={!props.selectable}
+        aria-label={`${enemy.name}${props.selectable ? " 고르기" : ""}`}
+        onClick={props.onPick}
+      >
         <span class="unit__head">
           <span class="unit__name">{enemy.name}</span>
-          <span class="unit__note">{enemy.down ? (enemy.captured ? "생포" : "쓰러짐") : broken ? "흐트러짐" : props.selectable ? "대상" : ""}</span>
+          <span class="unit__note">
+            {enemy.down
+              ? enemy.captured
+                ? "생포"
+                : "쓰러짐"
+              : broken
+                ? "흐트러짐"
+                : props.selectable
+                  ? "대상"
+                  : ""}
+          </span>
         </span>
         <Gauge value={enemy.hp} max={enemy.maxHp} kind="hp" />
         <Gauge value={enemy.stagger} max={enemy.maxStagger} kind="stagger" />
-        <span class="unit__nums">체력 {enemy.hp}/{enemy.maxHp}</span>
+        <span class="unit__nums">
+          체력 {enemy.hp}/{enemy.maxHp}
+        </span>
       </button>
-      <Effects stacks={enemy.effects} names={props.names} onEffect={(id) => props.onEffect(enemy.name, id)} />
+      <Effects
+        stacks={enemy.effects}
+        names={props.names}
+        onEffect={(id) => props.onEffect(enemy.name, id)}
+      />
       {/* 모바일에서는 의도를 적 칸 아래 꼬리표로 붙인다 (PC는 가운데 줄) */}
       {intent && (
         <p class="unit__intent">
-          {intent.actionName} · {Math.round(intent.power * 10) / 10} → {props.targetName}
+          {intent.actionName} · {Math.round(intent.power * 10) / 10} →{" "}
+          {props.targetName}
         </p>
       )}
     </div>
   );
 }
 
-function Effects(props: { stacks: Readonly<Record<string, number>>; names: ReadonlyMap<string, string>; onEffect: (id: string) => void }) {
+function Effects(props: {
+  stacks: Readonly<Record<string, number>>;
+  names: ReadonlyMap<string, string>;
+  onEffect: (id: string) => void;
+}) {
   const list = Object.entries(props.stacks).filter(([, n]) => n > 0);
   if (list.length === 0) return null;
   return (
     <div class="unit__effects">
       {list.map(([id, n]) => (
-        <button key={id} class="effect" type="button" onClick={() => props.onEffect(id)}>
+        <button
+          key={id}
+          class="effect"
+          type="button"
+          onClick={() => props.onEffect(id)}
+        >
           {props.names.get(id) ?? id} {n}
         </button>
       ))}
@@ -483,17 +703,38 @@ function Effects(props: { stacks: Readonly<Record<string, number>>; names: Reado
 }
 
 /** 적의 의도 (PC): 행동 · 위력과 대상 쪽 화살표 */
-function Intents(props: { battle: BattleState; names: (id: string) => string }) {
+function Intents(props: {
+  battle: BattleState;
+  names: (id: string) => string;
+}) {
   const intents = props.battle.intents.filter((i) => !i.cancelled);
   return (
     <section class="intents" aria-label="적의 의도">
-      {intents.length === 0 && !props.battle.outcome && <p class="intent intent--none">이번 턴 움직이는 적 없음</p>}
+      {intents.length === 0 && !props.battle.outcome && (
+        <p class="intent intent--none">이번 턴 움직이는 적 없음</p>
+      )}
       {intents.map((intent) => (
         <p key={intent.enemyId} class="intent">
           <span class="intent__target">→ {props.names(intent.targetId)}</span>
-          <svg class="intent__arrow" width="96" height="10" viewBox="0 0 96 10" aria-hidden="true">
-            <path d="M96 5 L6 5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" />
-            <path d="M10 1 L2 5 L10 9" fill="none" stroke="currentColor" stroke-width="1.5" />
+          <svg
+            class="intent__arrow"
+            width="96"
+            height="10"
+            viewBox="0 0 96 10"
+            aria-hidden="true"
+          >
+            <path
+              d="M96 5 L6 5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-dasharray="5 4"
+            />
+            <path
+              d="M10 1 L2 5 L10 9"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
           </svg>
           <span class="intent__what">
             {intent.actionName} · {Math.round(intent.power * 10) / 10}
@@ -518,6 +759,8 @@ function SkillPanel(props: {
   onMove: () => void;
   onRest: () => void;
   onFlee: () => void;
+  /** 던전처럼 문이 닫힌 싸움에서는 도망이 없다 */
+  canFlee: boolean;
 }) {
   const { battle, player, ctx } = props;
   if (player.down) {
@@ -530,7 +773,12 @@ function SkillPanel(props: {
       </section>
     );
   }
-  const kindOf = (skill: BattleSkill) => (skill.id === player.basicAttack.id ? "기본 공격" : skill.id === player.ultimate?.id ? "궁극기" : "기본기");
+  const kindOf = (skill: BattleSkill) =>
+    skill.id === player.basicAttack.id
+      ? "기본 공격"
+      : skill.id === player.ultimate?.id
+        ? "궁극기"
+        : "기본기";
   const free = canMove(ctx.effects, player.effects);
   const moveCost = ctx.rules.move.energy;
   return (
@@ -538,22 +786,27 @@ function SkillPanel(props: {
       <div class="skills__list">
         {allySkills(player).map((skill) => {
           const cooldown = player.cooldowns[skill.id] ?? 0;
-          const reachOk = skill.reach === "원거리" || rowOf(player.slot) === "앞줄";
-          const hasTarget = skill.stance || skillTargets(battle, player, skill).length > 0;
+          const reachOk =
+            skill.reach === "원거리" || rowOf(player.slot) === "앞줄";
+          const hasTarget =
+            skill.stance || skillTargets(battle, player, skill).length > 0;
           const usable = canUseSkill(player, skill) && reachOk && hasTarget;
           const why =
             cooldown > 0
               ? `쿨다운 ${cooldown}`
               : player.energy < skill.energy
                 ? `기력 ${skill.energy} 필요`
-                : skill.spendConfidence !== undefined && !canUseSkill(player, skill)
+                : skill.spendConfidence !== undefined &&
+                    !canUseSkill(player, skill)
                   ? "자신감 필요"
                   : !reachOk
                     ? "뒷줄에서는 못 씀"
                     : !hasTarget
                       ? "고를 대상 없음"
                       : undefined;
-          const power = skill.stance ? "자세" : `위력 ${Math.round(skill.baseHitPower * skill.hitCount * 10) / 10}`;
+          const power = skill.stance
+            ? "자세"
+            : `위력 ${Math.round(skill.baseHitPower * skill.hitCount * 10) / 10}`;
           const link = usable ? chainBonus(battle, ctx, player, skill) : 0;
           return (
             <button
@@ -566,35 +819,72 @@ function SkillPanel(props: {
             >
               <span class="skill__kind">
                 {kindOf(skill)} · {skill.role}
-                {link > 0 && <span class="skill__link"> · 연계 +{Math.round(link * 100)}%</span>}
+                {link > 0 && (
+                  <span class="skill__link">
+                    {" "}
+                    · 연계 +{Math.round(link * 100)}%
+                  </span>
+                )}
               </span>
               <span class="skill__name">{skill.name}</span>
-              <span class="skill__info">{why ?? `${skill.damageType} · 기력 ${skill.energy} · ${power}`}</span>
+              <span class="skill__info">
+                {why ?? `${skill.damageType} · 기력 ${skill.energy} · ${power}`}
+              </span>
             </button>
           );
         })}
       </div>
       <div class="skills__side">
-        {props.picked !== undefined && <p class="skills__note">칠 적을 고르세요</p>}
+        {props.picked !== undefined && (
+          <p class="skills__note">칠 적을 고르세요</p>
+        )}
         {props.moving && <p class="skills__note">옮겨 갈 빈 칸을 고르세요</p>}
-        <button class="button" type="button" aria-pressed={props.clash} disabled={!props.canClash} onClick={props.onClash}>
+        <button
+          class="button"
+          type="button"
+          aria-pressed={props.clash}
+          disabled={!props.canClash}
+          onClick={props.onClash}
+        >
           {props.clash ? "합 걸기 켜짐" : "합 걸기"}
         </button>
-        <button class="button" type="button" aria-pressed={props.moving} disabled={!free || player.energy < moveCost} onClick={props.onMove}>
-          {!free ? "묶여서 못 옮김" : props.moving ? "옮기기 그만" : `자리 옮기기 · 기력 ${moveCost}`}
+        <button
+          class="button"
+          type="button"
+          aria-pressed={props.moving}
+          disabled={!free || player.energy < moveCost}
+          onClick={props.onMove}
+        >
+          {!free
+            ? "묶여서 못 옮김"
+            : props.moving
+              ? "옮기기 그만"
+              : `자리 옮기기 · 기력 ${moveCost}`}
         </button>
         <button class="button" type="button" onClick={props.onRest}>
           쉬기
         </button>
-        <button class="button" type="button" disabled={battle.kind !== "일반" || !free} onClick={props.onFlee}>
-          도망
-        </button>
+        {props.canFlee && (
+          <button
+            class="button"
+            type="button"
+            disabled={battle.kind !== "일반" || !free}
+            onClick={props.onFlee}
+          >
+            도망
+          </button>
+        )}
       </div>
     </section>
   );
 }
 
-function Result(props: { battle: BattleState; onRetry: () => void; onExit: () => void }) {
+function Result(props: {
+  battle: BattleState;
+  onRetry: () => void;
+  onExit: () => void;
+  onFinish?: (battle: BattleState) => void;
+}) {
   const { battle } = props;
   const player = battle.allies.find((a) => a.kind === "플레이어");
   return (
@@ -604,15 +894,33 @@ function Result(props: { battle: BattleState; onRetry: () => void; onExit: () =>
         {battle.turn}턴 · 내 체력 {player?.hp ?? 0}/{player?.maxHp ?? 0}
         {player?.injury ? ` · ${player.injury}` : ""}
       </p>
-      <p class="result__note">연습 전투라 저장하지 않고 보상도 없어요.</p>
-      <div class="result__buttons">
-        <button class="button button--main" type="button" onClick={props.onRetry}>
-          다시
-        </button>
-        <button class="button" type="button" onClick={props.onExit}>
-          돌아가기
-        </button>
-      </div>
+      {props.onFinish ? (
+        <div class="result__buttons">
+          <button
+            class="button button--main"
+            type="button"
+            onClick={() => props.onFinish?.(battle)}
+          >
+            계속
+          </button>
+        </div>
+      ) : (
+        <>
+          <p class="result__note">연습 전투라 저장하지 않고 보상도 없어요.</p>
+          <div class="result__buttons">
+            <button
+              class="button button--main"
+              type="button"
+              onClick={props.onRetry}
+            >
+              다시
+            </button>
+            <button class="button" type="button" onClick={props.onExit}>
+              돌아가기
+            </button>
+          </div>
+        </>
+      )}
     </section>
   );
 }

@@ -1,0 +1,168 @@
+/* 던전 (docs/ui/DungeonGate.dc.html, Dungeon.dc.html) */
+.dg__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  gap: 28px;
+  align-items: start;
+  max-width: 1180px;
+  margin: 18px auto 0;
+  padding: 0 32px 32px;
+}
+
+.dg__problem {
+  max-width: 1180px;
+  margin: 12px auto 0;
+  padding: 8px 32px;
+  color: #f2c2b8;
+}
+
+.dg .bar__button {
+  white-space: nowrap;
+}
+
+.dg__room-title,
+.dg__gate-title {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 22px;
+  letter-spacing: 0.06em;
+}
+
+.dg__room-text {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.dg__vitals {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.dg__loot,
+.dg__gains {
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dg__loot li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.dg__gains li {
+  padding: 3px 0;
+}
+
+.dg__gains--lost {
+  color: #9b2a1f;
+}
+
+.dg__crack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  color: var(--gold-deep);
+}
+
+.dg__actions,
+.dg__ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dg__side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dg__side-title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 16px;
+}
+
+.dg__grid {
+  display: grid;
+  grid-auto-rows: 34px;
+  gap: 4px;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.dg__cell {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.dg__cell--entered {
+  background: rgba(70, 62, 52, 0.12);
+  color: var(--ink);
+}
+
+.dg__cell--here {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.dg__legend,
+.dg__note,
+.dg__where {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.dg__gate {
+  max-width: 640px;
+  margin: 24px auto;
+}
+
+.dg__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 14px 0;
+}
+
+.dg__facts dt {
+  color: var(--ink-soft);
+}
+
+.dg__facts dd {
+  margin: 0;
+}
+
+.dg__end {
+  margin-top: 14px;
+}
+
+/* 모바일: 방 → 지도 → 가방을 세로로 */
+@media (max-width: 767px) {
+  .dg__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 0 4px 24px;
+  }
+
+  .dg__problem {
+    padding: 8px 12px;
+  }
+
+  .dg__gate {
+    margin: 12px 4px;
+  }
+}
