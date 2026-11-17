@@ -163,6 +163,32 @@
             ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 2"
           }
         },
+        "scenes": {
+          "$scene": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !data.exists() && newData.exists()",
+            ".validate": "$scene.matches(/^[A-Za-z0-9_-]+$/) && newData.child('at').isNumber() && newData.child('at').val() <= now + 300000"
+          }
+        },
+        "profile": {
+          "marks": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists()"
+          }
+        },
+        "people": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()",
+          "$person": {
+            ".validate": "$person.matches(/^[A-Za-z0-9_-]+$/) && newData.child('name').isString() && newData.child('intimacy').isNumber()"
+          }
+        },
+        "clues": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()"
+        },
+        "quests": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()"
+        },
+        "pendingResults": {
+          ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists()"
+        },
         "claimedRewards": {
           "$reward": {
             ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !data.exists()",

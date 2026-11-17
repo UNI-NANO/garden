@@ -197,8 +197,10 @@ describe("비밀과 주인 없는 캐릭터", () => {
     await assertSucceeds(as(OTHER).ref(char()).get());
     await assertFails(as(OWNER).ref(char()).get());
   });
-  it("플레이어는 새로 생긴 칸(인물·일생 기록·이전 기록)을 고칠 수 없다", async () => {
-    await assertFails(as(OWNER).ref().update(enveloped({ [char("people/p1")]: { name: "x", relation: "", intimacy: 100, note: "" } })));
+  it("플레이어는 일생 기록·이전 기록·창립 멤버 표시를 고칠 수 없다 (인물은 장면 결과로 고친다)", async () => {
+    // 인물(친밀도)은 장면 결과가 쓴다: 수정 번호와 요청 기록이 함께일 때만
+    await assertSucceeds(as(OWNER).ref().update(enveloped({ [char("people/p1")]: { name: "x", relation: "", intimacy: 5, note: "" } })));
+    await assertFails(as(OWNER).ref().update({ [char("people/p2")]: { name: "y", relation: "", intimacy: 5, note: "" } }));
     await assertFails(as(OWNER).ref().update(enveloped({ [char("life/0")]: { kind: "기록", text: "x" } })));
     await assertFails(as(OWNER).ref().update(enveloped({ [char("migration/oldPlayer")]: "x" })));
     await assertFails(as(OWNER).ref().update(enveloped({ [char("meta/founder")]: true })));

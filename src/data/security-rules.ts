@@ -119,6 +119,21 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
       savedActions: { ".validate": int(0, limits.month.savedActionsMax) },
       career: { ".validate": int(0, limits.month.careerMax) },
     },
+    // 장면 결과 (명세서 「장면」: 끝날 때 한 번에). 본 장면은 더하기만: 지우면 같은 결과를 또 받을 수 있다
+    scenes: {
+      $scene: {
+        ".write": ownerWrite(2, " && !data.exists() && newData.exists()"),
+        ".validate": `$scene.matches(${KEY}) && newData.child('at').isNumber() && newData.child('at').val() <= now + 300000`,
+      },
+    },
+    profile: { marks: { ".write": ownerWrite(2) } },
+    people: {
+      ".write": ownerWrite(1),
+      $person: { ".validate": `$person.matches(${KEY}) && newData.child('name').isString() && newData.child('intimacy').isNumber()` },
+    },
+    clues: { ".write": ownerWrite(1) },
+    quests: { ".write": ownerWrite(1) },
+    pendingResults: { ".write": ownerWrite(1) },
     claimedRewards: {
       // 받은 보상은 더하기만 된다. 지우면 같은 보상을 또 받을 수 있으므로 지우기는 GM만.
       $reward: { ".write": ownerWrite(2, " && !data.exists()"), ".validate": `$reward.matches(${KEY}) && newData.val() === true` },

@@ -9,7 +9,7 @@ import { Paper } from "./parts";
 type SignedIn = Extract<Session, { status: "signedIn" }>;
 type Tab = "card" | "life";
 
-export function LibraryHome(props: { fb: Firebase; session: SignedIn; onPractice?: () => void }) {
+export function LibraryHome(props: { fb: Firebase; session: SignedIn; onPractice?: () => void; onScenes?: () => void }) {
   const { session } = props;
   const [tab, setTab] = useState<Tab>("card");
   const [clock, setClock] = useState<WorldClock>();
@@ -59,6 +59,11 @@ export function LibraryHome(props: { fb: Firebase; session: SignedIn; onPractice
           {import.meta.env.VITE_GARDEN_ENV !== "prod" && props.onPractice && (
             <button class="button home__practice" type="button" onClick={props.onPractice}>
               연습 전투 (시험 환경)
+            </button>
+          )}
+          {import.meta.env.VITE_GARDEN_ENV !== "prod" && props.onScenes && (
+            <button class="button home__practice" type="button" onClick={props.onScenes}>
+              장면 보기 (시험 환경)
             </button>
           )}
         </div>

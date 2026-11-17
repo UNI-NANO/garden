@@ -177,6 +177,14 @@ export function characterSchema(limits: Limits) {
     }),
     /** 받은 보상의 출처 ID */
     claimedRewards: keySet,
+    /** 본 장면: 장면 ID → 본 때와 고른 선택지 (결과는 처음 볼 때 한 번만 적용. 고른 것은 검증에 쓴다) */
+    scenes: z.record(KeySchema, z.strictObject({ at: timestamp, choices: z.array(z.string()).default([]) })).default({}),
+    /** 단서 수첩 */
+    clues: z.array(z.string().min(1)).default([]),
+    /** 퀘스트 진행 기록 (퀘스트 시스템은 정의·목표·보상과 함께 따로) */
+    quests: z.array(z.strictObject({ id: z.string().min(1), state: z.enum(["시작", "진행", "완료"]), steps: count })).default([]),
+    /** 받을 자리가 아직 없어 보류된 장면 결과 (그 시스템이 생기면 적용) */
+    pendingResults: z.array(z.strictObject({ scene: z.string().min(1), cmd: z.string().min(1), args: z.array(z.string()) })).default([]),
     mailbox: z.record(KeySchema, MailSchema).default({}),
     /** 인물과 친밀도 */
     people: z

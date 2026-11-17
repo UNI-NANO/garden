@@ -1,0 +1,382 @@
+/* 비주얼노벨 장면 (docs/ui/Scene.dc.html). 밤 바탕, 회색 실루엣, 아래 종이 대사창 */
+.vn {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  color: var(--light);
+  background:
+    radial-gradient(ellipse 70% 55% at 30% 70%, rgba(120, 140, 135, 0.22), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 75% 35%, rgba(90, 105, 120, 0.18), transparent 70%),
+    linear-gradient(180deg, #11141b 0%, #171c26 55%, #10131a 100%);
+}
+
+.vn--dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 6, 9, 0.85);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.vn--shake-약 {
+  animation: vn-shake 0.3s 2;
+}
+.vn--shake-중 {
+  animation: vn-shake 0.25s 4;
+}
+.vn--shake-강 {
+  animation: vn-shake 0.2s 6;
+}
+
+@keyframes vn-shake {
+  25% {
+    transform: translate(-4px, 2px);
+  }
+  75% {
+    transform: translate(4px, -2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vn--shake-약,
+  .vn--shake-중,
+  .vn--shake-강 {
+    animation: none;
+  }
+}
+
+.vn__bar {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 14px 0;
+  min-height: 56px;
+  padding: 0 16px;
+  color: var(--ink);
+  background: var(--paper);
+  border-top: 1.5px solid var(--line);
+  border-bottom: 1.5px solid var(--line);
+}
+
+.vn__place {
+  font-family: var(--serif);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.vn__close {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.vn__close[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.vn__bg,
+.vn__effect {
+  position: relative;
+  z-index: 1;
+  margin: 12px 40px 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: rgba(220, 215, 200, 0.45);
+}
+
+.vn__effect {
+  color: var(--gold);
+}
+
+/* 서 있는 사람: 회색 실루엣, 말하는 사람은 밝게 */
+.vn__actors {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.vn__actor {
+  position: absolute;
+  bottom: 0;
+  width: min(28vw, 360px);
+  height: min(80vh, 600px);
+  color: #6e727a;
+  opacity: 0.55;
+}
+
+.vn__actor--speaking {
+  color: #a3a7ae;
+  opacity: 0.95;
+}
+
+.vn__actor--왼쪽 {
+  left: 8%;
+}
+.vn__actor--가운데 {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.vn__actor--오른쪽 {
+  right: 8%;
+}
+.vn__actor--뒷줄 {
+  left: 50%;
+  transform: translateX(-50%) scale(0.7);
+  transform-origin: bottom center;
+  opacity: 0.3;
+}
+
+/* 대사창 */
+.vn__box {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  bottom: 22px;
+  z-index: 2;
+  min-height: 196px;
+  padding: 40px 120px 28px 56px;
+  color: var(--ink);
+  background-color: #ece5d3;
+  background-image: linear-gradient(rgba(70, 62, 52, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(70, 62, 52, 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.vn__name {
+  position: absolute;
+  left: 16px;
+  top: -26px;
+  min-width: 180px;
+  margin: 0;
+  padding: 10px 24px;
+  background: #f2ecdc;
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+.vn__text {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 22px;
+  line-height: 1.75;
+}
+
+.vn__text--narration {
+  color: var(--ink-soft);
+}
+
+.vn__text--small {
+  font-size: 16px;
+}
+
+.vn__style--빨강 {
+  color: #9b2a1f;
+}
+.vn__style--작게 {
+  font-size: 0.75em;
+}
+.vn__style--흐리게 {
+  opacity: 0.45;
+}
+.vn__style--떨림 {
+  display: inline-block;
+  animation: vn-shake 0.15s infinite;
+}
+
+.vn__next {
+  position: absolute;
+  right: 30px;
+  bottom: 22px;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  background: transparent;
+  color: #a8792a;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* 선택지 */
+.vn__choices {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(520px, calc(100% - 32px));
+  transform: translateX(-50%);
+}
+
+.vn__choice {
+  min-height: 58px;
+  padding: 8px 16px;
+  border: 0;
+  background: #e2dac5;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.vn__choice:hover,
+.vn__choice:focus-visible {
+  background: #f2ecdc;
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* 끝·전투 카드 */
+.vn__card {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  z-index: 2;
+  width: min(520px, calc(100% - 32px));
+  padding: 24px;
+  color: var(--ink);
+  background: var(--paper);
+  transform: translateX(-50%);
+}
+
+.vn__card-title {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.vn__buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.vn__problem {
+  color: #9b2a1f;
+}
+
+.vn__log {
+  position: absolute;
+  inset: 80px 14px 14px;
+  z-index: 5;
+  overflow-y: auto;
+  padding: 20px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.vn__log p {
+  margin: 6px 0;
+}
+
+/* 장면 보기 목록 */
+.scenes {
+  display: flex;
+  justify-content: center;
+}
+
+.scenes__paper {
+  width: min(720px, 100%);
+}
+
+.scenes__note {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.scenes__filter input {
+  min-height: var(--tap);
+  margin-left: 8px;
+  padding: 0 8px;
+  font: inherit;
+}
+
+.scenes__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scenes__item {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.scenes__seen {
+  color: var(--gold-deep);
+}
+
+/* 모바일 (명세서 「UI와 모바일」 5번): 말하는 사람 하나만 크게, 대사창은 화면 아래 40% */
+@media (max-width: 767px) {
+  .vn__bar {
+    margin: 6px 10px 0;
+    padding: 0 8px;
+  }
+
+  .vn__actor {
+    width: 70vw;
+    height: 60vh;
+    bottom: 30vh;
+  }
+
+  .vn__actor:not(.vn__actor--speaking) {
+    display: none;
+  }
+
+  .vn__actor--speaking {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
+  .vn__box {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: 40vh;
+    padding: 36px 20px 64px;
+  }
+
+  .vn__name {
+    left: 12px;
+    min-width: 0;
+    font-size: 17px;
+  }
+
+  .vn__text {
+    font-size: 18px;
+  }
+
+  .vn__choices {
+    top: auto;
+    bottom: calc(40vh + 16px);
+  }
+}

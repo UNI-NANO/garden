@@ -17,6 +17,8 @@ export type Session =
       isGm: boolean;
       /** 연결된 캐릭터. 없으면 아직 사서가 열람증을 준비하는 중 */
       character: Character | undefined;
+      /** 연결된 캐릭터의 ID (캐릭터를 읽었을 때만) */
+      characterId?: string;
       /** 저장된 값을 읽지 못했을 때의 안내 (화면은 멈추지 않는다) */
       problem: string | undefined;
     };
@@ -77,7 +79,7 @@ export function watchSession(fb: Firebase, limits: Limits, onChange: (session: S
           (characterSnapshot) => {
             const character = schema.safeParse(characterSnapshot.val());
             if (character.success) {
-              onChange({ ...base, character: character.data, problem: undefined });
+              onChange({ ...base, character: character.data, characterId, problem: undefined });
             } else {
               const issue = character.error.issues[0];
               reportError(fb, new Error(`캐릭터 ${characterId}가 스키마와 다르다: ${issue?.path.join(".") ?? ""} ${issue?.message ?? ""}`), "캐릭터 읽기");

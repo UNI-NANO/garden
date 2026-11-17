@@ -36,10 +36,12 @@ class ErrorBoundary extends Component<{ fb: Firebase; children: ComponentChildre
 /** 연습 전투는 시험 환경에만. 실제 환경 빌드에서는 이 갈래가 통째로 빠진다(`npm run check:build`가 확인) */
 const PRACTICE = import.meta.env.VITE_GARDEN_ENV !== "prod";
 type PracticeScreen = (props: { fb: Firebase; onExit: () => void }) => preact.JSX.Element;
+type ScenesScreen = (props: { fb: Firebase; session: Extract<Session, { status: "signedIn" }> | undefined; onExit: () => void }) => preact.JSX.Element;
 
 export function App(props: { fb: Firebase; limits: Limits }) {
   const [session, setSession] = useState<Session>({ status: "loading" });
   const [practice, setPractice] = useState<PracticeScreen | "loading">();
+  const [scenes, setScenes] = useState<ScenesScreen | "loading">();
   useEffect(() => watchSession(props.fb, props.limits, setSession), [props.fb, props.limits]);
   // 시험 환경에서는 주소 끝에 #practice를 붙이면 로그인 없이 연습장이 바로 열린다 (숫자를 직접 쳐 보는 용도)
   useEffect(() => {
@@ -57,6 +59,17 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       });
   };
 
+  const openScenes = () => {
+    if (!PRACTICE) return;
+    setScenes("loading");
+    import("./scene/SceneBrowser")
+      .then((module) => setScenes(() => module.SceneBrowser))
+      .catch((error: unknown) => {
+        reportError(props.fb, error, "장면 보기 열기");
+        setScenes(undefined);
+      });
+  };
+
   const closePractice = () => {
     setPractice(undefined);
     if (window.location.hash === "#practice") history.replaceState(null, "", window.location.pathname + window.location.search);
@@ -68,12 +81,16 @@ export function App(props: { fb: Firebase; limits: Limits }) {
         <Notice title="연습 전투">연습장을 여는 중…</Notice>
       ) : PRACTICE && practice ? (
         h(practice, { fb: props.fb, onExit: closePractice })
+      ) : PRACTICE && scenes === "loading" ? (
+        <Notice title="장면 보기">대본집을 펼치는 중…</Notice>
+      ) : PRACTICE && scenes ? (
+        h(scenes, { fb: props.fb, session: session.status === "signedIn" ? session : undefined, onExit: () => setScenes(undefined) })
       ) : session.status === "loading" ? (
         <Notice title="저편의 정원">문을 여는 중…</Notice>
       ) : session.status === "signedOut" ? (
         <LoginScreen fb={props.fb} />
       ) : (
-        <LibraryHome fb={props.fb} session={session} {...(PRACTICE ? { onPractice: openPractice } : {})} />
+        <LibraryHome fb={props.fb} session={session} {...(PRACTICE ? { onPractice: openPractice, onScenes: openScenes } : {})} />
       )}
     </ErrorBoundary>
   );

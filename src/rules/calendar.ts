@@ -14,6 +14,11 @@ export function parseMonthKey(key: string): MonthKey | undefined {
   return match ? { year: Number(match[1]), index: Number(match[2]) } : undefined;
 }
 
+/** 달 순번의 이름: 0 → "첫째", 11 → "이름 없는 다섯 날" */
+export function monthName(index: number): string {
+  return ORDINALS[index] ?? "이름 없는 다섯 날";
+}
+
 /** "514-2" → "성력 514년 · 셋째 달" */
 export function monthLabel(key: string): string {
   const month = parseMonthKey(key);

@@ -123,7 +123,7 @@ async function readProcessed(db: DbPort, characterId: string, requestId: string)
 }
 
 /** 바뀐 키만 골라낸다. 사라진 키는 null(지움). */
-function diff<T>(before: Record<string, T>, after: Record<string, T>, emit: (key: string, value: T | null) => void): void {
+export function diff<T>(before: Record<string, T>, after: Record<string, T>, emit: (key: string, value: T | null) => void): void {
   for (const key of Object.keys(before)) if (!(key in after)) emit(key, null);
   for (const [key, value] of Object.entries(after)) {
     if (JSON.stringify(before[key]) !== JSON.stringify(value)) emit(key, value);
