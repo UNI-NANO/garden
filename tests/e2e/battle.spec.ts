@@ -24,11 +24,11 @@ async function pauseClock(page: Page) {
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 10));
 }
 
-/** 판정 바를 가운데에서 친다 (시계가 멈춰 있어야 한다) */
-async function hitCenter(page: Page) {
+/** 판정 바를 가운데(완벽)에서, 또는 at만큼 지나서 친다 (시계가 멈춰 있어야 한다) */
+async function hitCenter(page: Page, at = CENTER_MS) {
   const bar = page.getByRole("dialog", { name: "판정 바" });
   await expect(bar).toBeVisible();
-  await page.clock.runFor(CENTER_MS);
+  await page.clock.runFor(at);
   await page.keyboard.press("Space");
 }
 
@@ -54,6 +54,15 @@ async function startPractice(page: Page, name: string) {
 
 const thisTurn = (page: Page) => page.getByRole("region", { name: "이번 턴" });
 
+/** 적 차례: 반응을 물으면 막기로 받고, 다음 아군 차례까지 기다린다 (적이 흐트러졌으면 묻지 않는다) */
+async function settle(page: Page, nextTurn: number) {
+  const reaction = page.getByRole("dialog", { name: "반응" });
+  const next = page.getByText(`제${nextTurn}턴 · 아군 차례`);
+  await expect(reaction.or(next)).toBeVisible();
+  if (await reaction.isVisible()) await react(page, "막기");
+  await expect(next).toBeVisible();
+}
+
 test("연습 전투: 편성을 고르고, 판정 바로 쳐서 늑대를 이긴다", async ({ page }, info) => {
   const shot = (name: string) => page.screenshot({ path: join(shots, `battle-${name}-${info.project.name}.png`), fullPage: true });
   await page.clock.install();
@@ -68,7 +77,8 @@ test("연습 전투: 편성을 고르고, 판정 바로 쳐서 늑대를 이긴�
 
   await expect(page.getByText("제1턴 · 아군 차례")).toBeVisible();
   await pauseClock(page);
-  await expect(page.getByRole("region", { name: "적의 의도" })).toContainText("→ 나");
+  // 적의 의도: PC는 가운데 줄, 모바일은 적 칸 아래 꼬리표
+  await expect(page.getByText(/→ 나$/).filter({ visible: true }).first()).toBeVisible();
   await shot("2-field");
 
   // 기술을 고르면 칠 수 있는 적만 고를 수 있다
@@ -178,4 +188,67 @@ test("자동 버튼: 켜면 끝까지 자동으로 싸운다", async ({ page }, 
   for (let i = 0; i < 20 && !(await result.isVisible()); i++) await page.clock.runFor(1_000);
   await expect(result).toContainText("승리");
   await page.screenshot({ path: join(shots, `battle-6-auto-${info.project.name}.png`), fullPage: true });
+});
+
+test("연계 표시, 효과 설명, 자리 옮기기", async ({ page }, info) => {
+  await startPractice(page, "살피는 사람");
+  const me = page.getByRole("group", { name: "아군" });
+  // 1턴: 여는 기술(베기)로 연계를 연다
+  await page.getByRole("button", { name: /^기본 공격.*베기/ }).click();
+  await page.getByRole("button", { name: "늑대 고르기" }).click();
+  // 늑대가 일찍 쓰러지지 않게 좋음으로 친다
+  await hitCenter(page, GOOD_MS);
+  await settle(page, 2);
+
+  // 2턴: 잇는 기술에 연계 보너스가 보이고, 내 칸에 연계 중
+  await expect(page.getByText("연계 중 · 여는")).toBeVisible();
+  const combo = page.getByRole("button", { name: /연속 베기/ });
+  await expect(combo).toContainText("연계 +10%");
+  await expect(page.getByRole("button", { name: /^기본 공격.*베기/ })).not.toContainText("연계");
+  await combo.click();
+  await page.getByRole("button", { name: "늑대 고르기" }).click();
+  for (let hit = 0; hit < 3; hit++) await hitCenter(page, GOOD_MS);
+  await settle(page, 3);
+
+  // 늑대에게 붙은 출혈: 누르면 하는 일을 보여 준다
+  const bleed = page.getByRole("group", { name: "적" }).getByRole("button", { name: /^출혈 \d+$/ });
+  await expect(bleed).toBeVisible();
+  await bleed.click();
+  await expect(page.getByRole("region", { name: "이번 턴" })).toContainText("늑대의 출혈: 턴 끝에 중첩만큼 피해 · 턴 끝 −1 · 최대 10");
+  await page.screenshot({ path: join(shots, `battle-7-states-${info.project.name}.png`), fullPage: true });
+
+  // 자리 옮기기: 빈 칸을 고르면 기력 1을 쓰고 옮긴다. 뒷줄에서는 근접 기술이 잠긴다
+  const energyBefore = Number((await me.getByText(/기력 \d+/).textContent())?.match(/기력 (\d+)/)?.[1]);
+  await page.getByRole("button", { name: /^자리 옮기기/ }).click();
+  await expect(page.getByText("옮겨 갈 빈 칸을 고르세요")).toBeVisible();
+  await page.getByRole("button", { name: "뒷줄 2번 칸으로" }).click();
+  await expect(page.getByRole("region", { name: "이번 턴" })).toContainText("나 자리 옮김");
+  await settle(page, 4);
+  // 기력: −1(옮기기) +2(턴 끝), 막기에 성공했으면 +1, 최대 10
+  await expect(me.getByText(/기력 \d+/)).toHaveText(new RegExp(`기력 (${Math.min(10, energyBefore + 1)}|${Math.min(10, energyBefore + 2)})`));
+  await expect(page.getByRole("button", { name: /^기본 공격.*베기/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /^기본 공격.*베기/ })).toContainText("뒷줄에서는 못 씀");
+});
+
+test("모바일 배치: 적이 위, 아군이 아래, 의도는 적 칸 아래, 기술 패널은 화면 아래", async ({ page }, info) => {
+  test.skip(info.project.name !== "mobile", "모바일만");
+  await startPractice(page, "작은 화면");
+  const enemies = await page.getByRole("group", { name: "적" }).boundingBox();
+  const allies = await page.getByRole("group", { name: "아군" }).boundingBox();
+  expect(enemies && allies && enemies.y < allies.y).toBe(true);
+  // 의도는 가운데 줄이 아니라 적 칸 아래 꼬리표로 (대상 이름)
+  await expect(page.getByRole("region", { name: "적의 의도" })).toBeHidden();
+  await expect(page.getByRole("group", { name: "적" }).getByText(/→ 나$/)).toBeVisible();
+  // 기술 패널은 화면 아래에 붙어 있다
+  const panel = await page.getByRole("region", { name: "기술" }).boundingBox();
+  const viewport = page.viewportSize();
+  expect(panel && viewport && Math.abs(panel.y + panel.height - viewport.height) < 2).toBe(true);
+  // 누르는 것은 44px 이상
+  const skill = await page.getByRole("button", { name: /^기본 공격.*베기/ }).boundingBox();
+  expect(skill && skill.height >= 44).toBe(true);
+  // 첫 화면에서 내 칸이 패널에 가리지 않는다
+  const mine = await page.getByRole("group", { name: "아군" }).getByText("차례").boundingBox();
+  expect(mine && panel && mine.y + mine.height <= panel.y).toBe(true);
+  // 실제 휴대폰 화면 크기 그대로 (전체 페이지 캡처는 아래 고정 패널 자리를 다르게 그린다)
+  await page.screenshot({ path: join(shots, `battle-8-phone-${info.project.name}.png`) });
 });

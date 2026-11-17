@@ -13,7 +13,8 @@
   background-image:
     repeating-linear-gradient(115deg, rgba(233, 226, 208, 0.05) 0 1px, transparent 1px 7px),
     linear-gradient(180deg, #121519 0%, #161a1d 52%, #0e1312 52%, #0a0d0c 100%);
-  overflow-x: hidden;
+  /* hidden이면 스크롤 상자가 되어 기술 패널이 아래에 붙지 않는다 */
+  overflow-x: clip;
 }
 
 .battle__bar {
@@ -118,19 +119,61 @@
   border: 1.5px solid var(--woods);
 }
 
-.unit--enemy:disabled {
+/* 적 칸: 칸 전체가 「고르기」 버튼, 효과 꼬리표는 그 아래 */
+.unit__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.unit__pick:disabled {
   cursor: default;
 }
 
 .unit--target {
   border: 2px solid var(--gold);
+}
+
+.unit--target .unit__pick {
   cursor: pointer;
 }
 
 .unit--target:hover,
-.unit--target:focus-visible {
+.unit--target:focus-within {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
+}
+
+/* 적의 의도를 적 칸 아래 꼬리표로: 모바일에서만 */
+.unit__intent {
+  display: none;
+  margin: 2px 0 0;
+  padding: 3px 8px;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.unit__states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.state {
+  padding: 0 4px;
+  font-size: 10px;
+  color: var(--paper);
+  background: var(--gold-deep);
 }
 
 .unit__head {
@@ -167,8 +210,45 @@
 
 .effect {
   padding: 0 4px;
+  font: inherit;
   font-size: 10px;
+  color: inherit;
+  background: transparent;
   border: 1px solid currentColor;
+  cursor: help;
+}
+
+.cell--move {
+  border: 1.5px dashed var(--gold);
+  background: rgba(217, 180, 106, 0.08);
+  color: var(--gold);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.skill__link {
+  color: var(--gold-deep);
+  font-weight: 700;
+}
+
+.skill--ultimate .skill__link {
+  color: var(--gold);
+}
+
+.skills__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.battle__info {
+  color: var(--light);
+  font-size: 13px;
+}
+
+.intent__arrow {
+  color: rgba(233, 226, 208, 0.7);
 }
 
 .gauge {
@@ -611,43 +691,111 @@
 }
 
 /* 모바일: ①에서는 세로로 쌓기만 (다듬기는 ③) */
+/* 모바일 (명세서 「UI와 모바일」 6번): 위에 적 6칸, 가운데 판정 바, 아래에 아군 6칸, 맨 아래 기술 패널(가로로 밀기).
+   적의 의도는 적 칸 아래 꼬리표로, 화살표 대신 대상 이름 */
 @media (max-width: 767px) {
+  .battle {
+    gap: 8px;
+    padding: 6px 10px 0;
+  }
+
+  /* 위 띠는 두 줄: 윗줄에 턴과 장소, 아랫줄에 시간·자동·그만두기 */
   .battle__bar {
     flex-wrap: wrap;
-    padding: 6px 12px;
+    gap: 0 12px;
+    padding: 4px 12px;
+  }
+
+  .battle__place {
+    font-size: 13px;
+  }
+
+  .battle__side {
+    flex-basis: 100%;
+    justify-content: flex-end;
   }
 
   .battle__field {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
     padding: 0;
   }
 
   .formation--enemy {
-    order: -2;
+    order: -1;
   }
 
   .intents {
-    order: -1;
-    align-items: stretch;
-    padding-top: 0;
+    display: none;
+  }
+
+  .unit__intent {
+    display: block;
   }
 
   .formation__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(64px, auto);
+    gap: 8px;
+  }
+
+  .effect {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
   }
 
   .battle__log {
+    min-height: 0;
     padding: 0;
   }
 
+  /* 기술 패널은 화면 아래에 고정, 기술은 가로로 밀기 */
   .skills {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    flex-direction: column;
     flex-wrap: nowrap;
+    gap: 10px;
+    margin: auto -10px 0;
+    padding: 12px;
+  }
+
+  .skills__list {
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
     overflow-x: auto;
-    padding: 14px;
   }
 
   .skill {
-    flex: 0 0 140px;
+    flex: 0 0 132px;
+    min-height: 80px;
+    gap: 2px;
+    padding: 8px;
+  }
+
+  /* 공용 행동은 한 줄로: 패널이 아군 칸을 덜 가리게 */
+  .skills__side {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-left: 0;
+  }
+
+  .skills__side .button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 4px 6px;
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
+  .skills__note {
+    flex-basis: 100%;
   }
 
   .reaction__what {
@@ -663,9 +811,5 @@
   .reaction__choice {
     width: auto;
     min-height: 88px;
-  }
-
-  .skills__side {
-    flex: 0 0 auto;
   }
 }
