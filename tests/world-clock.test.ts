@@ -12,17 +12,18 @@ import {
   spendAction,
   yearEndAge,
 } from "../src/rules/world-clock";
+import type { Character } from "../src/schema/character";
 import { LimitsSchema } from "../src/schema/defs/limits";
 
 const limits = LimitsSchema.parse(rawLimits);
-const month = (over = {}) => ({
+const month = (over: Partial<Character["month"]> = {}): Character["month"] => ({
   key: "514-3",
   mainActions: 4,
   minorActions: 2,
   savedActions: 0,
   career: 1,
   learnCounts: { sword: 2 },
-  combatMasteryGained: { sword: 1 as const },
+  combatMasteryGained: { sword: 1 },
   fatigue: { 던전: 1 },
   ...over,
 });
