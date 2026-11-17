@@ -7,7 +7,7 @@ import { Paper } from "./parts";
 type SignedIn = Extract<Session, { status: "signedIn" }>;
 type Tab = "card" | "life";
 
-export function LibraryHome(props: { fb: Firebase; session: SignedIn }) {
+export function LibraryHome(props: { fb: Firebase; session: SignedIn; onPractice?: () => void }) {
   const { session } = props;
   const [tab, setTab] = useState<Tab>("card");
   const view = session.character ? buildHomeView(session.character) : undefined;
@@ -46,6 +46,11 @@ export function LibraryHome(props: { fb: Firebase; session: SignedIn }) {
             </button>
           </nav>
           <p class="home__soon">열람실과 월보는 아직 준비 중이에요.</p>
+          {import.meta.env.VITE_GARDEN_ENV !== "prod" && props.onPractice && (
+            <button class="button home__practice" type="button" onClick={props.onPractice}>
+              연습 전투 (시험 환경)
+            </button>
+          )}
         </div>
 
         {view ? tab === "life" ? <LifeBook view={view} onClose={() => setTab("card")} /> : <ReaderCard view={view} /> : <Waiting problem={session.problem} />}

@@ -1,0 +1,541 @@
+/* 전투 화면 (docs/ui/Battle.dc.html). 목판화 빗금 바탕, 종이 띠, 금빛 강조 하나 */
+.battle {
+  --woods: #6e967c;
+  --woods-soft: #9cc0a8;
+  --woods-deep: #1c2320;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100dvh;
+  padding: 8px 14px 18px;
+  color: var(--light);
+  background-image:
+    repeating-linear-gradient(115deg, rgba(233, 226, 208, 0.05) 0 1px, transparent 1px 7px),
+    linear-gradient(180deg, #121519 0%, #161a1d 52%, #0e1312 52%, #0a0d0c 100%);
+  overflow-x: hidden;
+}
+
+.battle__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 6px 24px;
+  color: var(--ink);
+  background: var(--paper);
+  border-top: 1.5px solid var(--line);
+  border-bottom: 1.5px solid var(--line);
+}
+
+.battle__turn,
+.battle__place {
+  font-family: var(--serif);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.battle__place {
+  font-weight: 700;
+}
+
+.battle__leave {
+  min-height: var(--tap);
+  padding: 0 14px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+/* 진형: 아군 | 의도 | 적 */
+.battle__field {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 24px;
+  padding: 0 24px;
+}
+
+.formation__label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(233, 226, 208, 0.55);
+}
+
+.formation__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 160px);
+  grid-auto-rows: minmax(84px, auto);
+  gap: 12px 16px;
+}
+
+.cell {
+  display: flex;
+}
+
+.cell > * {
+  flex: 1;
+}
+
+.cell--empty {
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: rgba(233, 226, 208, 0.4);
+  border: 1px dashed rgba(233, 226, 208, 0.22);
+}
+
+.cell--down {
+  opacity: 0.45;
+}
+
+.unit {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+}
+
+.unit--ally {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.unit--me {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.unit--enemy {
+  color: var(--light);
+  background: var(--woods-deep);
+  border: 1.5px solid var(--woods);
+}
+
+.unit--enemy:disabled {
+  cursor: default;
+}
+
+.unit--target {
+  border: 2px solid var(--gold);
+  cursor: pointer;
+}
+
+.unit--target:hover,
+.unit--target:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.unit__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.unit__name {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.unit__note {
+  font-size: 10px;
+  color: var(--gold);
+}
+
+.unit--ally .unit__note {
+  color: var(--ink-soft);
+}
+
+.unit__nums {
+  font-size: 11px;
+}
+
+.unit__effects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.effect {
+  padding: 0 4px;
+  font-size: 10px;
+  border: 1px solid currentColor;
+}
+
+.gauge {
+  height: 6px;
+  background: #c9c1ab;
+}
+
+.unit--enemy .gauge {
+  background: #2e3833;
+}
+
+.gauge--stagger {
+  height: 4px;
+}
+
+.gauge__fill {
+  height: 100%;
+  background: var(--ink);
+}
+
+.unit--enemy .gauge--hp .gauge__fill {
+  background: var(--light);
+}
+
+.gauge--stagger .gauge__fill {
+  background: var(--woods-soft);
+}
+
+/* 적의 의도 꼬리표 */
+.intents {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  padding-top: 32px;
+}
+
+.intent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.intent__who,
+.intent__target {
+  font-size: 11px;
+  color: rgba(233, 226, 208, 0.65);
+}
+
+.intent__what {
+  padding: 4px 10px;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.intent--none {
+  font-size: 12px;
+  color: rgba(233, 226, 208, 0.5);
+}
+
+/* 이번 턴 */
+.battle__log {
+  min-height: 72px;
+  padding: 0 24px;
+  font-size: 12px;
+  color: rgba(233, 226, 208, 0.8);
+}
+
+.battle__log p {
+  margin: 2px 0;
+}
+
+.battle__problem {
+  color: var(--gold);
+}
+
+/* 기술 패널 */
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: auto;
+  padding: 18px 24px;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: linear-gradient(rgba(70, 62, 52, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(70, 62, 52, 0.12) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.skill {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  width: 150px;
+  min-height: 96px;
+  padding: 10px;
+  border: 1.5px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.skill:disabled {
+  border-color: rgba(58, 52, 45, 0.5);
+  background: rgba(58, 52, 45, 0.08);
+  color: rgba(36, 32, 28, 0.55);
+  cursor: default;
+}
+
+.skill--picked {
+  border: 2px solid var(--gold-deep);
+  background: #f6efd9;
+}
+
+.skill--ultimate {
+  background: #1c1814;
+  color: #f0d08e;
+}
+
+.skill--ultimate:disabled {
+  background: #1c1814;
+  color: rgba(240, 208, 142, 0.5);
+}
+
+.skill__kind {
+  font-size: 10px;
+}
+
+.skill__name {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.skill__info {
+  font-size: 11px;
+}
+
+.skills__side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.skills__note {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* 판정 바: 화면을 덮고, 아무 데나 누르면 판정 */
+.judge {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(11, 12, 15, 0.55);
+  touch-action: manipulation;
+  user-select: none;
+  cursor: pointer;
+}
+
+.judge__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(600px, 100%);
+}
+
+.judge__title {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+}
+
+.judge__count {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(233, 226, 208, 0.7);
+}
+
+.judge__bar {
+  position: relative;
+  width: 100%;
+  height: 26px;
+  background: #c9c1ab;
+  border: 1.5px solid var(--light);
+}
+
+.judge__zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.judge__zone--normal {
+  background: #b0a690;
+}
+
+.judge__zone--good {
+  background: #6b6253;
+}
+
+.judge__zone--perfect {
+  background: var(--gold);
+}
+
+.judge__cursor {
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--night-deep);
+  box-shadow: 0 0 0 1px var(--light);
+}
+
+.judge__help,
+.judge__done {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(233, 226, 208, 0.75);
+}
+
+.judge__done {
+  font-size: 13px;
+  color: var(--gold);
+}
+
+/* 결과 */
+.result {
+  align-self: center;
+  width: min(440px, 100%);
+  margin-top: auto;
+  text-align: center;
+}
+
+.result__note {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.result__buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* 연습 전투 편성 */
+.practice {
+  display: flex;
+  justify-content: center;
+}
+
+.practice__paper {
+  width: min(640px, 100%);
+}
+
+.practice__note,
+.practice__hint {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.practice__group {
+  margin: 14px 0;
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+}
+
+.practice__group legend {
+  padding: 0 6px;
+  font-family: var(--serif);
+  font-weight: 700;
+}
+
+.practice__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--tap);
+}
+
+.practice__check,
+.practice__radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+  margin-right: 16px;
+}
+
+.practice__paper select {
+  min-height: var(--tap);
+  padding: 0 8px;
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 1.5px solid var(--line);
+}
+
+.practice__buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.home__practice {
+  margin-top: 12px;
+  color: var(--light);
+  border-color: rgba(233, 226, 208, 0.5);
+}
+
+/* 모바일: ①에서는 세로로 쌓기만 (다듬기는 ③) */
+@media (max-width: 767px) {
+  .battle__bar {
+    flex-wrap: wrap;
+    padding: 6px 12px;
+  }
+
+  .battle__field {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .formation--enemy {
+    order: -2;
+  }
+
+  .intents {
+    order: -1;
+    align-items: stretch;
+    padding-top: 0;
+  }
+
+  .formation__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .battle__log {
+    padding: 0;
+  }
+
+  .skills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 14px;
+  }
+
+  .skill {
+    flex: 0 0 140px;
+  }
+
+  .skills__side {
+    flex: 0 0 auto;
+  }
+}

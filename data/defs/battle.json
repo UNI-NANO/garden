@@ -1,7 +1,7 @@
 {
   "id": "battle",
   "name": "전투 기준값",
-  "version": 7,
+  "version": 8,
   "player": {
     "hpBase": 30,
     "hpPerHealth": 0.5,
@@ -13,7 +13,8 @@
     "goodBase": 16,
     "goodPerMastery": 0.12,
     "perfectShare": 0.25,
-    "normalShareEachSide": 0.6
+    "normalShareEachSide": 0.6,
+    "sweepMs": 1200
   },
   "range": {
     "othersShare": {

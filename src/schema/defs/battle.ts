@@ -32,6 +32,8 @@ export const BattleRulesSchema = z.strictObject({
     goodPerMastery: z.number().min(0),
     perfectShare: share,
     normalShareEachSide: z.number().min(0),
+    /** 커서가 바의 왼쪽 끝에서 오른쪽 끝까지 가는 시간(밀리초). 기술의 판정 바 속도로 나눈다 */
+    sweepMs: z.number().positive(),
   }),
   range: z.strictObject({
     /** 고른 대상이 아닌 나머지 대상이 받는 위력의 비율 */

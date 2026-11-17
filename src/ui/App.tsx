@@ -1,4 +1,4 @@
-import { Component, type ComponentChildren } from "preact";
+import { Component, h, type ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import type { Firebase } from "../data/firebase-app";
 import { reportError, watchSession, type Session } from "../data/session";
@@ -33,9 +33,25 @@ class ErrorBoundary extends Component<{ fb: Firebase; children: ComponentChildre
   }
 }
 
+/** 연습 전투는 시험 환경에만. 실제 환경 빌드에서는 이 갈래가 통째로 빠진다(`npm run check:build`가 확인) */
+const PRACTICE = import.meta.env.VITE_GARDEN_ENV !== "prod";
+type PracticeScreen = (props: { fb: Firebase; onExit: () => void }) => preact.JSX.Element;
+
 export function App(props: { fb: Firebase; limits: Limits }) {
   const [session, setSession] = useState<Session>({ status: "loading" });
+  const [practice, setPractice] = useState<PracticeScreen | "loading">();
   useEffect(() => watchSession(props.fb, props.limits, setSession), [props.fb, props.limits]);
+
+  const openPractice = () => {
+    if (!PRACTICE) return;
+    setPractice("loading");
+    import("./battle/Practice")
+      .then((module) => setPractice(() => module.Practice))
+      .catch((error: unknown) => {
+        reportError(props.fb, error, "연습 전투 열기");
+        setPractice(undefined);
+      });
+  };
 
   return (
     <ErrorBoundary fb={props.fb}>
@@ -43,8 +59,12 @@ export function App(props: { fb: Firebase; limits: Limits }) {
         <Notice title="저편의 정원">문을 여는 중…</Notice>
       ) : session.status === "signedOut" ? (
         <LoginScreen fb={props.fb} />
+      ) : PRACTICE && practice === "loading" ? (
+        <Notice title="연습 전투">연습장을 여는 중…</Notice>
+      ) : PRACTICE && practice ? (
+        h(practice, { fb: props.fb, onExit: () => setPractice(undefined) })
       ) : (
-        <LibraryHome fb={props.fb} session={session} />
+        <LibraryHome fb={props.fb} session={session} {...(PRACTICE ? { onPractice: openPractice } : {})} />
       )}
     </ErrorBoundary>
   );

@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const dist = join(import.meta.dirname, "..", "dist", "assets");
-const forbidden = ["시험 계정으로 들어가기", "example.test"];
+const forbidden = ["시험 계정으로 들어가기", "example.test", "연습 전투"];
 const problems: string[] = [];
 let scripts = 0;
 for (const name of readdirSync(dist)) {
