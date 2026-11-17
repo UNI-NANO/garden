@@ -1,0 +1,47 @@
+name: 하루 계산
+
+# 매일 한국 시간 자정(UTC 15:00)에 세계가 한 달 흐른다 (명세서 「하루 계산」).
+# 지금은 손으로만 돌리고, 에뮬레이터에서 리허설만 한다.
+# 배포 단계에서: 아래 schedule을 켜고, 관리자 키(FIREBASE_SERVICE_ACCOUNT)와
+# 백업용 키(GARDEN_DATA_TOKEN: 비공개 저장소 garden-data에만 쓸 수 있는 키)를 GitHub Secrets에 넣는다.
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "0 15 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  # 하루 계산은 한 번에 하나만
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: 하루 계산 (에뮬레이터 리허설)
+        run: npx firebase emulators:exec --only database --project demo-garden "npm run daily -- --target emulator --backup-dir $RUNNER_TEMP/backup"
+      # 배포 단계에서 켠다: 백업 파일을 비공개 저장소 garden-data에 올린다 (키가 없으면 건너뜀)
+      # - name: 백업 올리기
+      #   if: env.GARDEN_DATA_TOKEN != ''
+      #   env:
+      #     GARDEN_DATA_TOKEN: ${{ secrets.GARDEN_DATA_TOKEN }}
+      #   run: |
+      #     git clone "https://x-access-token:${GARDEN_DATA_TOKEN}@github.com/UNI-NANO/garden-data.git" "$RUNNER_TEMP/garden-data"
+      #     mkdir -p "$RUNNER_TEMP/garden-data/backups"
+      #     cp "$RUNNER_TEMP"/backup/*.json "$RUNNER_TEMP/garden-data/backups/"
+      #     cd "$RUNNER_TEMP/garden-data"
+      #     git add backups && git -c user.name="하루 계산" -c user.email="actions@users.noreply.github.com" commit -m "백업 $(date -u +%F)" && git push
