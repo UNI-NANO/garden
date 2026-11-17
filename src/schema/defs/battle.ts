@@ -50,6 +50,10 @@ export const BattleRulesSchema = z.strictObject({
     parryMultiplier: multiplier,
   }),
   guard: z.strictObject({ damageMultiplier: share, energy: count }),
+  /** 적 차례 반응의 판정 칸 폭 (바 길이와 같은 단위). 칸 안에서 누르면 성공 */
+  reaction: z.strictObject({ guardWidth: z.number().positive(), parryWidth: z.number().positive(), dodgeWidth: z.number().positive() }),
+  /** 제한 시간(초): 아군 차례, 적 차례의 반응 하나 */
+  timers: z.strictObject({ allySeconds: z.number().positive(), reactionSeconds: z.number().positive() }),
   dodge: z.strictObject({ energy: count }),
   move: z.strictObject({ energy: count }),
   /** 적의 숫자는 등급 공식으로: 체력 = hpBase + hpPerTier × 등급, 위력 = powerBase + powerPerTier × 등급 */

@@ -208,6 +208,8 @@ export interface AllyUnit {
     cover?: { damageTaken: number; all?: boolean };
     parryAllyEffects: AppliedEffect[];
     parryBreakResist: number;
+    /** 받아치기 칸에 더하는 폭 (화면이 반응 판정에 쓴다) */
+    parryWidth: number;
   };
   /** 여러 턴 이어지는 기술: 쓴 턴, 한 번에 들어가는 위력(배율을 곱하기 전) */
   lingering?: { skillId: string; startTurn: number; power: number };
@@ -883,6 +885,7 @@ function useSkill(state: BattleState, ctx: BattleContext, ally: AllyUnit, action
       ...(opts.cover ? { cover: { ...opts.cover } } : {}),
       parryAllyEffects: [...(opts.parryAllyEffects ?? [])],
       parryBreakResist: opts.parryBreakResist ?? 0,
+      parryWidth: opts.parryWidth ?? 0,
     };
     if (opts.thrust && thrustTarget) {
       const thrust = opts.thrust;
@@ -1083,26 +1086,12 @@ export function resolveEnemies(before: BattleState, defenses: Defenses, ctx: Bat
     const enemy = state.enemies.find((e) => e.id === intent.enemyId);
     if (!enemy || enemy.down || intent.cancelled) continue;
 
-    // 대상이 쓰러졌거나 닿지 않게 되었으면 성향대로 다시 고른다
-    const candidates = reachable(standingAllies(state), intent.reach);
-    const rng = createRng(`${state.seed}:${state.turn}:${enemy.id}:다시`);
-    // 적진에 나가 있는 아군이 있으면 닿든 안 닿든 그 사람을 먼저 노린다
-    const exposed = standingAllies(state).find((a) => a.exposed?.turn === state.turn);
-    const main = exposed ?? candidates.find((a) => a.id === intent.targetId) ?? pickTarget(state, enemy.targeting, intent.reach, rng.next());
-    if (!main) continue;
-
-    const share = ctx.rules.range.othersShare[intent.range];
-    // 노린 사람의 같은 줄 바로 옆에서 대신 받는 자세를 잡은 동료가 있으면 그 동료가 받는다(받아치기 판정도 그 동료)
-    const coverer = coverFor(state, main);
-    if (coverer) state.events.push({ turn: state.turn, type: "대신 받음", ally: coverer.id, for: main.id, enemy: enemy.id });
-    targetsInRange(standingAllies(state), main, intent.range).forEach((ally, index) => {
-      const isMain = index === 0;
-      if (coverer && !isMain && (ally.id === coverer.id || coverer.stance?.cover?.all === true)) return;
-      const struck = coverer && isMain ? coverer : ally;
-      const cover = coverer && isMain ? (coverer.stance?.cover?.damageTaken ?? 1) : 1;
-      const power = (isMain ? intent.power : intent.power * share) * cover;
-      strikeAlly(state, ctx, enemy, intent, struck, power, defenses[defenseKey(enemy.id, struck.id)] ?? "없음");
-    });
+    const plan = planStrikes(state, ctx, enemy, intent);
+    if (!plan) continue;
+    if (plan.coverer) state.events.push({ turn: state.turn, type: "대신 받음", ally: plan.coverer.id, for: plan.main.id, enemy: enemy.id });
+    for (const strike of plan.strikes) {
+      strikeAlly(state, ctx, enemy, intent, strike.ally, strike.power, defenses[defenseKey(enemy.id, strike.ally.id)] ?? "없음");
+    }
     checkOutcome(state);
   }
 
@@ -1111,6 +1100,61 @@ export function resolveEnemies(before: BattleState, defenses: Defenses, ctx: Bat
 }
 
 const slotOfEnemy = (state: BattleState, enemyId: string) => state.enemies.find((e) => e.id === enemyId)?.slot ?? 0;
+
+/**
+ * 의도 하나가 지금 누구를 얼마로 치는가. 적 차례(`resolveEnemies`)와 화면의 반응 묻기(`incomingAttacks`)가 같이 쓴다.
+ * - 대상이 쓰러졌거나 닿지 않게 되었으면 성향대로 다시 고른다
+ * - 적진에 나가 있는 아군이 있으면 닿든 안 닿든 그 사람을 먼저 노린다
+ * - 대신 받는 자세를 잡은 동료가 있으면 그 동료가 받는다(받아치기 판정도 그 동료)
+ */
+function planStrikes(
+  state: BattleState,
+  ctx: BattleContext,
+  enemy: EnemyUnit,
+  intent: Intent,
+): { main: AllyUnit; coverer: AllyUnit | undefined; strikes: { ally: AllyUnit; power: number }[] } | undefined {
+  const candidates = reachable(standingAllies(state), intent.reach);
+  const rng = createRng(`${state.seed}:${state.turn}:${enemy.id}:다시`);
+  const exposed = standingAllies(state).find((a) => a.exposed?.turn === state.turn);
+  const main = exposed ?? candidates.find((a) => a.id === intent.targetId) ?? pickTarget(state, enemy.targeting, intent.reach, rng.next());
+  if (!main) return undefined;
+  const share = ctx.rules.range.othersShare[intent.range];
+  const coverer = coverFor(state, main);
+  const strikes: { ally: AllyUnit; power: number }[] = [];
+  targetsInRange(standingAllies(state), main, intent.range).forEach((ally, index) => {
+    const isMain = index === 0;
+    if (coverer && !isMain && (ally.id === coverer.id || coverer.stance?.cover?.all === true)) return;
+    const struck = coverer && isMain ? coverer : ally;
+    const cover = coverer && isMain ? (coverer.stance?.cover?.damageTaken ?? 1) : 1;
+    strikes.push({ ally: struck, power: (isMain ? intent.power : intent.power * share) * cover });
+  });
+  return { main, coverer, strikes };
+}
+
+/** 적 차례에 들어올 공격 하나: 누가 무엇으로 누구를 치는가 */
+export interface IncomingAttack {
+  enemyId: string;
+  allyId: string;
+  actionName: string;
+  /** 사기·공포·자세를 반영하기 전의 위력 (의도에 보이는 값) */
+  power: number;
+  big: boolean;
+}
+
+/**
+ * 적 차례에 들어올 공격을 실행 순서대로(앞줄부터). 화면이 반응(막기·받아치기·피하기)을 미리 묻는 데 쓴다.
+ * 적 차례 도중에 누가 쓰러지면 실제로는 대상이 바뀔 수 있다(그때 묻지 않은 반응은 "없음").
+ */
+export function incomingAttacks(state: BattleState, ctx: BattleContext): IncomingAttack[] {
+  if (state.phase !== "적 차례") return [];
+  const order = [...state.intents].sort((a, b) => slotOfEnemy(state, a.enemyId) - slotOfEnemy(state, b.enemyId));
+  return order.flatMap((intent) => {
+    const enemy = state.enemies.find((e) => e.id === intent.enemyId);
+    if (!enemy || enemy.down || intent.cancelled) return [];
+    const plan = planStrikes(state, ctx, enemy, intent);
+    return (plan?.strikes ?? []).map((strike) => ({ enemyId: enemy.id, allyId: strike.ally.id, actionName: intent.actionName, power: strike.power, big: intent.big }));
+  });
+}
 
 function strikeAlly(state: BattleState, ctx: BattleContext, enemy: EnemyUnit, intent: Intent, ally: AllyUnit, basePower: number, input: DefenseInput): void {
   if (ally.down || enemy.down) return;

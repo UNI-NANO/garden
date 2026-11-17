@@ -411,6 +411,121 @@
   color: var(--gold);
 }
 
+.battle__side {
+  display: flex;
+  align-items: stretch;
+}
+
+.battle__timer {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-family: var(--serif);
+  font-weight: 800;
+}
+
+.battle__leave[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* 적 차례의 반응 (docs/ui/Guard.dc.html) */
+.reaction {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 14px 24px;
+  color: var(--light);
+  background-image:
+    repeating-linear-gradient(115deg, rgba(233, 226, 208, 0.05) 0 1px, transparent 1px 7px),
+    linear-gradient(180deg, #121519 0%, #161a1d 52%, #0e1312 52%, #0a0d0c 100%);
+  z-index: 10;
+}
+
+.reaction__bar {
+  align-self: stretch;
+}
+
+.reaction__who {
+  margin: 32px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--woods-soft);
+}
+
+.reaction__what {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 40px;
+}
+
+.reaction__choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.reaction__choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 220px;
+  min-height: 150px;
+  border: 1.5px solid rgba(233, 226, 208, 0.6);
+  background: rgba(233, 226, 208, 0.12);
+  color: var(--light);
+  cursor: pointer;
+}
+
+.reaction__choice:hover:not(:disabled),
+.reaction__choice:focus-visible {
+  background: var(--paper);
+  color: var(--ink);
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+
+.reaction__choice:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.reaction__name {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 24px;
+}
+
+.reaction__note,
+.reaction__help {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.reaction__judge {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: stretch;
+  touch-action: manipulation;
+  user-select: none;
+  cursor: pointer;
+}
+
+.reaction__judge .judge__bar {
+  width: min(600px, 100%);
+}
+
 /* 결과 */
 .result {
   align-self: center;
@@ -533,6 +648,21 @@
 
   .skill {
     flex: 0 0 140px;
+  }
+
+  .reaction__what {
+    font-size: 28px;
+  }
+
+  .reaction__choices {
+    flex-direction: column;
+    align-self: stretch;
+    gap: 12px;
+  }
+
+  .reaction__choice {
+    width: auto;
+    min-height: 88px;
   }
 
   .skills__side {

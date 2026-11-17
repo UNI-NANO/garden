@@ -1,12 +1,14 @@
-import { useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import type { Firebase } from "../../data/firebase-app";
 import { reportError } from "../../data/session";
-import { autoAllyActions } from "../../rules/battle/auto";
-import { barModifiers } from "../../rules/battle/effects";
+import { autoAllyActions, autoDefenses } from "../../rules/battle/auto";
+import { barModifiers, canMove } from "../../rules/battle/effects";
 import {
   allySkills,
   canUseSkill,
   createBattle,
+  defenseKey,
+  incomingAttacks,
   resolveAllies,
   resolveEnemies,
   skillBarSpeed,
@@ -18,15 +20,32 @@ import {
   type BattleSetup,
   type BattleSkill,
   type BattleState,
+  type Defenses,
+  type DefenseInput,
   type EnemyUnit,
+  type IncomingAttack,
 } from "../../rules/battle/engine";
 import { rowOf } from "../../rules/battle/formation";
-import { sweepTime } from "../../rules/battle/judge";
+import { reactionWidths, sweepTime } from "../../rules/battle/judge";
 import { judgementWidths } from "../../rules/battle/numbers";
 import type { Judgement } from "../../schema/defs/skill-table";
 import type { BattleDefs } from "./defs";
 import { describeEvent } from "./event-text";
 import { JudgeBar } from "./JudgeBar";
+import { Reaction } from "./Reaction";
+
+/** 적 차례에 플레이어에게 반응을 묻는 중 */
+interface Reacting {
+  /** 이번 턴이 시작될 때의 상태 (기록을 자르는 데) */
+  before: BattleState;
+  /** 아군 차례가 끝난 상태 */
+  state: BattleState;
+  queue: IncomingAttack[];
+  defenses: Defenses;
+}
+
+/** 자동 전투에서 턴 사이에 멈추는 시간 */
+const AUTO_PAUSE_MS = 800;
 
 interface Judging {
   skill: BattleSkill;
@@ -55,24 +74,104 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
   const pickedSkill = player && picked ? allySkills(player).find((s) => s.id === picked) : undefined;
   const targets = player && pickedSkill ? skillTargets(battle, player, pickedSkill) : [];
 
-  /** 플레이어의 행동과 동료의 행동으로 한 턴을 돌린다. 적 차례는 ①에서는 모두 그냥 맞는다 */
+  const [reacting, setReacting] = useState<Reacting>();
+  const [auto, setAuto] = useState(false);
+  const allySeconds = ctx.rules.timers.allySeconds;
+  const [left, setLeft] = useState(allySeconds);
+  const turnStart = useRef(performance.now());
+
+  const linesOf = (before: BattleState, after: BattleState) => after.events.slice(before.events.length).flatMap((e) => describeEvent(e, names) ?? []);
+  const fail = (error: unknown) => {
+    reportError(props.fb, error, "전투");
+    setProblem("이 행동은 지금 할 수 없어요. 다른 것을 골라 주세요.");
+    setReacting(undefined);
+  };
+  /** 한 턴이 끝났다 */
+  const finish = (before: BattleState, next: BattleState) => {
+    setLog(linesOf(before, next));
+    setBattle(next);
+    setReacting(undefined);
+    setProblem(undefined);
+    turnStart.current = performance.now();
+    setLeft(allySeconds);
+  };
+  /** 적 차례: 플레이어를 노린 공격마다 반응을 묻고, 다 모이면 실행한다. 자동이면 자동 규칙으로 */
+  const enemyPhase = (before: BattleState, afterAllies: BattleState, byAuto: boolean) => {
+    if (afterAllies.phase !== "적 차례") return finish(before, afterAllies);
+    if (byAuto) return finish(before, resolveEnemies(afterAllies, autoDefenses(afterAllies, ctx, "자동"), ctx));
+    const me = afterAllies.allies.find((a) => a.kind === "플레이어");
+    const mine = me && !me.down ? incomingAttacks(afterAllies, ctx).filter((a) => a.allyId === me.id) : [];
+    if (mine.length === 0) return finish(before, resolveEnemies(afterAllies, {}, ctx));
+    setLog(linesOf(before, afterAllies));
+    setBattle(afterAllies);
+    setReacting({ before, state: afterAllies, queue: mine, defenses: {} });
+  };
+
+  /** 플레이어의 행동과 동료의 행동(성향대로 자동)으로 아군 차례를 돌린다 */
   const runTurn = (mine: AllyAction | undefined) => {
     setPicked(undefined);
     setJudging(undefined);
     setClash(false);
+    turnStart.current = performance.now();
     try {
       const mates = autoAllyActions(battle, ctx).filter((a) => a.unitId !== player?.id);
-      let next = resolveAllies(battle, [...(mine ? [mine] : []), ...mates], ctx);
-      if (next.phase === "적 차례") next = resolveEnemies(next, {}, ctx);
-      const lines = next.events.slice(battle.events.length).flatMap((e) => describeEvent(e, names) ?? []);
-      setLog(lines);
-      setBattle(next);
-      setProblem(undefined);
+      enemyPhase(battle, resolveAllies(battle, [...(mine ? [mine] : []), ...mates], ctx), false);
     } catch (error) {
-      reportError(props.fb, error, "전투");
-      setProblem("이 행동은 지금 할 수 없어요. 다른 것을 골라 주세요.");
+      fail(error);
     }
   };
+
+  /** 자동: 모두 자동 규칙으로 */
+  const runAuto = () => {
+    try {
+      enemyPhase(battle, resolveAllies(battle, autoAllyActions(battle, ctx), ctx), true);
+    } catch (error) {
+      fail(error);
+      setAuto(false);
+    }
+  };
+
+  const reacted = (input: DefenseInput) => {
+    if (!reacting) return;
+    const [attack, ...rest] = reacting.queue;
+    if (!attack) return;
+    const defenses = { ...reacting.defenses, [defenseKey(attack.enemyId, attack.allyId)]: input };
+    if (rest.length > 0) {
+      setReacting({ ...reacting, queue: rest, defenses });
+      return;
+    }
+    try {
+      finish(reacting.before, resolveEnemies(reacting.state, defenses, ctx));
+    } catch (error) {
+      fail(error);
+    }
+  };
+
+  // 아군 차례 제한 시간: 지나면 그 턴은 자동 규칙으로 대신 고른다
+  const idle = !judging && !reacting && !battle.outcome && !auto;
+  const live = useRef({ idle, timeout: () => undefined as void });
+  live.current = {
+    idle,
+    timeout: () => {
+      const action = player ? autoAllyActions(battle, ctx).find((a) => a.unitId === player.id) : undefined;
+      runTurn(action);
+    },
+  };
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const remain = allySeconds - (performance.now() - turnStart.current) / 1000;
+      setLeft(Math.max(0, Math.ceil(remain)));
+      if (remain <= 0 && live.current.idle) live.current.timeout();
+    }, 250);
+    return () => clearInterval(timer);
+  }, [allySeconds]);
+
+  // 자동 전투: 턴 사이에 잠깐 멈추고 다음 턴
+  useEffect(() => {
+    if (!auto || battle.outcome || reacting || judging) return;
+    const timer = setTimeout(runAuto, AUTO_PAUSE_MS);
+    return () => clearTimeout(timer);
+  }, [auto, battle, reacting, judging]);
 
   const strikeWith = (skill: BattleSkill, target: EnemyUnit | undefined) => {
     if (!player) return;
@@ -107,16 +206,28 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
     runTurn({ unitId: player.id, type: "기술", skillId: judging.skill.id, targetId: judging.targetId, judgements: done, clash: judging.clash });
   };
 
-  const turnLabel = battle.outcome ? "전투 끝" : `제${battle.turn}턴 · 아군 차례`;
+  const turnLabel = battle.outcome ? "전투 끝" : reacting ? `제${battle.turn}턴 · 적 차례` : `제${battle.turn}턴 · 아군 차례`;
 
   return (
     <main class="battle" aria-label="전투">
       <header class="battle__bar">
         <span class="battle__turn">{turnLabel}</span>
         <span class="battle__place">{props.title}</span>
-        <button class="battle__leave" type="button" onClick={props.onExit}>
-          그만두기
-        </button>
+        <span class="battle__side">
+          {!battle.outcome && !auto && (
+            <span class="battle__timer" aria-label="남은 시간">
+              {left}초
+            </span>
+          )}
+          {!battle.outcome && (
+            <button class="battle__leave" type="button" aria-pressed={auto} onClick={() => setAuto(!auto)}>
+              {auto ? "자동 끄기" : "자동"}
+            </button>
+          )}
+          <button class="battle__leave" type="button" onClick={props.onExit}>
+            그만두기
+          </button>
+        </span>
       </header>
 
       <div class="battle__field">
@@ -146,7 +257,8 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
       {battle.outcome ? (
         <Result battle={battle} onRetry={props.onRetry} onExit={props.onExit} />
       ) : (
-        player && (
+        player &&
+        !auto && (
           <SkillPanel
             battle={battle}
             player={player}
@@ -159,6 +271,22 @@ export function BattleScreen(props: { fb: Firebase; defs: BattleDefs; setup: Bat
             onFlee={() => runTurn({ unitId: player.id, type: "도망" })}
           />
         )
+      )}
+
+      {reacting && reacting.queue[0] && player && (
+        <Reaction
+          key={`${reacting.queue[0].enemyId}>${reacting.queue[0].allyId}`}
+          attack={reacting.queue[0]}
+          enemyName={names.unit(reacting.queue[0].enemyId)}
+          allyName={player.name}
+          turn={battle.turn}
+          canDodge={reacting.queue[0].big && canMove(ctx.effects, player.effects)}
+          seconds={ctx.rules.timers.reactionSeconds}
+          length={ctx.rules.judgementBar.length}
+          sweepMs={ctx.rules.judgementBar.sweepMs}
+          widthsFor={(kind) => reactionWidths(ctx.rules.reaction, kind, player.stance?.parryWidth ?? 0, ctx.rules.judgementBar.length)}
+          onDone={reacted}
+        />
       )}
 
       {judging && player && (

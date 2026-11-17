@@ -40,7 +40,7 @@ export function Practice(props: { fb: Firebase; onExit: () => void }) {
         defs={defs}
         setup={running.setup}
         title={`연습 전투 — ${running.choice.foes}`}
-        onRetry={() => start({ ...running.choice, seed: `연습-${running.round + 1}-${Date.now()}` }, running.round + 1)}
+        onRetry={() => start({ ...running.choice, seed: `연습-${running.round + 1}` }, running.round + 1)}
         onExit={() => setRunning(undefined)}
       />
     );
@@ -72,7 +72,7 @@ function PracticeSetup(props: { defs: BattleDefs; onStart: (choice: PracticeChoi
       basics: chosen.map((id) => (routes[id] ? { id, route: routes[id] } : { id })),
       foes,
       party,
-      seed: `연습-1-${Date.now()}`,
+      seed: "연습-1",
       ...(ultimate !== NO_ROUTE && ultimateOk ? { ultimateRoute: ultimate } : {}),
     };
     props.onStart(choice);

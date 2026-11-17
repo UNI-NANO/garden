@@ -44,3 +44,26 @@ export function judgeAt(widths: BarWidths, length: number, position: number | un
   if (inside(zones.normal)) return "보통";
   return "빗나감";
 }
+
+/** 적 차례의 반응 */
+export type ReactionKind = "막기" | "받아치기" | "피하기";
+
+/**
+ * 반응의 판정 칸 폭. 받아치기는 잡은 자세의 받아치기 칸(되받아치기 계열)을 더한다.
+ * 칸 하나뿐이라 좋음 칸에 넣고, 완벽·보통 칸은 없다.
+ */
+export function reactionWidths(
+  reaction: { guardWidth: number; parryWidth: number; dodgeWidth: number },
+  kind: ReactionKind,
+  stanceParryWidth: number,
+  length: number,
+): BarWidths {
+  const base = kind === "막기" ? reaction.guardWidth : kind === "받아치기" ? reaction.parryWidth + stanceParryWidth : reaction.dodgeWidth;
+  return { good: Math.min(length, Math.max(0, base)), perfect: 0, normalEachSide: 0 };
+}
+
+/** 반응 판정: 칸 안이면 성공. 끝까지 누르지 않았거나 칸 밖이면 그냥 맞는다 */
+export function reactionResult(widths: BarWidths, length: number, kind: ReactionKind, position: number | undefined): "막기 성공" | "받아치기 성공" | "피하기 성공" | "없음" {
+  if (judgeAt(widths, length, position) !== "좋음") return "없음";
+  return kind === "막기" ? "막기 성공" : kind === "받아치기" ? "받아치기 성공" : "피하기 성공";
+}

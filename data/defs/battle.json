@@ -1,7 +1,7 @@
 {
   "id": "battle",
   "name": "전투 기준값",
-  "version": 8,
+  "version": 9,
   "player": {
     "hpBase": 30,
     "hpPerHealth": 0.5,
@@ -42,6 +42,15 @@
   "guard": {
     "damageMultiplier": 0.5,
     "energy": 1
+  },
+  "reaction": {
+    "guardWidth": 30,
+    "parryWidth": 10,
+    "dodgeWidth": 20
+  },
+  "timers": {
+    "allySeconds": 60,
+    "reactionSeconds": 10
   },
   "dodge": {
     "energy": 1
