@@ -24,5 +24,5 @@ export const LedgerLineSchema = z.strictObject({
 /** 처리한 요청의 기록. 같은 요청 ID가 다시 오면 이 기록이 있어서 두 번 처리되지 않는다. */
 export const RequestRecordSchema = z.strictObject({
   at: z.number().int().min(0),
-  kind: z.enum(["주고받기"]),
+  kind: z.enum(["주고받기", "달 행동"]),
 });

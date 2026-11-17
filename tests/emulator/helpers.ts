@@ -27,11 +27,14 @@ export async function startTestEnv(): Promise<RulesTestEnvironment> {
 
 type Database = ReturnType<RulesTestContext["database"]>;
 
-/** 규칙을 건너뛰고 처음 상태를 만든다: GM 한 명, OWNER의 캐릭터 하나 */
-export async function seed(testEnv: RulesTestEnvironment, character: unknown = makeCharacter(OWNER)): Promise<void> {
+/** 시험용 세계 시계: 성력 514년 넷째 달(514-3), 계산 중 아님 (가짜 캐릭터의 달과 같다) */
+export const CLOCK = { year: 514, monthIndex: 3, monthKey: "514-3", lastDateKey: "2026-11-17", computing: false };
+
+/** 규칙을 건너뛰고 처음 상태를 만든다: GM 한 명, OWNER의 캐릭터 하나, 세계 시계 */
+export async function seed(testEnv: RulesTestEnvironment, character: unknown = makeCharacter(OWNER), clock: unknown = CLOCK): Promise<void> {
   await testEnv.clearDatabase();
   await testEnv.withSecurityRulesDisabled(async (context) => {
-    await context.database().ref().set({ gm: { [GM]: true }, characters: { [CID]: character } });
+    await context.database().ref().set({ gm: { [GM]: true }, characters: { [CID]: character }, world: { clock } });
   });
 }
 

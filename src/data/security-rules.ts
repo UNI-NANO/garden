@@ -100,7 +100,18 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
       $other: { ".validate": false },
     },
     month: {
-      ".write": ownerWrite(1, " && newData.exists()"),
+      // 주인은 세계의 이번 달에, 계산 중이 아닐 때만, 행동을 줄이기만 한다. 달 넘기기(행동 다시 채우기)는 하루 계산(관리자)과 GM만
+      ".write": ownerWrite(
+        1,
+        " && newData.exists()" +
+          " && root.child('world/clock/computing').val() === false" +
+          " && newData.child('key').val() === root.child('world/clock/monthKey').val()" +
+          " && newData.child('key').val() === data.child('key').val()" +
+          " && newData.child('mainActions').val() <= data.child('mainActions').val()" +
+          " && newData.child('minorActions').val() <= data.child('minorActions').val()" +
+          " && newData.child('savedActions').val() <= data.child('savedActions').val()" +
+          " && newData.child('career').val() >= data.child('career').val()",
+      ),
       ".validate": "newData.hasChildren(['key', 'mainActions', 'minorActions', 'savedActions', 'career'])",
       key: { ".validate": "newData.isString()" },
       mainActions: { ".validate": int(0, limits.month.mainActions) },

@@ -710,3 +710,14 @@ input:focus-visible {
     transition: none;
   }
 }
+
+/* 하루 계산 중 */
+.home__computing {
+  max-width: 1080px;
+  margin: 8px auto 0;
+  padding: 10px 16px;
+  color: var(--ink);
+  background: var(--gold);
+  font-size: 14px;
+  text-align: center;
+}

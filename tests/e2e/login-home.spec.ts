@@ -115,6 +115,13 @@ test("로그인부터 도서관 홈까지", async ({ page }, testInfo) => {
   await life.getByRole("button", { name: "덮기" }).click();
   await expect(card.getByText("아린")).toBeVisible();
 
+  // 하루 계산 중이면 알린다 (세계 시계는 관리자만 쓴다)
+  const clock = { year: 514, monthIndex: 3, monthKey: "514-3", lastDateKey: "2026-11-17", computing: true };
+  await admin.update({ "world/clock": clock });
+  await expect(page.getByRole("status")).toContainText("세계의 시간이 흐르는 중");
+  await admin.update({ "world/clock/computing": false });
+  await expect(page.getByRole("status")).toHaveCount(0);
+
   // 5. 누르는 것은 44px 이상 (모바일 규칙)
   for (const button of await page.getByRole("button").all()) {
     const box = await button.boundingBox();

@@ -17,6 +17,8 @@ export const WorldClockSchema = z.strictObject({
   year: z.number().int().min(1),
   /** 0~10은 열한 달, 11은 이름 없는 다섯 날 */
   monthIndex: z.number().int().min(0).max(11),
+  /** 이번 달 키 "연도-달 순번". year·monthIndex와 늘 같다(보안 규칙이 캐릭터의 달 키와 바로 비교한다) */
+  monthKey: z.string().regex(/^[0-9]+-(?:[0-9]|1[01])$/),
   /** 마지막으로 처리를 끝낸 날짜 */
   lastDateKey: DateKeySchema,
   /** 계산 중: 이 동안 달 행동 요청을 받지 않는다 */
@@ -25,6 +27,9 @@ export const WorldClockSchema = z.strictObject({
   progress: z.strictObject({ dateKey: DateKeySchema, done: z.array(DailyStepSchema) }).optional(),
 });
 export type WorldClock = z.infer<typeof WorldClockSchema>;
+
+/** 세계 시계의 자리 */
+export const WORLD_CLOCK_PATH = "world/clock";
 
 /** 하루 계산 실행 기록 (`/world/runs/{runId}`) */
 export const DailyRunSchema = z.strictObject({

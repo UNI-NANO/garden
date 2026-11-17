@@ -37,7 +37,8 @@ export function monthKeyOf(clock: Pick<WorldClock, "year" | "monthIndex">): stri
 
 /** 처음 세계 시계: 시작 연도의 첫 달, 오늘까지 처리한 것으로 */
 export function initialClock(limits: Limits, nowMs: number): WorldClock {
-  return { year: limits.clock.startYear, monthIndex: 0, lastDateKey: dateKeyAt(nowMs, limits.clock.utcOffsetHours), computing: false };
+  const year = limits.clock.startYear;
+  return { year, monthIndex: 0, monthKey: monthKeyOf({ year, monthIndex: 0 }), lastDateKey: dateKeyAt(nowMs, limits.clock.utcOffsetHours), computing: false };
 }
 
 /** 달 순번 +1. 10 다음은 11(이름 없는 다섯 날), 11 다음은 다음 해 0. 11이 되는 날은 한 해 정리 */

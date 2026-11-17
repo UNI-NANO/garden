@@ -1,6 +1,8 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import type { Firebase } from "../data/firebase-app";
 import { reportError, signOut, type Session } from "../data/session";
+import { watchWorldClock } from "../data/world";
+import type { WorldClock } from "../schema/world";
 import { buildHomeView, type HomeView } from "../rules/home-view";
 import { Paper } from "./parts";
 
@@ -10,6 +12,8 @@ type Tab = "card" | "life";
 export function LibraryHome(props: { fb: Firebase; session: SignedIn; onPractice?: () => void }) {
   const { session } = props;
   const [tab, setTab] = useState<Tab>("card");
+  const [clock, setClock] = useState<WorldClock>();
+  useEffect(() => watchWorldClock(props.fb, setClock), [props.fb]);
   const view = session.character ? buildHomeView(session.character) : undefined;
   const leave = () => void signOut(props.fb).catch((error: unknown) => reportError(props.fb, error, "로그아웃"));
 
@@ -27,6 +31,12 @@ export function LibraryHome(props: { fb: Firebase; session: SignedIn; onPractice
           </div>
         </div>
       </header>
+
+      {clock?.computing && (
+        <p class="home__computing" role="status">
+          세계의 시간이 흐르는 중이에요. 잠시 뒤 새 달이 열리면 달 행동을 할 수 있어요.
+        </p>
+      )}
 
       <div class="home__body">
         <div class="home__desk">

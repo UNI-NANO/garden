@@ -45,7 +45,7 @@ describe("날짜 키", () => {
 
 describe("달력", () => {
   it("처음 세계: 성력 514년 첫 달, 오늘까지 처리한 것으로", () => {
-    expect(initialClock(limits, Date.parse("2026-11-17T03:00:00Z"))).toEqual({ year: 514, monthIndex: 0, lastDateKey: "2026-11-17", computing: false });
+    expect(initialClock(limits, Date.parse("2026-11-17T03:00:00Z"))).toEqual({ year: 514, monthIndex: 0, monthKey: "514-0", lastDateKey: "2026-11-17", computing: false });
   });
   it("10 다음은 이름 없는 다섯 날(한 해 정리), 그다음은 새해", () => {
     expect(advanceMonth({ year: 514, monthIndex: 3 })).toEqual({ year: 514, monthIndex: 4, yearEnd: false });
