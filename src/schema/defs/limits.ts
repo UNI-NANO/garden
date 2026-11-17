@@ -37,5 +37,20 @@ export const LimitsSchema = z.strictObject({
     /** 우편함 보관 기간(일) */
     mailboxDays: count.min(1),
   }),
+  /** 던전 탐험 (명세서 「던전」). 숫자는 모두 임시 */
+  dungeon: z.strictObject({
+    /** 함정방을 지날 때 내는 체력: 최대 체력의 이 비율 (체력 1은 남는다) */
+    trapHpShare: z.number().min(0).max(1),
+    /** 쉼터의 쉬기: 최대 체력·기력의 이 비율만큼 회복 */
+    restShare: z.number().min(0).max(1),
+    /** 전투가 끝난 뒤 기력: 최대 기력의 이 비율만큼 찬다 */
+    fightEnergyShare: z.number().min(0).max(1),
+    /** 얻은 것의 칸 수 (같은 물건 묶음은 한 칸, 잎전은 칸을 쓰지 않음) */
+    lootSlots: count.min(1),
+    /** 시작부터 이 시간이 지나면 자동 귀환 */
+    autoReturnHours: z.number().positive(),
+    /** 보상 곡선: 그날 그 분야 n번째(1부터)의 전리품 배율. 끝 값이 이후에도 이어진다 */
+    fatigueCurve: z.array(z.number().min(0).max(1)).min(1),
+  }),
 });
 export type Limits = z.infer<typeof LimitsSchema>;

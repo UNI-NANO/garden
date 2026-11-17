@@ -2,7 +2,7 @@
 //   npm run check:defs
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { checkDefs, type DefIssue } from "../src/rules/validate-defs";
+import { checkDefs, checkDungeons, type DefIssue } from "../src/rules/validate-defs";
 
 const root = join(import.meta.dirname, "..", "data", "defs");
 const issues: DefIssue[] = [];
@@ -35,8 +35,10 @@ const raw = {
 if (issues.length === 0) {
   const result = checkDefs(raw);
   if (result.ok) {
+    const dungeons = checkDungeons(readJson("dungeons.json"), result.defs);
+    if (!dungeons.ok) issues.push(...dungeons.issues);
     const nodes = result.defs.trees.reduce((sum, tree) => sum + tree.nodes.length, 0);
-    console.log(`정의 데이터 통과: 나무 ${result.defs.trees.length}그루, 칸 ${nodes}개, 효과 ${result.defs.effects.effects.length}개, 물건 ${result.defs.items.items.length}개`);
+    console.log(`정의 데이터 통과: 나무 ${result.defs.trees.length}그루, 칸 ${nodes}개, 효과 ${result.defs.effects.effects.length}개, 물건 ${result.defs.items.items.length}개, 던전 ${dungeons.ok ? dungeons.dungeons.dungeons.length : "?"}개`);
   } else {
     issues.push(...result.issues);
   }

@@ -1,0 +1,27 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { checkDefs, checkDungeons } from "../../src/rules/validate-defs";
+
+/** 실제 정의 데이터(data/defs)를 검사해 읽는다. 시험 여러 곳이 같이 쓴다 */
+const root = join(import.meta.dirname, "..", "..", "data", "defs");
+const read = (file: string): unknown => JSON.parse(readFileSync(join(root, file), "utf8"));
+
+export function realDefs() {
+  const trees: Record<string, unknown> = {};
+  for (const name of readdirSync(join(root, "trees"))) trees[`trees/${name}`] = read(`trees/${name}`);
+  const result = checkDefs({
+    skillTable: read("skill-table.json"),
+    effects: read("effects.json"),
+    limits: read("limits.json"),
+    items: read("items.json"),
+    migration: read("migration.json"),
+    talents: read("talents.json"),
+    battle: read("battle.json"),
+    enemies: read("enemies.json"),
+    trees,
+  });
+  if (!result.ok) throw new Error(JSON.stringify(result.issues));
+  const dungeons = checkDungeons(read("dungeons.json"), result.defs);
+  if (!dungeons.ok) throw new Error(JSON.stringify(dungeons.issues));
+  return { ...result.defs, dungeons: dungeons.dungeons.dungeons, itemMap: new Map(result.defs.items.items.map((i) => [i.id, i])) };
+}

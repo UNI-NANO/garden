@@ -339,6 +339,9 @@ export interface AllySetup {
   skills: BattleSkill[];
   /** 든 궁극기 (하나) */
   ultimate?: BattleSkill;
+  /** 이어지는 체력·기력 (던전). 없으면 가득 찬 채로 */
+  hp?: number;
+  energy?: number;
 }
 
 export interface BattleSetup {
@@ -382,10 +385,10 @@ export function createBattle(setup: BattleSetup, ctx: BattleContext): BattleStat
       name: a.name,
       kind: a.kind,
       slot: a.slot,
-      hp: maxHp,
+      hp: Math.max(1, Math.min(maxHp, a.hp ?? maxHp)),
       maxHp,
       defense: ctx.rules.player.defense,
-      energy: ctx.table.energy.max,
+      energy: Math.max(0, Math.min(ctx.table.energy.max, a.energy ?? ctx.table.energy.max)),
       mastery: a.mastery,
       basicAttack: a.basicAttack,
       skills: a.skills,

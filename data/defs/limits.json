@@ -1,7 +1,7 @@
 {
   "id": "limits",
   "name": "범위와 상한",
-  "version": 3,
+  "version": 4,
   "abilities": {
     "min": 0,
     "max": 100,
@@ -38,5 +38,19 @@
     "maxStackQuantity": 99999,
     "maxQuantityGainPerChange": 9999,
     "mailboxDays": 7
+  },
+  "dungeon": {
+    "trapHpShare": 0.15,
+    "restShare": 0.5,
+    "fightEnergyShare": 0.3,
+    "lootSlots": 8,
+    "autoReturnHours": 24,
+    "fatigueCurve": [
+      1,
+      1,
+      0.7,
+      0.5,
+      0.3
+    ]
   }
 }

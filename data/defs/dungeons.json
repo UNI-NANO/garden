@@ -1,0 +1,75 @@
+{
+  "id": "dungeons",
+  "name": "던전",
+  "version": 1,
+  "dungeons": [
+    {
+      "id": "border-forest",
+      "name": "국경 숲길",
+      "region": "북쪽 팔",
+      "place": "국경 숲길",
+      "description": "입문용 숲길. 덫과 굶주린 늑대들이 길을 막는다. 압박은 없다.",
+      "floors": [{ "rooms": { "min": 8, "max": 9 } }, { "rooms": { "min": 9, "max": 11 } }, { "rooms": { "min": 10, "max": 12 } }],
+      "trapShare": 0.25,
+      "treasureChance": 0.6,
+      "secretChance": 0.4,
+      "bombChance": 0.5,
+      "pressure": "없음",
+      "groups": {
+        "일반": [
+          { "weight": 3, "enemies": [{ "enemy": "wolf", "slot": 1 }] },
+          { "weight": 2, "enemies": [{ "enemy": "wolf", "slot": 0 }, { "enemy": "wolf", "slot": 2 }] },
+          { "weight": 1, "minFloor": 2, "enemies": [{ "enemy": "wolf", "slot": 0 }, { "enemy": "wolf", "slot": 1 }, { "enemy": "wolf", "slot": 2 }] },
+          { "weight": 1, "minFloor": 2, "enemies": [{ "enemy": "deserter.shield", "slot": 1 }, { "enemy": "deserter.crossbow", "slot": 4 }] }
+        ],
+        "정예": [{ "weight": 1, "enemies": [{ "enemy": "wolf.alpha", "slot": 1 }, { "enemy": "wolf", "slot": 0 }] }],
+        "보스": [{ "weight": 1, "enemies": [{ "enemy": "wolf.king", "slot": 1 }, { "enemy": "wolf", "slot": 0 }, { "enemy": "wolf", "slot": 2 }] }]
+      },
+      "loot": {
+        "전투": {
+          "rolls": { "min": 1, "max": 2 },
+          "entries": [
+            { "kind": "물건", "item": "wolf-pelt", "quantity": { "min": 1, "max": 2 }, "weight": 3 },
+            { "kind": "물건", "item": "forest-herb", "quantity": { "min": 1, "max": 3 }, "weight": 2 },
+            { "kind": "잎전", "quantity": { "min": 5, "max": 20 }, "weight": 1 }
+          ]
+        },
+        "정예": {
+          "rolls": { "min": 2, "max": 3 },
+          "entries": [
+            { "kind": "물건", "item": "wolf-pelt", "quantity": { "min": 2, "max": 4 }, "weight": 3 },
+            { "kind": "물건", "item": "timber", "quantity": { "min": 1, "max": 3 }, "weight": 1 },
+            { "kind": "잎전", "quantity": { "min": 20, "max": 50 }, "weight": 1 }
+          ]
+        },
+        "보물": {
+          "rolls": { "min": 2, "max": 3 },
+          "entries": [
+            { "kind": "물건", "item": "hunters-knife", "quantity": { "min": 1, "max": 1 }, "weight": 1 },
+            { "kind": "물건", "item": "forest-herb", "quantity": { "min": 3, "max": 6 }, "weight": 2 },
+            { "kind": "잎전", "quantity": { "min": 30, "max": 80 }, "weight": 2 }
+          ]
+        },
+        "비밀": {
+          "rolls": { "min": 1, "max": 2 },
+          "entries": [
+            { "kind": "물건", "item": "timber", "quantity": { "min": 2, "max": 5 }, "weight": 2 },
+            { "kind": "잎전", "quantity": { "min": 40, "max": 100 }, "weight": 1 }
+          ]
+        },
+        "보스": {
+          "rolls": { "min": 2, "max": 3 },
+          "entries": [
+            { "kind": "물건", "item": "wolf-pelt", "quantity": { "min": 3, "max": 5 }, "weight": 2 },
+            { "kind": "물건", "item": "wolf-king-fang", "quantity": { "min": 1, "max": 1 }, "weight": 1 },
+            { "kind": "잎전", "quantity": { "min": 60, "max": 120 }, "weight": 2 }
+          ]
+        }
+      },
+      "firstClear": [
+        { "kind": "잎전", "quantity": 200 },
+        { "kind": "물건", "item": "wolf-king-fang", "quantity": 1 }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "id": "enemies",
   "name": "적",
-  "version": 3,
+  "version": 4,
   "enemies": [
     {
       "id": "wolf",
@@ -107,6 +107,101 @@
           "reach": "원거리",
           "range": "단일",
           "weight": 1
+        }
+      ]
+    },
+    {
+      "id": "wolf.alpha",
+      "name": "늑대 우두머리",
+      "archetype": "짐승",
+      "tier": 2,
+      "rank": "정예",
+      "row": "앞줄",
+      "resist": {
+        "자상": "약함",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 0,
+      "targeting": "체력이 가장 낮은 쪽",
+      "actions": [
+        {
+          "name": "물어뜯기",
+          "damageType": "자상",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2,
+          "effects": [
+            {
+              "id": "bleed",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "덮치기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "bind",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wolf.king",
+      "name": "굶주린 늑대왕",
+      "archetype": "짐승",
+      "tier": 3,
+      "rank": "보스",
+      "row": "앞줄",
+      "resist": {
+        "자상": "약함",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 0,
+      "targeting": "체력이 가장 낮은 쪽",
+      "actions": [
+        {
+          "name": "물어뜯기",
+          "damageType": "자상",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2,
+          "effects": [
+            {
+              "id": "bleed",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "덮치기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "bind",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "포효",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "전체",
+          "big": true,
+          "weight": 1,
+          "powerMultiplier": 0.6
         }
       ]
     }

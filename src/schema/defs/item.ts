@@ -4,7 +4,7 @@ import { DefIdSchema, defHeader } from "./common";
 export const ItemKindSchema = z.enum(["묶음", "낱개"]);
 export type ItemKind = z.infer<typeof ItemKindSchema>;
 
-/** 물건 카드. 지금은 짐을 셀 때 필요한 칸만 있다. 값·신선도 분류·효과는 그 시스템을 만들 때 더한다. */
+/** 물건 카드. 지금은 짐을 셀 때와 던전 손실 순서에 필요한 칸만 있다. 값·신선도 분류·효과는 그 시스템을 만들 때 더한다. */
 export const ItemSchema = z.strictObject({
   id: DefIdSchema,
   name: z.string().min(1),
@@ -12,6 +12,8 @@ export const ItemSchema = z.strictObject({
   kind: ItemKindSchema,
   /** 하나의 무게 */
   weight: z.number().min(0),
+  /** 하나의 값어치 (잎전, 임시). 던전에서 쓰러질 때 잃을 것을 고르는 순서에 쓴다. 없으면 0 */
+  value: z.number().min(0).optional(),
 });
 export type Item = z.infer<typeof ItemSchema>;
 

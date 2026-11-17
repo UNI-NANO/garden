@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import { BattleRulesSchema, EnemyListSchema, type BattleRules, type EnemyList } from "../schema/defs/battle";
+import { DungeonListSchema, type DungeonList } from "../schema/defs/dungeon";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -495,4 +496,48 @@ function validateStem(file: string, tree: Tree, table: SkillTable): DefIssue[] {
   }
   for (const id of mustUnlock) if (!unlocked.has(id)) add("stem", `줄기 어디에서도 열리지 않는다: ${id}`);
   return issues;
+}
+
+const DUNGEONS_FILE = "dungeons.json";
+
+/**
+ * 던전 카드 검사: 모양, 그리고 적·물건 연결.
+ * 정예 무리에는 정예 적이, 보스 무리에는 보스 적이 있어야 하고, 한 무리 안의 칸은 겹치지 않는다.
+ */
+export function checkDungeons(raw: unknown, defs: { enemies: EnemyList; items: ItemList }): { ok: true; dungeons: DungeonList } | { ok: false; issues: DefIssue[] } {
+  const parsed = DungeonListSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(DUNGEONS_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  const enemies = new Map(defs.enemies.enemies.map((e) => [e.id, e]));
+  const items = new Set(defs.items.items.map((i) => i.id));
+  const ids = new Set<string>();
+  for (const dungeon of parsed.data.dungeons) {
+    const add = (where: string, message: string) => issues.push({ file: DUNGEONS_FILE, where: `${dungeon.id}.${where}`, message });
+    if (ids.has(dungeon.id)) add("id", "ID가 겹친다");
+    ids.add(dungeon.id);
+    dungeon.floors.forEach((floor, i) => {
+      // 시작·쉼터·끝방은 꼭 있어야 한다
+      if (floor.rooms.min < 3) add(`floors.${i}`, "방은 셋 이상 (시작·쉼터·끝)");
+    });
+    for (const rank of ["일반", "정예", "보스"] as const) {
+      dungeon.groups[rank].forEach((group, g) => {
+        const slots = new Set<number>();
+        for (const member of group.enemies) {
+          const enemy = enemies.get(member.enemy);
+          if (!enemy) add(`groups.${rank}.${g}`, `없는 적: ${member.enemy}`);
+          if (slots.has(member.slot)) add(`groups.${rank}.${g}`, `칸 ${member.slot}이 겹친다`);
+          slots.add(member.slot);
+        }
+        if (rank !== "일반" && !group.enemies.some((m) => enemies.get(m.enemy)?.rank === rank)) add(`groups.${rank}.${g}`, `${rank} 무리에 ${rank} 적이 없다`);
+        if (group.minFloor !== undefined && group.minFloor > dungeon.floors.length) add(`groups.${rank}.${g}`, "없는 층부터 나온다");
+      });
+      if (rank === "일반" && !dungeon.groups.일반.some((g) => (g.minFloor ?? 1) === 1)) add("groups.일반", "첫 층에 나올 무리가 없다");
+    }
+    const lootItems = [
+      ...Object.values(dungeon.loot).flatMap((table) => table.entries),
+      ...dungeon.firstClear,
+    ].flatMap((entry) => (entry.kind === "물건" ? [entry.item] : []));
+    for (const item of lootItems) if (!items.has(item)) add("loot", `없는 물건: ${item}`);
+  }
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, dungeons: parsed.data };
 }
