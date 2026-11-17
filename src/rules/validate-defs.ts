@@ -3,6 +3,7 @@ import { BattleRulesSchema, EnemyListSchema, type BattleRules, type EnemyList } 
 import { DungeonListSchema, type DungeonList } from "../schema/defs/dungeon";
 import { CAST_ZONES, FishingDefsSchema, SeasonSchema, type FishingDefs } from "../schema/defs/fishing";
 import { GatheringDefsSchema, type GatheringDefs } from "../schema/defs/gathering";
+import { HuntingDefsSchema, type HuntingDefs } from "../schema/defs/hunting";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -598,4 +599,31 @@ export function checkGathering(raw: unknown, defs: { items: ItemList }): { ok: t
     }
   }
   return issues.length > 0 ? { ok: false, issues } : { ok: true, gathering: parsed.data };
+}
+
+const HUNTING_FILE = "hunting.json";
+
+/** 사냥 검사: 모양, 물건·적 연결, 계절마다 나올 짐승 */
+export function checkHunting(raw: unknown, defs: { items: ItemList; enemies: EnemyList }): { ok: true; hunting: HuntingDefs } | { ok: false; issues: DefIssue[] } {
+  const parsed = HuntingDefsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(HUNTING_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  const items = new Map(defs.items.items.map((i) => [i.id, i]));
+  const enemies = new Set(defs.enemies.enemies.map((e) => e.id));
+  const { rules } = parsed.data;
+  if (rules.distance.min > rules.distance.start) issues.push({ file: HUNTING_FILE, where: "rules.distance", message: "가장 가까운 거리가 처음 거리보다 멀다" });
+  if (rules.paths.max > 4) issues.push({ file: HUNTING_FILE, where: "rules.paths", message: "길은 방향 넷보다 많을 수 없다" });
+  for (const ground of parsed.data.grounds) {
+    const add = (where: string, message: string) => issues.push({ file: HUNTING_FILE, where: `${ground.id}.${where}`, message });
+    for (const prey of ground.prey) {
+      for (const drop of prey.drops) {
+        const item = items.get(drop.item);
+        if (!item) add(prey.id, `없는 물건: ${drop.item}`);
+        else if (item.kind !== "묶음") add(prey.id, `얻는 것은 묶음 물건이어야 한다: ${drop.item}`);
+      }
+      for (const member of prey.danger?.enemies ?? []) if (!enemies.has(member.enemy)) add(prey.id, `없는 적: ${member.enemy}`);
+    }
+    for (const season of SeasonSchema.options) if (!ground.prey.some((p) => p.seasons.includes(season))) add("prey", `${season}에 나올 짐승이 없다`);
+  }
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, hunting: parsed.data };
 }

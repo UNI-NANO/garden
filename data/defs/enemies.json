@@ -1,7 +1,7 @@
 {
   "id": "enemies",
   "name": "적",
-  "version": 4,
+  "version": 5,
   "enemies": [
     {
       "id": "wolf",
@@ -202,6 +202,43 @@
           "big": true,
           "weight": 1,
           "powerMultiplier": 0.6
+        }
+      ]
+    },
+    {
+      "id": "boar",
+      "name": "멧돼지",
+      "archetype": "짐승",
+      "tier": 2,
+      "rank": "일반",
+      "row": "앞줄",
+      "resist": {
+        "자상": "약함",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 0,
+      "targeting": "앞줄",
+      "actions": [
+        {
+          "name": "들이받기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2
+        },
+        {
+          "name": "엄니 찌르기",
+          "damageType": "관통",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "bleed",
+              "amount": 1
+            }
+          ]
         }
       ]
     }

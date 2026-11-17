@@ -1,0 +1,66 @@
+{
+  "id": "hunting",
+  "name": "사냥",
+  "version": 1,
+  "rules": {
+    "forks": 3,
+    "paths": { "min": 2, "max": 3 },
+    "steps": 6,
+    "alert": { "quiet": 5, "fast": 15, "wrong": 10, "downwind": 30, "approach": 20 },
+    "distance": { "start": 60, "step": 15, "min": 15 },
+    "bar": {
+      "far": { "good": 10, "perfect": 3, "normalEachSide": 10 },
+      "near": { "good": 28, "perfect": 10, "normalEachSide": 14 },
+      "sweepMs": 1400
+    },
+    "quality": { "완벽": "최상", "좋음": "상", "전투": "중", "nervousAlert": 60 }
+  },
+  "grounds": [
+    {
+      "id": "tesanga-grassland",
+      "name": "테산가 사냥 초원",
+      "region": "테산가",
+      "place": "사냥 초원",
+      "description": "끝없이 펼쳐진 풀밭. 바람이 냄새를 실어 나른다.",
+      "prey": [
+        {
+          "id": "grass-hare",
+          "name": "초원토끼",
+          "seasons": ["봄", "여름", "가을", "겨울"],
+          "weight": 3,
+          "wariness": 0.3,
+          "tracks": ["작은 발자국", "꺾인 풀"],
+          "drops": [{ "item": "rabbit-meat", "quantity": { "min": 1, "max": 2 } }, { "item": "rabbit-fur", "quantity": { "min": 1, "max": 1 } }]
+        },
+        {
+          "id": "antelope",
+          "name": "영양",
+          "seasons": ["봄", "여름", "가을"],
+          "weight": 3,
+          "wariness": 0.8,
+          "tracks": ["갈라진 발굽", "꺾인 풀"],
+          "drops": [{ "item": "antelope-meat", "quantity": { "min": 2, "max": 3 } }, { "item": "antelope-hide", "quantity": { "min": 1, "max": 1 } }]
+        },
+        {
+          "id": "boar",
+          "name": "멧돼지",
+          "seasons": ["봄", "여름", "가을", "겨울"],
+          "weight": 2,
+          "wariness": 0.5,
+          "tracks": ["파헤친 흙", "갈라진 발굽"],
+          "drops": [{ "item": "boar-hide", "quantity": { "min": 1, "max": 1 } }, { "item": "boar-tusk", "quantity": { "min": 1, "max": 2 } }],
+          "danger": { "enemies": [{ "enemy": "boar", "slot": 1 }] }
+        },
+        {
+          "id": "bison",
+          "name": "들소",
+          "seasons": ["여름", "가을"],
+          "weight": 1,
+          "wariness": 0.6,
+          "tracks": ["넓은 발굽", "똥 무더기"],
+          "drops": [{ "item": "bison-hide", "quantity": { "min": 1, "max": 1 } }]
+        }
+      ]
+    }
+  ]
+}

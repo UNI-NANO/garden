@@ -1,0 +1,175 @@
+/* 사냥 (docs/ui/Hunt.dc.html) */
+.ht__info {
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.ht .bar__button {
+  white-space: nowrap;
+}
+
+.ht__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 24px;
+  align-items: start;
+  max-width: 1180px;
+  margin: 18px auto 0;
+  padding: 0 32px 32px;
+}
+
+.ht__target {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 18px;
+}
+
+.ht__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+}
+
+.ht__road {
+  stroke: #8a7a52;
+  stroke-width: 18;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.ht__road--tried {
+  opacity: 0.2;
+}
+
+.ht__prey {
+  fill: #4a3f2e;
+}
+
+.ht__wind {
+  font-size: 22px;
+  fill: #3d4447;
+  text-anchor: end;
+}
+
+.ht__meters {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.ht__meter {
+  flex: 1;
+}
+
+.ht__meter-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.ht__meter-bar {
+  display: block;
+  height: 12px;
+  border: 1px solid var(--line);
+  background: rgba(70, 62, 52, 0.1);
+}
+
+.ht__meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+}
+
+.ht__meter--danger .ht__meter-fill {
+  background: #b5402c;
+}
+
+.ht__steps {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.ht__notice,
+.ht__problem {
+  color: #9b2a1f;
+}
+
+.ht__side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ht__title {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 20px;
+}
+
+.ht__hint,
+.ht__known {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.ht__pace {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.ht__pace [aria-checked="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.ht__paths {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ht__paths .button {
+  width: 100%;
+  text-align: left;
+}
+
+.ht__guide {
+  font-size: 13px;
+}
+
+.ht__guide ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.ht__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ht__gains {
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 767px) {
+  .ht__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 0 4px 24px;
+  }
+
+  .ht__info {
+    display: none;
+  }
+}

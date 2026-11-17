@@ -1,7 +1,7 @@
 {
   "id": "items",
   "name": "물건",
-  "version": 5,
+  "version": 6,
   "items": [
     {
       "id": "sea-eel",
@@ -158,6 +158,41 @@
       "name": "이슬꽃",
       "kind": "묶음",
       "weight": 0.05,
+      "value": 40
+    },
+    {
+      "id": "antelope-meat",
+      "name": "영양 고기",
+      "kind": "묶음",
+      "weight": 1,
+      "value": 6
+    },
+    {
+      "id": "antelope-hide",
+      "name": "영양 가죽",
+      "kind": "묶음",
+      "weight": 1,
+      "value": 14
+    },
+    {
+      "id": "boar-hide",
+      "name": "멧돼지 가죽",
+      "kind": "묶음",
+      "weight": 2,
+      "value": 16
+    },
+    {
+      "id": "boar-tusk",
+      "name": "멧돼지 엄니",
+      "kind": "묶음",
+      "weight": 0.3,
+      "value": 12
+    },
+    {
+      "id": "bison-hide",
+      "name": "들소 가죽",
+      "kind": "묶음",
+      "weight": 4,
       "value": 40
     }
   ]

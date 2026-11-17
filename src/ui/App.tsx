@@ -66,6 +66,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
   const [dungeon, setDungeon] = useState<DungeonView | "loading">();
   const [fishing, setFishing] = useState<DungeonView | "loading">();
   const [gathering, setGathering] = useState<DungeonView | "loading">();
+  const [hunting, setHunting] = useState<DungeonView | "loading">();
   useEffect(
     () => watchSession(props.fb, props.limits, setSession),
     [props.fb, props.limits],
@@ -133,6 +134,18 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       });
   };
 
+  // 사냥도 지도(9단계)가 생기기 전까지 시험 환경에서만
+  const openHunting = () => {
+    if (!PRACTICE) return;
+    setHunting("loading");
+    import("./hunting/HuntingScreen")
+      .then((module) => setHunting(() => module.HuntingScreen))
+      .catch((error: unknown) => {
+        reportError(props.fb, error, "사냥 열기");
+        setHunting(undefined);
+      });
+  };
+
   const closePractice = () => {
     setPractice(undefined);
     if (window.location.hash === "#practice")
@@ -156,6 +169,15 @@ export function App(props: { fb: Firebase; limits: Limits }) {
           fb: props.fb,
           session: session.status === "signedIn" ? session : undefined,
           onExit: () => setScenes(undefined),
+        })
+      ) : PRACTICE && hunting === "loading" ? (
+        <Notice title="사냥">초원으로 가는 중…</Notice>
+      ) : PRACTICE && hunting && session.status === "signedIn" ? (
+        h(hunting, {
+          fb: props.fb,
+          limits: props.limits,
+          session,
+          onExit: () => setHunting(undefined),
         })
       ) : PRACTICE && gathering === "loading" ? (
         <Notice title="채집">산비탈로 가는 중…</Notice>
@@ -200,6 +222,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
                 onDungeon: openDungeon,
                 onFishing: openFishing,
                 onGathering: openGathering,
+                onHunting: openHunting,
               }
             : {})}
         />
