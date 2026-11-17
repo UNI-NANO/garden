@@ -72,6 +72,9 @@ const grownPlayer: AllySetup = { ...player, skills: [grown("sword.combo"), grown
 const GALE_B = ["s1", "s2", "b", "b.s1", "b.s2", "b1", "b1.s", "b1.u"].map((tail) => `sword.gale.${tail}`);
 const galeB = buildSkill(defs.skillTable, defs.effects.effects, defs.battle.words, sword, "sword.gale", { picked: new Set(GALE_B), choices: {} }, "근접");
 const gust = buildUltimate(defs.skillTable, defs.effects.effects, defs.battle.words, sword, "sword.gale.b1.u", new Set(["sword.gale", ...GALE_B]), "근접");
+const windRoute = new Set(["sword.gale", ...ROUTE.map((tail) => `sword.gale.${tail}`), "sword.gale.a1.u"]);
+const wind = buildUltimate(defs.skillTable, defs.effects.effects, defs.battle.words, sword, "sword.gale.a1.u", windRoute, "근접");
+const windPlayer: AllySetup = { ...grownPlayer, ultimate: wind };
 const ultimatePlayer: AllySetup = { ...player, skills: [grown("sword.combo"), grown("sword.charge"), galeB], ultimate: gust };
 const mate = (n: number): AllySetup => ({ ...player, id: `mate${n}`, name: `동료 ${n}`, kind: "동료", slot: n, skills: [] });
 
@@ -80,8 +83,10 @@ const parties: [string, AllySetup[]][] = [
   ["동료 둘과", [player, mate(1), mate(2)]],
   ["혼자 (갈래 찍음)", [grownPlayer]],
   ["동료 둘과 (갈래 찍음)", [grownPlayer, mate(1), mate(2)]],
-  ["혼자 (갈래 + 궁극기)", [ultimatePlayer]],
-  ["동료 둘과 (갈래 + 궁극기)", [ultimatePlayer, mate(1), mate(2)]],
+  ["혼자 (갈래 + 멎지 않는 바람)", [windPlayer]],
+  ["동료 둘과 (갈래 + 멎지 않는 바람)", [windPlayer, mate(1), mate(2)]],
+  ["혼자 (갈래 + 칼바람)", [ultimatePlayer]],
+  ["동료 둘과 (갈래 + 칼바람)", [ultimatePlayer, mate(1), mate(2)]],
 ];
 const foes: [string, BattleSetup["enemies"]][] = [
   ["늑대 하나", [{ id: "w1", def: enemy("wolf"), slot: 0 }]],

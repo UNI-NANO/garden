@@ -21,6 +21,9 @@ export interface FakeTree extends Json {
 
 const axes = rawTable.tree.axes;
 
+/** 궁극기 칸의 기술 항목 */
+export const ultimateSkill = (): Json => ({ tier: "궁극기", potency: "보통", hits: 1, range: "단일", role: "끝내는", damageType: "자상", effects: [] });
+
 /** 규칙에 맞는 작은 나무를 만든다. 기본기 넷, 루트마다 9칸. */
 export function makeTree(id = "t"): FakeTree {
   const nodes: FakeNode[] = [];
@@ -44,7 +47,7 @@ export function makeTree(id = "t"): FakeTree {
       const endAxis = axes[axisIndex++];
       for (const n of ["1", "2"]) {
         const end = node(`${fork}${n}`, "끝갈래", fs2, { axis: endAxis });
-        node(`${end}.u`, "궁극기", node(`${end}.s`, "보완", end));
+        node(`${end}.u`, "궁극기", node(`${end}.s`, "보완", end), { skill: ultimateSkill() });
       }
     }
   }

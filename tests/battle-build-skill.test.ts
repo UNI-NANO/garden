@@ -12,6 +12,8 @@ import {
   skillHitCount,
   skillHitPowers,
   skillTargets,
+  skillBarSpeed,
+  canUseSkill,
   type AllyAction,
   type BattleSkill,
   type BattleState,
@@ -572,8 +574,6 @@ describe("궁극기", () => {
     expect(build(route)).toEqual(gust);
     expect(() => build(route.filter((id) => id !== "sword.gale.b.s1"))).toThrow("루트를 끝까지 찍지 않았다 (sword.gale.b.s1)");
     expect(() => build(route, "sword.gale.b1")).toThrow("궁극기가 아니다");
-    // 아직 기술 항목이 없는 궁극기(다음 단위)
-    expect(() => ultimate("sword.combo.a1.u")).toThrow("아직 기술 항목이 없는");
   });
   it("든 궁극기는 다른 기술처럼 쓰고, 자동 전투도 고른다", () => {
     const gust = ultimate("sword.gale.b1.u");
@@ -677,5 +677,152 @@ describe("궁극기", () => {
     const damage = (id: string) => 999 - foe(after, id).hp;
     expect(damage("w1")).toBeGreaterThan(0);
     expect([damage("w2"), damage("w3")]).toEqual([damage("w1"), 0]);
+  });
+});
+
+describe("궁극기: 여러 턴·연쇄·적 차례", () => {
+  const solo = (u: BattleSkill, enemies = [dummy()]) => createBattle(setup(enemies, [hero({ skills: [], ultimate: u })]), ctx);
+  const bleedEvents = (b: BattleState) => b.events.filter((e) => e.type === "효과" && e.effect === "bleed").map((e) => e.type === "효과" && e.amount);
+  it("핏빛 실타래: 6타, 타마다 출혈 1 + 이번 전투에서 연계를 이은 횟수", () => {
+    const thread = ultimate("sword.combo.a1.u");
+    expect(thread).toMatchObject({ hitCount: 6, role: "끝내는" });
+    let b = solo(thread);
+    expect(bleedEvents(resolveAllies(b, [use(thread)], ctx))).toEqual([1, 1, 1, 1, 1, 1]);
+    b = solo(thread);
+    b.events.push({ turn: 0, type: "연계", unit: "hero", bonus: 0.1 }, { turn: 0, type: "연계", unit: "hero", bonus: 0.25 }, { turn: 0, type: "연계", unit: "mate", bonus: 0.1 });
+    // 출혈은 최대 10에서 멈춘다: 3, 3, 3, 1(10까지)
+    expect(bleedEvents(resolveAllies(b, [use(thread)], ctx))).toEqual([3, 3, 3, 1]);
+  });
+  it("천번베기: 8타, 판정 바 ×1.5, 마지막 세 타만 완벽이면 출혈 2배", () => {
+    const thousand = ultimate("sword.combo.a2.u");
+    expect(thousand.hitCount).toBe(8);
+    expect([skillBarSpeed(thousand), skillBarSpeed(skill("sword.combo"))]).toEqual([1.5, 1]);
+    const b = solo(thousand);
+    const after = resolveAllies(b, [use(thousand, "w1", { judgements: Array.from({ length: 8 }, () => "완벽" as const) })], ctx);
+    expect(bleedEvents(after)).toEqual([1, 1, 1, 1, 1, 2, 2, 1]);
+  });
+  it("멎지 않는 바람: 쓴 턴에 약하게, 다음 턴 시작에 약하게, 그다음 턴 시작에 크게", () => {
+    const wind = ultimate("sword.gale.a1.u");
+    let b = solo(wind, [dummy("w1", 0), dummy("w2", 1), dummy("w3", 3)]);
+    const after = (id: string) => 999 - foe(b, id).hp;
+    // 궁극기 24 × 휩쓸기 0.9 × 1.09 × 1.5(자상 약함) = 35.3: 약하게 ×0.75 → 26, 크게 ×1.5 → 53. 뒷줄은 안 맞는다
+    b = resolveAllies(b, [use(wind)], ctx);
+    expect([after("w1"), after("w2"), after("w3")]).toEqual([26, 26, 0]);
+    // 적 차례가 끝나고 2턴이 시작되면(의도 공개 뒤) 한 번 더 약하게
+    b = resolveEnemies(b, {}, ctx);
+    expect([b.turn, after("w1"), after("w2"), after("w3")]).toEqual([2, 52, 52, 0]);
+    expect(ally(b).lingering).toMatchObject({ skillId: "sword.gale.a1.u", startTurn: 1 });
+    // 3턴 시작에 크게, 그리고 끝
+    b = playTurn(b, { actions: [rest], defenses: {} }, ctx);
+    expect([after("w1"), after("w2")]).toEqual([105, 105]);
+    expect(b.events.filter((e) => e.type === "이어짐")).toHaveLength(2);
+    expect(ally(b).lingering).toBeUndefined();
+    b = playTurn(b, { actions: [rest], defenses: {} }, ctx);
+    expect(after("w1")).toBe(105);
+  });
+  it("멎지 않는 바람: 턴 시작의 휩쓸기로 다 쓰러뜨리면 그때 이긴다, 쓴 사람이 쓰러지면 멈춘다", () => {
+    const wind = ultimate("sword.gale.a1.u");
+    let b = solo(wind, [wolf("w1", 0, { overrides: { hp: 60, power: 0 } })]);
+    b = playTurn(b, { actions: [use(wind)], defenses: {} }, ctx);
+    expect([b.outcome, foe(b).hp]).toEqual([undefined, 60 - 52]);
+    b = playTurn(b, { actions: [rest], defenses: {} }, ctx);
+    expect(b.outcome).toBe("승리");
+    expect(b.events.find((e) => e.type === "끝")).toMatchObject({ turn: 3 });
+    const stopped = solo(wind, [dummy()]);
+    const used = resolveAllies(stopped, [use(wind)], ctx);
+    ally(used).down = true;
+    ally(used).hp = 0;
+    // 플레이어가 쓰러지면 전투가 끝나므로, 쓰러진 사람의 바람이 다음 턴에 불지 않는지만 본다
+    expect(resolveEnemies(used, {}, ctx).events.some((e) => e.type === "이어짐")).toBe(false);
+  });
+  it("풀베기: 쓰러뜨리면 앞줄을 다시 휩씀, 추가 최대 3번", () => {
+    const mow = ultimate("sword.gale.a2.u");
+    const weak = (id: string, slot: number, hp: number) => wolf(id, slot, { overrides: { hp, power: 0, stagger: 9999 } });
+    // 한 번에 35(24 × 0.9 × 1.09 × 1.5 = 35.3): 30은 첫 휩쓸기에, 60은 둘째에, 90은 셋째에 쓰러진다
+    const b = solo(mow, [weak("w1", 0, 30), weak("w2", 1, 60), weak("w3", 2, 90)]);
+    const after = resolveAllies(b, [use(mow)], ctx);
+    expect(after.events.filter((e) => e.type === "이어짐")).toHaveLength(2);
+    expect(after.enemies.map((e) => e.down)).toEqual([true, true, true]);
+    // 아무도 쓰러지지 않으면 다시 치지 않는다
+    const none = resolveAllies(solo(mow, [dummy("w1", 0), dummy("w2", 1)]), [use(mow)], ctx);
+    expect(none.events.some((e) => e.type === "이어짐")).toBe(false);
+    // 추가 횟수의 상한: 1로 줄이면 셋째 휩쓸기가 없어 마지막 적이 남는다
+    const once = { ...mow, repeatOnDown: 1 };
+    const capped = resolveAllies(solo(once, [weak("w1", 0, 30), weak("w2", 1, 60), weak("w3", 2, 90)]), [use(once)], ctx);
+    expect(capped.events.filter((e) => e.type === "이어짐")).toHaveLength(1);
+    expect(capped.enemies.map((e) => e.down)).toEqual([true, true, false]);
+  });
+  it("기사의 맹세: 아군 누구를 노린 공격이든 혼자 받고, 받아칠 때마다 아군 전원에게 사기 1", () => {
+    const oath = ultimate("sword.riposte.a2.u");
+    const run = (defenses = {}) => {
+      const mates = [2, 4].map((slot, i) => hero({ id: `m${i}`, name: `동료 ${i}`, kind: "동료", slot, skills: [] }));
+      let b = createBattle(setup([wolf("w1", 0, { overrides: { hp: 999 } }), wolf("w2", 1, { overrides: { hp: 999 } })], [hero({ skills: [], ultimate: oath }), ...mates]), ctx);
+      b.intents[0]!.targetId = "m0";
+      b.intents[1]!.targetId = "m1";
+      b = playTurn(b, { actions: [use(oath), { unitId: "m0", type: "쉬기" }, { unitId: "m1", type: "쉬기" }], defenses }, ctx);
+      return b;
+    };
+    const hit = run();
+    expect(hit.allies.map((a) => a.hp)).toEqual([55 - 14, 55, 55]);
+    const parried = run({ "w1>hero": "받아치기 성공", "w2>hero": "받아치기 성공" });
+    // 받아치기 둘로 사기 2, 턴 끝에 1 줄어 1
+    expect(parried.allies.map((a) => [a.hp, a.effects["morale"] ?? 0])).toEqual([
+      [55, 1],
+      [55, 1],
+      [55, 1],
+    ]);
+    expect(parried.events.filter((e) => e.type === "효과" && e.effect === "morale")).toHaveLength(6);
+  });
+  it("틈을 여는 검: 받아치면 그 적의 강함 저항이 받아친 턴과 다음 턴에 보통", () => {
+    const gap = ultimate("sword.riposte.b1.u");
+    const shieldUnit = { id: "s1", def: enemyDef("deserter.shield", { overrides: { hp: 999, stagger: 9999 } }), slot: 0 };
+    let b = createBattle(setup([shieldUnit], [hero({ skills: [], ultimate: gap })]), ctx);
+    b = playTurn(b, { actions: [use(gap)], defenses: { "s1>hero": "받아치기 성공" } }, ctx);
+    expect(foe(b, "s1").resistBrokenUntil).toBe(2);
+    const cut = hero().basicAttack;
+    const hitWith = (state: BattleState) => {
+      const before = foe(state, "s1").hp;
+      return before - foe(resolveAllies(state, [{ unitId: "hero", type: "기술", skillId: cut.id, targetId: "s1", judgements: good(cut.hitCount) }], ctx), "s1").hp;
+    };
+    // 베기 6 × 1.09 = 6.54: 자상 강함이면 × 0.5 − 2 = 1.27 → 1, 보통이면 − 2 = 4.54 → 5
+    expect(hitWith(b)).toBe(5);
+    b.turn = 3;
+    expect(hitWith(b)).toBe(1);
+  });
+  it("흔들리지 않는 자: 자신감이 있어야 쓰고, 다 써서 다음 3번의 공격은 좋음 칸이 판정 바 전체", () => {
+    const steady = ultimate("sword.riposte.b2.u");
+    let b = solo(steady);
+    expect(canUseSkill(ally(b), steady)).toBe(false);
+    expect(() => resolveAllies(b, [use(steady)], ctx)).toThrow("자신감이 없다");
+    ally(b).effects = { confidence: 4 };
+    expect(canUseSkill(ally(b), steady)).toBe(true);
+    b = playTurn(b, { actions: [use(steady)], defenses: {} }, ctx);
+    expect(ally(b)).toMatchObject({ effects: {}, steady: 3 });
+    const cut = hero().basicAttack;
+    expect(skillGoodWidth(b, ally(b), cut, foe(b))).toBe(Number.POSITIVE_INFINITY);
+    expect(judgementWidths(rules, 30, { goodWidth: skillGoodWidth(b, ally(b), cut, foe(b)), shake: 0, noPerfect: false }).good).toBe(100);
+    const attack: AllyAction = { unitId: "hero", type: "기술", skillId: cut.id, targetId: "w1", judgements: good(cut.hitCount) };
+    for (const left of [2, 1]) {
+      b = playTurn(b, { actions: [attack], defenses: {} }, ctx);
+      expect(ally(b).steady).toBe(left);
+    }
+    b = playTurn(b, { actions: [attack], defenses: {} }, ctx);
+    expect(ally(b).steady).toBeUndefined();
+    expect(skillGoodWidth(b, ally(b), cut, foe(b))).toBe(0);
+  });
+  it("진형 붕괴: 앞줄 전원을 치고, 열마다 앞뒤를 바꾼다", () => {
+    const collapse = ultimate("sword.charge.a1.u");
+    const b = solo(collapse, [dummy("w1", 0), dummy("w2", 1), dummy("w3", 2), dummy("w4", 3), dummy("w5", 5)]);
+    const after = resolveAllies(b, [use(collapse)], ctx);
+    const damage = (id: string) => 999 - foe(after, id).hp;
+    expect([damage("w1"), damage("w2"), damage("w3")].every((d) => d === damage("w1") && d > 0)).toBe(true);
+    expect([damage("w4"), damage("w5")]).toEqual([0, 0]);
+    expect(after.enemies.map((e) => [e.id, e.slot])).toEqual([
+      ["w1", 3],
+      ["w2", 4],
+      ["w3", 5],
+      ["w4", 0],
+      ["w5", 2],
+    ]);
   });
 });

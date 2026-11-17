@@ -170,7 +170,36 @@ function applyMods(skill: BattleSkill, mods: readonly Mod[], words: Readonly<Rec
         skill.capture.rewardBonus += amount(mod.amount);
         return;
       case "효과 ×":
-        (skill.effectMultipliers ??= []).push({ effect: mod.effect, amount: amount(mod.amount), ...(mod.when !== undefined ? { when: mod.when } : {}) });
+        (skill.effectMultipliers ??= []).push({
+          effect: mod.effect,
+          amount: amount(mod.amount),
+          ...(mod.when !== undefined ? { when: mod.when } : {}),
+          ...(mod.lastHits !== undefined ? { lastHits: mod.lastHits } : {}),
+        });
+        return;
+      case "효과 + 연계 횟수":
+        (skill.effectPlusLinks ??= []).push(mod.effect);
+        return;
+      case "판정 바 속도":
+        skill.barSpeed = (skill.barSpeed ?? 1) * amount(mod.amount);
+        return;
+      case "쓰러뜨리면 다시":
+        skill.repeatOnDown = mod.max;
+        return;
+      case "여러 턴":
+        skill.lingering = { turns: mod.turns, weak: amount(mod.weak), big: amount(mod.big) };
+        return;
+      case "앞뒤 줄 바꾸기":
+        skill.swapRows = true;
+        return;
+      case "받아치면 아군 효과":
+        ((skill.stanceOpts ??= {}).parryAllyEffects ??= []).push(mod.effect);
+        return;
+      case "받아치면 저항 무너뜨림":
+        (skill.stanceOpts ??= {}).parryBreakResist = mod.turns;
+        return;
+      case "자신감 쓰기":
+        skill.spendConfidence = mod.uses;
         return;
       case "효과":
         if (mod.when === "완벽") (skill.perfectEffects ??= []).push(mod.effect);
@@ -262,7 +291,8 @@ function applyMods(skill: BattleSkill, mods: readonly Mod[], words: Readonly<Rec
         return;
       case "대신 받기": {
         const opts = (skill.stanceOpts ??= {});
-        opts.cover = { damageTaken: (opts.cover?.damageTaken ?? 1) * (mod.damageTaken !== undefined ? amount(mod.damageTaken) : 1) };
+        const all = mod.all === true || opts.cover?.all === true;
+        opts.cover = { damageTaken: (opts.cover?.damageTaken ?? 1) * (mod.damageTaken !== undefined ? amount(mod.damageTaken) : 1), ...(all ? { all } : {}) };
         return;
       }
       case "찌르기": {

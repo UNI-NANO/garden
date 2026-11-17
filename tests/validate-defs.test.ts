@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkDefs, type RawDefs } from "../src/rules/validate-defs";
-import { fakeBattle, fakeEffects, fakeEnemies, fakeItems, fakeLimits, fakeMigration, fakeTable, fakeTalents, makeTree, type FakeNode, type FakeTree } from "./helpers/fake-tree";
+import { fakeBattle, fakeEffects, fakeEnemies, fakeItems, fakeLimits, fakeMigration, fakeTable, fakeTalents, makeTree, ultimateSkill, type FakeNode, type FakeTree } from "./helpers/fake-tree";
 
 const raw = (tree: unknown = makeTree(), over: Partial<RawDefs> = {}): RawDefs => ({
   skillTable: fakeTable(),
@@ -45,7 +45,7 @@ describe("올바른 데이터", () => {
         t.nodes.push(
           { id: "t.b1.ax", kind: "끝갈래", name: "숨은", prev: "t.b1.a.s2", description: "설명", hidden: true },
           { id: "t.b1.ax.s", kind: "보완", name: "보완", prev: "t.b1.ax", description: "설명" },
-          { id: "t.b1.ax.u", kind: "궁극기", name: "궁극기", prev: "t.b1.ax.s", description: "설명" },
+          { id: "t.b1.ax.u", kind: "궁극기", name: "궁극기", prev: "t.b1.ax.s", description: "설명", skill: ultimateSkill() },
         );
       }),
     ).toEqual([]);
@@ -147,7 +147,7 @@ describe("연계 역할", () => {
       t.nodes.push(
         { id: "t.b2.ax", kind: "끝갈래", name: "숨은", prev: "t.b2.a.s2", description: "설명", hidden: true, overrides: { role: "잇는" } },
         { id: "t.b2.ax.s", kind: "보완", name: "보완", prev: "t.b2.ax", description: "설명" },
-        { id: "t.b2.ax.u", kind: "궁극기", name: "궁극기", prev: "t.b2.ax.s", description: "설명" },
+        { id: "t.b2.ax.u", kind: "궁극기", name: "궁극기", prev: "t.b2.ax.s", description: "설명", skill: ultimateSkill() },
       );
     });
     expect(result).toHaveLength(1);
@@ -193,7 +193,7 @@ describe("나무 모양 오류", () => {
         t.nodes.push(
           { id: `t.b1.a${x}`, kind: "끝갈래", name: x, prev: "t.b1.a.s2", description: "설명", hidden: true },
           { id: `t.b1.a${x}.s`, kind: "보완", name: x, prev: `t.b1.a${x}`, description: "설명" },
-          { id: `t.b1.a${x}.u`, kind: "궁극기", name: x, prev: `t.b1.a${x}.s`, description: "설명" },
+          { id: `t.b1.a${x}.u`, kind: "궁극기", name: x, prev: `t.b1.a${x}.s`, description: "설명", skill: ultimateSkill() },
         );
       }
     });
@@ -236,13 +236,10 @@ describe("나무 모양 오류", () => {
     ).toEqual(["t.atk: 기본 공격의 단계는 「기본 공격」이어야 한다"]);
   });
   it("궁극기의 기술 항목", () => {
-    const ultimateSkill = (t: FakeTree, tier: string) => ({ ...(find(t, "t.b1")["skill"] as object), tier });
-    expect(broken((t) => void (find(t, "t.b1.a1.u")["skill"] = ultimateSkill(t, "궁극기")))).toEqual([]);
-    expect(broken((t) => void (find(t, "t.b1.a1.u")["skill"] = ultimateSkill(t, "3단계")))).toEqual(["t.b1.a1.u: 궁극기의 단계는 궁극기여야 한다 (지금 3단계)"]);
-    expect(broken((t) => void (find(t, "t.b1.a1.u")["mods"] = [{ kind: "방어 무시" }]))).toEqual([
-      "t.b1.a1.u: 궁극기에 규칙(mods)을 적으려면 기술 항목(skill)도 있어야 한다",
-    ]);
-    expect(broken((t) => void (find(t, "t.b1.s1")["skill"] = ultimateSkill(t, "궁극기")))).toContain("t.b1.s1: skill은 기본기와 궁극기에만 적는다");
+    expect(broken((t) => void (find(t, "t.b1.a1.u")["mods"] = [{ kind: "방어 무시" }]))).toEqual([]);
+    expect(broken((t) => void (find(t, "t.b1.a1.u")["skill"] = { ...ultimateSkill(), tier: "3단계" }))).toEqual(["t.b1.a1.u: 궁극기의 단계는 궁극기여야 한다 (지금 3단계)"]);
+    expect(broken((t) => void delete find(t, "t.b1.a1.u")["skill"])).toEqual(["t.b1.a1.u: 궁극기에는 skill이 있어야 한다"]);
+    expect(broken((t) => void (find(t, "t.b1.s1")["skill"] = ultimateSkill()))).toContain("t.b1.s1: skill은 기본기와 궁극기에만 적는다");
   });
   it("뿌리 갈래 수와 칸 수", () => {
     expect(broken((t) => void t.roots.pop())).toEqual(["roots: 뿌리는 4갈래여야 한다 (지금 3)"]);

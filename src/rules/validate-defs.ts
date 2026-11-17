@@ -315,11 +315,11 @@ function validateNodes(
         }
       }
     } else if (node.kind === "궁극기") {
-      // 궁극기의 기술 항목은 채워 가는 중이라 없어도 되지만, 규칙만 있고 기술 항목이 없으면 안 된다
-      if (node.skill !== undefined) {
+      if (node.skill === undefined) add(node.id, "궁극기에는 skill이 있어야 한다");
+      else {
         checkSkill(node.id, node.skill);
         if (node.skill.tier !== "궁극기") add(node.id, `궁극기의 단계는 궁극기여야 한다 (지금 ${node.skill.tier})`);
-      } else if (node.mods !== undefined) add(node.id, "궁극기에 규칙(mods)을 적으려면 기술 항목(skill)도 있어야 한다");
+      }
     } else if (node.skill !== undefined) add(node.id, "skill은 기본기와 궁극기에만 적는다");
     if (isFork) {
       if (node.hidden !== true && node.axis === undefined) add(node.id, "갈림길·끝갈래에는 axis가 있어야 한다");
