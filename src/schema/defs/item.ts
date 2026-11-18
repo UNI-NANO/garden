@@ -14,6 +14,8 @@ export const ItemSchema = z.strictObject({
   weight: z.number().min(0),
   /** 하나의 값어치 (잎전, 임시). 던전에서 쓰러질 때 잃을 것을 고르는 순서에 쓴다. 없으면 0 */
   value: z.number().min(0).optional(),
+  /** 대장간에서 강화할 수 있는 낱개 물건 (장비) */
+  enhanceable: z.boolean().optional(),
 });
 export type Item = z.infer<typeof ItemSchema>;
 

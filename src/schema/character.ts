@@ -49,6 +49,8 @@ export const UniqueItemSchema = z.strictObject({
   enhance: z.number().int().min(0).max(20),
   durability: z.number().int().min(0).max(100),
   quality: QualitySchema,
+  /** 강화 연속 실패 수 (성공 확률 보정). 없으면 0 */
+  failStreak: z.number().int().min(0).max(1000).optional(),
 });
 export type UniqueItem = z.infer<typeof UniqueItemSchema>;
 

@@ -5,6 +5,7 @@ import { CAST_ZONES, FishingDefsSchema, SeasonSchema, type FishingDefs } from ".
 import { GatheringDefsSchema, type GatheringDefs } from "../schema/defs/gathering";
 import { HuntingDefsSchema, type HuntingDefs } from "../schema/defs/hunting";
 import { CraftingDefsSchema, type CraftingDefs } from "../schema/defs/crafting";
+import { EnhanceDefsSchema, type EnhanceDefs } from "../schema/defs/enhance";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -664,4 +665,29 @@ export function checkCrafting(raw: unknown, defs: { items: ItemList }): { ok: tr
     if (!parsed.data.recipes.some((r) => r.station === station.id && r.known)) add(station.id, "처음부터 아는 레시피가 없다");
   }
   return issues.length > 0 ? { ok: false, issues } : { ok: true, crafting: parsed.data };
+}
+
+const ENHANCE_FILE = "enhance.json";
+
+/** 강화 검사: 모양, 재료·부적이 묶음 물건인지, 성공 확률이 단계마다 내려가는지(같거나 낮게) */
+export function checkEnhance(raw: unknown, defs: { items: ItemList }): { ok: true; enhance: EnhanceDefs } | { ok: false; issues: DefIssue[] } {
+  const parsed = EnhanceDefsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(ENHANCE_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  const items = new Map(defs.items.items.map((i) => [i.id, i]));
+  const stack = (where: string, id: string) => {
+    const item = items.get(id);
+    if (!item) issues.push({ file: ENHANCE_FILE, where, message: `없는 물건: ${id}` });
+    else if (item.kind !== "묶음") issues.push({ file: ENHANCE_FILE, where, message: `묶음 물건이어야 한다: ${id}` });
+  };
+  parsed.data.steps.forEach((step, i) => {
+    for (const m of step.materials) stack(`steps.${i}`, m.item);
+    const before = parsed.data.steps[i - 1];
+    if (before && step.chance > before.chance) issues.push({ file: ENHANCE_FILE, where: `steps.${i}`, message: "성공 확률이 앞 단계보다 높다" });
+  });
+  stack("charm", parsed.data.charm);
+  for (const item of defs.items.items) {
+    if (item.enhanceable && item.kind !== "낱개") issues.push({ file: "items.json", where: item.id, message: "강화할 수 있는 물건은 낱개여야 한다" });
+  }
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, enhance: parsed.data };
 }

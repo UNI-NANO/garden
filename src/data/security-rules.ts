@@ -60,6 +60,7 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
     enhance: { ".validate": int(0, 20) },
     durability: { ".validate": int(0, 100) },
     quality: { ".validate": quality },
+    failStreak: { ".validate": int(0, 1000) },
     $other: { ".validate": false },
   };
 

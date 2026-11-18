@@ -25,6 +25,7 @@ import "../battle/battle.css";
 import { withJosa } from "../josa";
 import { Notice, Paper } from "../parts";
 import "./crafting.css";
+import { EnhancePanel } from "./EnhancePanel";
 
 type SignedIn = Extract<Session, { status: "signedIn" }>;
 
@@ -327,6 +328,15 @@ function Crafting(props: {
             넣어 보기
           </button>
         </Paper>
+        {stationId === "forge" && (
+          <EnhancePanel
+            fb={fb}
+            limits={limits}
+            items={defs.items}
+            characterId={characterId}
+            character={character}
+          />
+        )}
       </div>
 
       {making && (

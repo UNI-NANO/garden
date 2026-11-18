@@ -176,6 +176,9 @@
               "quality": {
                 ".validate": "newData.val() === '하' || newData.val() === '중' || newData.val() === '상' || newData.val() === '최상'"
               },
+              "failStreak": {
+                ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 1000"
+              },
               "$other": {
                 ".validate": false
               }
@@ -302,6 +305,9 @@
                 },
                 "quality": {
                   ".validate": "newData.val() === '하' || newData.val() === '중' || newData.val() === '상' || newData.val() === '최상'"
+                },
+                "failStreak": {
+                  ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 1000"
                 },
                 "$other": {
                   ".validate": false

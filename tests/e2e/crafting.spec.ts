@@ -132,3 +132,72 @@ test("제작: 약방에서 기본 레시피로 지혈 연고를 빻아 만들고
   ).toBe(1);
   expect(c.recipes?.["detox-poultice"]).toBe(true);
 });
+
+test("강화: 대장간에서 장검을 맡기면 +1이 되고, 다음 확률과 비용이 보인다", async ({
+  page,
+}, info) => {
+  const p = info.project.name;
+  await page.goto("/");
+  await page.getByLabel("시험 계정 이름").fill(`강화 ${p}`);
+  await page.getByRole("button", { name: "시험 계정으로 들어가기" }).click();
+  await expect(
+    page.getByRole("heading", { name: "세계수 도서관", exact: true }),
+  ).toBeVisible();
+  const accounts = ((await admin.get("accounts")) ?? {}) as Record<
+    string,
+    { displayName?: string }
+  >;
+  const uid = Object.entries(accounts).find(
+    ([, a]) => a.displayName === `강화 ${p}`,
+  )![0];
+  const character = newCharacter(limits, {
+    owner: uid,
+    name: "하린",
+    gender: "여",
+    origin: { realm: "제국", region: "황도", place: "장터 골목" },
+    chosenTalents: ["agility", "sturdy", "intuition"],
+    monthKey: "514-3",
+    now: Date.now(),
+    stage: "살아 있음",
+  });
+  character.wallet = 1000;
+  character.bag.uniques = {
+    sword: {
+      itemId: "knights-longsword",
+      enhance: 0,
+      durability: 100,
+      quality: "상",
+    },
+  };
+  character.bag.stacks = {
+    i1: { itemId: "iron-scrap", quantity: 10, freshness: 100, quality: "중" },
+  };
+  await admin.update({
+    [`characters/enh-${p}`]: character,
+    [`accounts/${uid}/characterId`]: `enh-${p}`,
+  });
+  await expect(page.getByText("하린").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "제작 (시험 환경)" }).click();
+  await page
+    .getByRole("navigation", { name: "작업장" })
+    .getByRole("button", { name: "대장간" })
+    .click();
+  const panel = page.getByRole("region", { name: "강화" });
+  await expect(panel).toContainText("성공 100%");
+  await panel.getByRole("button", { name: "맡기기" }).click();
+  await expect(panel.getByRole("status", { name: "강화 결과" })).toContainText(
+    "성공! 기사의 장검 +1",
+  );
+  await expect(panel).toContainText("성공 85%");
+  await page.screenshot({
+    path: join(shots, `crafting-4-enhance-${p}.png`),
+    fullPage: true,
+  });
+  const saved = (await admin.get(`characters/enh-${p}`)) as {
+    wallet: number;
+    bag: { uniques: Record<string, { enhance: number }> };
+  };
+  expect(saved.bag.uniques["sword"]?.enhance).toBe(1);
+  expect(saved.wallet).toBe(1000 - 30);
+});

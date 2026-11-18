@@ -129,3 +129,54 @@
 .cf .judge__done {
   color: var(--ink-soft);
 }
+
+.cf__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.cf__field select {
+  min-height: var(--tap);
+  font: inherit;
+}
+
+.cf__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 10px 0;
+}
+
+.cf__facts dt {
+  color: var(--ink-soft);
+}
+
+.cf__facts dd {
+  margin: 0;
+}
+
+.cf__smith {
+  font-family: var(--serif);
+  font-style: italic;
+}
+
+.cf__result {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.cf__enhance {
+  grid-column: 1 / -1;
+}
+
+.cf__field select {
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  background: #f6f1e4;
+  color: var(--ink);
+}

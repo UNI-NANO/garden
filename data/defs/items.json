@@ -1,7 +1,7 @@
 {
   "id": "items",
   "name": "물건",
-  "version": 7,
+  "version": 8,
   "items": [
     {
       "id": "sea-eel",
@@ -55,13 +55,15 @@
       "id": "knights-longsword",
       "name": "기사의 장검",
       "kind": "낱개",
-      "weight": 3
+      "weight": 3,
+      "enhanceable": true
     },
     {
       "id": "plate-armor",
       "name": "판금 갑옷",
       "kind": "낱개",
-      "weight": 20
+      "weight": 20,
+      "enhanceable": true
     },
     {
       "id": "el-peso-del-padre",
@@ -102,7 +104,8 @@
       "name": "사냥꾼의 손칼",
       "kind": "낱개",
       "weight": 0.5,
-      "value": 60
+      "value": 60,
+      "enhanceable": true
     },
     {
       "id": "reed-minnow",
@@ -228,7 +231,36 @@
       "name": "가죽 손목 보호대",
       "kind": "낱개",
       "weight": 0.6,
-      "value": 55
+      "value": 55,
+      "enhanceable": true
+    },
+    {
+      "id": "iron-scrap",
+      "name": "쇳조각",
+      "kind": "묶음",
+      "weight": 0.5,
+      "value": 8
+    },
+    {
+      "id": "chief-sinew",
+      "name": "우두머리의 힘줄",
+      "kind": "묶음",
+      "weight": 0.2,
+      "value": 60
+    },
+    {
+      "id": "starlight-ore",
+      "name": "별빛 광석",
+      "kind": "묶음",
+      "weight": 1,
+      "value": 200
+    },
+    {
+      "id": "smiths-charm",
+      "name": "대장장이의 부적",
+      "kind": "묶음",
+      "weight": 0.05,
+      "value": 500
     }
   ]
 }
