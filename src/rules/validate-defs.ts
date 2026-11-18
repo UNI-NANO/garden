@@ -6,6 +6,7 @@ import { GatheringDefsSchema, type GatheringDefs } from "../schema/defs/gatherin
 import { HuntingDefsSchema, type HuntingDefs } from "../schema/defs/hunting";
 import { CraftingDefsSchema, type CraftingDefs } from "../schema/defs/crafting";
 import { EnhanceDefsSchema, type EnhanceDefs } from "../schema/defs/enhance";
+import { TrainingDefsSchema, type TrainingDefs } from "../schema/defs/training";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -690,4 +691,27 @@ export function checkEnhance(raw: unknown, defs: { items: ItemList }): { ok: tru
     if (item.enhanceable && item.kind !== "낱개") issues.push({ file: "items.json", where: item.id, message: "강화할 수 있는 물건은 낱개여야 한다" });
   }
   return issues.length > 0 ? { ok: false, issues } : { ok: true, enhance: parsed.data };
+}
+
+const TRAINING_FILE = "training.json";
+
+/** 훈련장 검사: 모양, 적 연결, 벽은 60·80 하나씩, 허수아비는 피해를 주지 않음 */
+export function checkTraining(raw: unknown, defs: { enemies: EnemyList }): { ok: true; training: TrainingDefs } | { ok: false; issues: DefIssue[] } {
+  const parsed = TrainingDefsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(TRAINING_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  const enemies = new Map(defs.enemies.enemies.map((e) => [e.id, e]));
+  for (const ground of parsed.data.grounds) {
+    const add = (where: string, message: string) => issues.push({ file: TRAINING_FILE, where: `${ground.id}.${where}`, message });
+    const dummy = enemies.get(ground.dummy.enemy);
+    if (!dummy) add("dummy", `없는 적: ${ground.dummy.enemy}`);
+    else if (dummy.overrides?.power !== 0 || dummy.actions.some((a) => (a.effects ?? []).length > 0)) add("dummy", "허수아비는 위력 0, 효과 없음이어야 한다");
+    const seen = new Set<number>();
+    for (const wall of ground.walls) {
+      if (seen.has(wall.at)) add(`walls.${wall.at}`, "같은 벽이 둘이다");
+      seen.add(wall.at);
+      for (const m of wall.enemies) if (!enemies.has(m.enemy)) add(`walls.${wall.at}`, `없는 적: ${m.enemy}`);
+    }
+  }
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, training: parsed.data };
 }

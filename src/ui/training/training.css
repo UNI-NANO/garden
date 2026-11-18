@@ -1,0 +1,75 @@
+/* 훈련장 (docs/ui/Training.dc.html) */
+.tr .bar__button {
+  white-space: nowrap;
+}
+
+.tr__info {
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.tr__message {
+  max-width: 1180px;
+  margin: 10px auto 0;
+  padding: 0 32px;
+  color: var(--light);
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.tr__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  max-width: 1180px;
+  margin: 18px auto 0;
+  padding: 0 32px 32px;
+}
+
+.tr__title {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 20px;
+}
+
+.tr__note {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.tr__list {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.tr__wall {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.tr__status {
+  padding: 4px 0;
+}
+
+@media (max-width: 767px) {
+  .tr__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 0 4px 24px;
+  }
+
+  .tr__message {
+    padding: 0 8px;
+  }
+
+  .tr__info {
+    display: none;
+  }
+}

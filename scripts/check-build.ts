@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const dist = join(import.meta.dirname, "..", "dist", "assets");
-const forbidden = ["시험 계정으로 들어가기", "example.test", "연습 전투", "장면 보기", "던전 (시험 환경)", "던전 입구", "낚시 (시험 환경)", "찌가 잠겼다", "채집 (시험 환경)", "잎 뒤 보기", "사냥 (시험 환경)", "바람을 등짐", "제작 (시험 환경)", "조합 시도"];
+const forbidden = ["시험 계정으로 들어가기", "example.test", "연습 전투", "장면 보기", "던전 (시험 환경)", "던전 입구", "낚시 (시험 환경)", "찌가 잠겼다", "채집 (시험 환경)", "잎 뒤 보기", "사냥 (시험 환경)", "바람을 등짐", "제작 (시험 환경)", "조합 시도", "훈련장 (시험 환경)", "교관 대련"];
 const problems: string[] = [];
 let scripts = 0;
 for (const name of readdirSync(dist)) {

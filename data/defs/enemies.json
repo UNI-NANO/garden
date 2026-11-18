@@ -1,7 +1,7 @@
 {
   "id": "enemies",
   "name": "적",
-  "version": 5,
+  "version": 6,
   "enemies": [
     {
       "id": "wolf",
@@ -233,6 +233,113 @@
           "reach": "근접",
           "range": "단일",
           "weight": 1,
+          "effects": [
+            {
+              "id": "bleed",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "training-dummy",
+      "name": "허수아비",
+      "archetype": "병사",
+      "tier": 1,
+      "rank": "일반",
+      "row": "앞줄",
+      "resist": {
+        "자상": "보통",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 0,
+      "targeting": "앞줄",
+      "actions": [
+        {
+          "name": "흔들거리기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1
+        }
+      ],
+      "overrides": {
+        "hp": 500,
+        "power": 0
+      }
+    },
+    {
+      "id": "old-instructor",
+      "name": "늙은 교관",
+      "archetype": "병사",
+      "tier": 1,
+      "rank": "정예",
+      "row": "앞줄",
+      "resist": {
+        "자상": "보통",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 1,
+      "targeting": "앞줄",
+      "actions": [
+        {
+          "name": "목검 내려치기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2
+        },
+        {
+          "name": "자세 무너뜨리기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "big": true,
+          "powerMultiplier": 1.4
+        }
+      ]
+    },
+    {
+      "id": "sword-master",
+      "name": "검술 사범",
+      "archetype": "병사",
+      "tier": 2,
+      "rank": "정예",
+      "row": "앞줄",
+      "resist": {
+        "자상": "보통",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 1,
+      "targeting": "앞줄",
+      "actions": [
+        {
+          "name": "빠른 베기",
+          "damageType": "자상",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2
+        },
+        {
+          "name": "찌르고 빠지기",
+          "damageType": "관통",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1
+        },
+        {
+          "name": "내려베기",
+          "damageType": "자상",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "big": true,
+          "powerMultiplier": 1.5,
           "effects": [
             {
               "id": "bleed",

@@ -1,0 +1,29 @@
+{
+  "id": "training",
+  "name": "훈련장",
+  "version": 1,
+  "grounds": [
+    {
+      "id": "reinfeld-yard",
+      "name": "라인펠트 아랫마을 훈련장",
+      "region": "북쪽 팔",
+      "dummy": { "enemy": "training-dummy" },
+      "walls": [
+        {
+          "at": 60,
+          "instructor": "늙은 교관",
+          "lifeNote": "늙은 교관과의 대련",
+          "line": "검은 손목으로 드는 게 아니야. 다시 와 봐.",
+          "enemies": [{ "enemy": "old-instructor", "slot": 0 }]
+        },
+        {
+          "at": 80,
+          "instructor": "검술 사범",
+          "lifeNote": "검술 사범과의 대련",
+          "line": "여기까지 왔으면 이제 자기 검을 찾을 때다.",
+          "enemies": [{ "enemy": "sword-master", "slot": 0 }]
+        }
+      ]
+    }
+  ]
+}
