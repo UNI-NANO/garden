@@ -201,7 +201,7 @@ test("던전 탐험: 싸워 이기고, 줍고, 쉼터에서 귀환하면 가방�
   await expect(page.getByText("제1턴 · 아군 차례")).toBeVisible();
   await expect(page.getByRole("button", { name: "그만두기" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "도망" })).toHaveCount(0);
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 10));
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   await page.getByRole("button", { name: "자동" }).click();
   const result = page.getByRole("region", { name: "전투 결과" });
   for (let i = 0; i < 40 && !(await result.isVisible()); i++)
