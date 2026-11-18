@@ -1,0 +1,25 @@
+{
+  "id": "arena",
+  "name": "투기장",
+  "version": 1,
+  "arenas": [
+    {
+      "id": "bracken-arena",
+      "name": "브라켄 투기장",
+      "region": "브라켄"
+    }
+  ],
+  "shadow": {
+    "archetype": "병사",
+    "hpMultiplier": 2,
+    "basicWeight": 2,
+    "skillWeight": 1,
+    "withUltimate": true,
+    "bigFrom": "3단계"
+  },
+  "seasonRewards": [
+    { "rank": 1, "title": "투기장의 별", "money": 300 },
+    { "rank": 2, "title": "투기장의 칼날", "money": 150 },
+    { "rank": 3, "title": "투기장의 방패", "money": 80 }
+  ]
+}

@@ -22,6 +22,7 @@ export function LibraryHome(props: {
   onGathering?: () => void;
   onHunting?: () => void;
   onTraining?: () => void;
+  onArena?: () => void;
   onCrafting?: () => void;
 }) {
   const { session } = props;
@@ -161,6 +162,15 @@ export function LibraryHome(props: {
               onClick={props.onTraining}
             >
               훈련장 (시험 환경)
+            </button>
+          )}
+          {import.meta.env.VITE_GARDEN_ENV !== "prod" && props.onArena && (
+            <button
+              class="button home__practice"
+              type="button"
+              onClick={props.onArena}
+            >
+              투기장 (시험 환경)
             </button>
           )}
           {session.character && session.characterId && (

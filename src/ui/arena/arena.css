@@ -1,0 +1,122 @@
+/* 투기장 (docs/ui/Arena.dc.html) */
+.ar .bar__button {
+  white-space: nowrap;
+}
+
+.ar__info {
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.ar__message {
+  max-width: 1180px;
+  margin: 10px auto 0;
+  padding: 0 32px;
+  color: var(--light);
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.ar__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  gap: 24px;
+  align-items: start;
+  max-width: 1180px;
+  margin: 18px auto 0;
+  padding: 0 32px 32px;
+}
+
+.ar__side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ar__title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 20px;
+}
+
+.ar__note {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.ar__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ar__table th,
+.ar__table td {
+  padding: 8px 6px;
+  border-bottom: 1px dashed var(--line);
+  text-align: left;
+}
+
+.ar__table th {
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--ink-soft);
+}
+
+.ar__me td {
+  font-weight: bold;
+}
+
+.ar__picked td {
+  background: rgba(196, 160, 90, 0.18);
+}
+
+.ar__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.ar__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 10px 0;
+}
+
+.ar__facts dt {
+  color: var(--ink-soft);
+}
+
+.ar__facts dd {
+  margin: 0;
+}
+
+.ar__log {
+  margin: 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 767px) {
+  .ar__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 0 4px 24px;
+  }
+
+  .ar__message {
+    padding: 0 8px;
+  }
+
+  .ar__info {
+    display: none;
+  }
+
+  .ar__table th,
+  .ar__table td {
+    padding: 6px 3px;
+  }
+}

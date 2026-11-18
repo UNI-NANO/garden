@@ -52,5 +52,14 @@ export const LimitsSchema = z.strictObject({
     /** 보상 곡선: 그날 그 분야 n번째(1부터)의 전리품 배율. 끝 값이 이후에도 이어진다 */
     fatigueCurve: z.array(z.number().min(0).max(1)).min(1),
   }),
+  /** 투기장 점수 (엘로식, 도전한 사람만 바뀐다). 보안 규칙이 한 번의 변화 폭을 k로 막는다. 숫자는 모두 임시 */
+  arena: z.strictObject({
+    startScore: count,
+    /** 한 결투에서 바뀔 수 있는 가장 큰 점수 */
+    k: count.min(1),
+    /** 점수 차가 이만큼이면 기대 승률이 1:10 */
+    scale: count.min(1),
+    maxScore: count.min(1),
+  }),
 });
 export type Limits = z.infer<typeof LimitsSchema>;

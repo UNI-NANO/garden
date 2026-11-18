@@ -7,6 +7,7 @@ import { HuntingDefsSchema, type HuntingDefs } from "../schema/defs/hunting";
 import { CraftingDefsSchema, type CraftingDefs } from "../schema/defs/crafting";
 import { EnhanceDefsSchema, type EnhanceDefs } from "../schema/defs/enhance";
 import { TrainingDefsSchema, type TrainingDefs } from "../schema/defs/training";
+import { ArenaDefsSchema, type ArenaDefs } from "../schema/defs/arena";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -714,4 +715,17 @@ export function checkTraining(raw: unknown, defs: { enemies: EnemyList }): { ok:
     }
   }
   return issues.length > 0 ? { ok: false, issues } : { ok: true, training: parsed.data };
+}
+
+const ARENA_FILE = "arena.json";
+
+/** 투기장 검사: 모양, 보상 순위가 1부터 겹치지 않음 */
+export function checkArena(raw: unknown): { ok: true; arena: ArenaDefs } | { ok: false; issues: DefIssue[] } {
+  const parsed = ArenaDefsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(ARENA_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  parsed.data.seasonRewards.forEach((r, i) => {
+    if (r.rank !== i + 1) issues.push({ file: ARENA_FILE, where: `seasonRewards.${i}`, message: "순위는 1부터 차례로" });
+  });
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, arena: parsed.data };
 }

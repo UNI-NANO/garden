@@ -69,6 +69,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
   const [hunting, setHunting] = useState<DungeonView | "loading">();
   const [craftingView, setCrafting] = useState<DungeonView | "loading">();
   const [training, setTraining] = useState<DungeonView | "loading">();
+  const [arenaView, setArena] = useState<DungeonView | "loading">();
   useEffect(
     () => watchSession(props.fb, props.limits, setSession),
     [props.fb, props.limits],
@@ -172,6 +173,18 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       });
   };
 
+  // 투기장도 지도(9단계)가 생기기 전까지 시험 환경에서만
+  const openArena = () => {
+    if (!PRACTICE) return;
+    setArena("loading");
+    import("./arena/ArenaScreen")
+      .then((module) => setArena(() => module.ArenaScreen))
+      .catch((error: unknown) => {
+        reportError(props.fb, error, "투기장 열기");
+        setArena(undefined);
+      });
+  };
+
   const closePractice = () => {
     setPractice(undefined);
     if (window.location.hash === "#practice")
@@ -195,6 +208,15 @@ export function App(props: { fb: Firebase; limits: Limits }) {
           fb: props.fb,
           session: session.status === "signedIn" ? session : undefined,
           onExit: () => setScenes(undefined),
+        })
+      ) : PRACTICE && arenaView === "loading" ? (
+        <Notice title="투기장">투기장으로 가는 중…</Notice>
+      ) : PRACTICE && arenaView && session.status === "signedIn" ? (
+        h(arenaView, {
+          fb: props.fb,
+          limits: props.limits,
+          session,
+          onExit: () => setArena(undefined),
         })
       ) : PRACTICE && training === "loading" ? (
         <Notice title="훈련장">훈련장으로 가는 중…</Notice>
@@ -269,6 +291,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
                 onHunting: openHunting,
                 onCrafting: openCrafting,
                 onTraining: openTraining,
+                onArena: openArena,
               }
             : {})}
         />

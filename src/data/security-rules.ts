@@ -211,6 +211,46 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
     ` && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= ${chat.maxLength}`;
   const rootAfterLine = "newData.parent().parent().parent()";
 
+  // 투기장: 순위표는 로그인한 사람 모두 읽고, 자기 칸만 고친다. 점수·승패는 「결투」 요청과 같은 쓰기에서만, 한 번에 k 이하로
+  const arena = limits.arena;
+  const arenaRoot = up(4); // /arena/$season/entries/$cid 에서 본 쓰기 뒤의 루트
+  const arenaRid = `${arenaRoot}.child('characters').child($cid).child('meta/lastRequestId').val()`;
+  const arenaRequestNow =
+    `${arenaRoot}.child('characters').child($cid).child('meta/lastRequestId').isString()` +
+    ` && ${arenaRoot}.child('requests').child($cid).child(${arenaRid}).exists()` +
+    ` && !root.child('requests').child($cid).child(${arenaRid}).exists()`;
+  const arenaKind = `${arenaRoot}.child('requests').child($cid).child(${arenaRid}).child('kind').val()`;
+  const field = (name: string) => `newData.child('${name}').val()`;
+  const was = (name: string) => `data.child('${name}').val()`;
+  const arenaEntry: Rules = {
+    ".write": `${OWNER} && newData.exists() && ${arenaRequestNow}`,
+    ".validate":
+      "newData.hasChildren(['build', 'registeredAt', 'score', 'wins', 'losses'])" +
+      ` && (!data.exists() ? (${field("score")} === ${arena.startScore} && ${field("wins")} === 0 && ${field("losses")} === 0)` +
+      ` : ${arenaKind} === '결투'` +
+      ` ? (${field("score")} - ${was("score")} <= ${arena.k} && ${was("score")} - ${field("score")} <= ${arena.k}` +
+      ` && ${field("wins")} + ${field("losses")} === ${was("wins")} + ${was("losses")} + 1 && ${field("wins")} >= ${was("wins")} && ${field("losses")} >= ${was("losses")})` +
+      ` : (${field("score")} === ${was("score")} && ${field("wins")} === ${was("wins")} && ${field("losses")} === ${was("losses")}))`,
+    build: { ".validate": "newData.hasChildren(['name', 'health', 'treeId', 'treeVersion', 'mastery']) && newData.child('name').isString() && newData.child('name').val().length <= 40" },
+    registeredAt: { ".validate": "newData.isNumber() && newData.val() <= now + 300000" },
+    score: { ".validate": int(0, arena.maxScore) },
+    wins: { ".validate": int(0, Number.MAX_SAFE_INTEGER) },
+    losses: { ".validate": int(0, Number.MAX_SAFE_INTEGER) },
+    $other: { ".validate": false },
+  };
+  const logRoot = up(5); // /arena/$season/log/$cid/$rid
+  const arenaLogLine: Rules = {
+    // 도전한 사람이 자기 「결투」 요청과 같은 쓰기에서 상대의 기록에 한 줄 덧붙인다
+    ".write":
+      `${AUTH} && !data.exists() && newData.exists() && ${MY_CID} != null && $cid !== ${MY_CID}` +
+      ` && newData.child('from').val() === ${MY_CID}` +
+      ` && ${logRoot}.child('requests').child(${MY_CID}).child($rid).exists() && !root.child('requests').child(${MY_CID}).child($rid).exists()`,
+    ".validate":
+      `$rid.matches(${KEY}) && newData.hasChildren(['at', 'from', 'fromName', 'challengerWon'])` +
+      " && newData.child('at').isNumber() && newData.child('at').val() <= now + 300000" +
+      " && newData.child('fromName').isString() && newData.child('fromName').val().length <= 40 && newData.child('challengerWon').isBoolean()",
+  };
+
   return {
     rules: {
       ".read": false,
@@ -254,6 +294,12 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
         },
       },
       ".write": false,
+      arena: {
+        $season: {
+          entries: { ".read": AUTH, $cid: arenaEntry },
+          log: { $cid: { ".read": `${OWNER} || ${GM}`, $rid: arenaLogLine } },
+        },
+      },
       gm: { ".read": AUTH },
       defs: { ".read": AUTH, ".write": GM },
       world: { ".read": AUTH, ".write": GM },

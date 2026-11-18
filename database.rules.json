@@ -43,6 +43,44 @@
       }
     },
     ".write": false,
+    "arena": {
+      "$season": {
+        "entries": {
+          ".read": "auth != null",
+          "$cid": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.exists() && newData.parent().parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').val()).exists()",
+            ".validate": "newData.hasChildren(['build', 'registeredAt', 'score', 'wins', 'losses']) && (!data.exists() ? (newData.child('score').val() === 1000 && newData.child('wins').val() === 0 && newData.child('losses').val() === 0) : newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').val()).child('kind').val() === '결투' ? (newData.child('score').val() - data.child('score').val() <= 32 && data.child('score').val() - newData.child('score').val() <= 32 && newData.child('wins').val() + newData.child('losses').val() === data.child('wins').val() + data.child('losses').val() + 1 && newData.child('wins').val() >= data.child('wins').val() && newData.child('losses').val() >= data.child('losses').val()) : (newData.child('score').val() === data.child('score').val() && newData.child('wins').val() === data.child('wins').val() && newData.child('losses').val() === data.child('losses').val()))",
+            "build": {
+              ".validate": "newData.hasChildren(['name', 'health', 'treeId', 'treeVersion', 'mastery']) && newData.child('name').isString() && newData.child('name').val().length <= 40"
+            },
+            "registeredAt": {
+              ".validate": "newData.isNumber() && newData.val() <= now + 300000"
+            },
+            "score": {
+              ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 100000"
+            },
+            "wins": {
+              ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 9007199254740991"
+            },
+            "losses": {
+              ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 9007199254740991"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "log": {
+          "$cid": {
+            ".read": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) || (auth != null && root.child('gm').child(auth.uid).val() === true)",
+            "$rid": {
+              ".write": "auth != null && !data.exists() && newData.exists() && root.child('accounts').child(auth.uid).child('characterId').val() != null && $cid !== root.child('accounts').child(auth.uid).child('characterId').val() && newData.child('from').val() === root.child('accounts').child(auth.uid).child('characterId').val() && newData.parent().parent().parent().parent().parent().child('requests').child(root.child('accounts').child(auth.uid).child('characterId').val()).child($rid).exists() && !root.child('requests').child(root.child('accounts').child(auth.uid).child('characterId').val()).child($rid).exists()",
+              ".validate": "$rid.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['at', 'from', 'fromName', 'challengerWon']) && newData.child('at').isNumber() && newData.child('at').val() <= now + 300000 && newData.child('fromName').isString() && newData.child('fromName').val().length <= 40 && newData.child('challengerWon').isBoolean()"
+            }
+          }
+        }
+      }
+    },
     "gm": {
       ".read": "auth != null"
     },

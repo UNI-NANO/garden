@@ -1,7 +1,7 @@
 {
   "id": "limits",
   "name": "범위와 상한",
-  "version": 4,
+  "version": 5,
   "abilities": {
     "min": 0,
     "max": 100,
@@ -52,5 +52,11 @@
       0.5,
       0.3
     ]
+  },
+  "arena": {
+    "startScore": 1000,
+    "k": 32,
+    "scale": 400,
+    "maxScore": 100000
   }
 }

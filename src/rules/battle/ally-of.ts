@@ -27,8 +27,17 @@ export interface AllyResult {
   problems: string[];
 }
 
+/** 전투 아군을 만드는 데 쓰는 캐릭터의 부분 (투기장에 등록한 빌드도 이 모양으로 바꿔 쓴다) */
+export interface AllySource {
+  profile: { name: string };
+  abilities: { health: number };
+  loadout: Pick<Character["loadout"], "basics" | "ultimate">;
+  trees: Record<string, { picked: Record<string, true>; choices: Record<string, 0 | 1> } | undefined>;
+  mastery: Record<string, { value: number } | undefined>;
+}
+
 /** 장착한 기본기가 있는 나무, 없으면 찍은 나무, 없으면 첫 나무 */
-function treeFor(character: Character, trees: readonly Tree[]): Tree {
+export function treeFor(character: AllySource, trees: readonly Tree[]): Tree {
   const first = character.loadout.basics[0];
   const byBasic = first ? trees.find((t) => t.nodes.some((n) => n.id === first)) : undefined;
   const byPicked = trees.find((t) => character.trees[idToKey(t.id)] !== undefined);
@@ -38,11 +47,11 @@ function treeFor(character: Character, trees: readonly Tree[]): Tree {
 }
 
 /** 던전을 시작할 때의 최대 체력·기력 */
-export function allyVitals(character: Character, defs: Pick<AllyDefs, "battle" | "skillTable">): { maxHp: number; maxEnergy: number } {
+export function allyVitals(character: Pick<AllySource, "abilities">, defs: Pick<AllyDefs, "battle" | "skillTable">): { maxHp: number; maxEnergy: number } {
   return { maxHp: playerMaxHp(defs.battle, character.abilities.health), maxEnergy: defs.skillTable.energy.max };
 }
 
-export function allyOfCharacter(character: Character, defs: AllyDefs, options: { hp?: number; energy?: number } = {}): AllyResult {
+export function allyOfCharacter(character: AllySource, defs: AllyDefs, options: { hp?: number; energy?: number } = {}): AllyResult {
   const problems: string[] = [];
   const tree = treeFor(character, defs.trees);
   const saved = character.trees[idToKey(tree.id)];

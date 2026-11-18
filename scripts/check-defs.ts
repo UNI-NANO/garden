@@ -2,7 +2,7 @@
 //   npm run check:defs
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { checkDefs, checkDungeons, checkFishing, checkGathering, checkHunting, checkCrafting, checkEnhance, checkTraining, type DefIssue } from "../src/rules/validate-defs";
+import { checkDefs, checkDungeons, checkFishing, checkGathering, checkHunting, checkCrafting, checkEnhance, checkTraining, checkArena, type DefIssue } from "../src/rules/validate-defs";
 
 const root = join(import.meta.dirname, "..", "data", "defs");
 const issues: DefIssue[] = [];
@@ -49,8 +49,10 @@ if (issues.length === 0) {
     if (!enhance.ok) issues.push(...enhance.issues);
     const training = checkTraining(readJson("training.json"), result.defs);
     if (!training.ok) issues.push(...training.issues);
+    const arena = checkArena(readJson("arena.json"));
+    if (!arena.ok) issues.push(...arena.issues);
     const nodes = result.defs.trees.reduce((sum, tree) => sum + tree.nodes.length, 0);
-    console.log(`정의 데이터 통과: 나무 ${result.defs.trees.length}그루, 칸 ${nodes}개, 효과 ${result.defs.effects.effects.length}개, 물건 ${result.defs.items.items.length}개, 던전 ${dungeons.ok ? dungeons.dungeons.dungeons.length : "?"}개, 낚시터 ${fishing.ok ? fishing.fishing.spots.length : "?"}곳, 채집터 ${gathering.ok ? gathering.gathering.spots.length : "?"}곳, 사냥터 ${hunting.ok ? hunting.hunting.grounds.length : "?"}곳, 레시피 ${crafting.ok ? crafting.crafting.recipes.length : "?"}개, 훈련장 ${training.ok ? training.training.grounds.length : "?"}곳`);
+    console.log(`정의 데이터 통과: 나무 ${result.defs.trees.length}그루, 칸 ${nodes}개, 효과 ${result.defs.effects.effects.length}개, 물건 ${result.defs.items.items.length}개, 던전 ${dungeons.ok ? dungeons.dungeons.dungeons.length : "?"}개, 낚시터 ${fishing.ok ? fishing.fishing.spots.length : "?"}곳, 채집터 ${gathering.ok ? gathering.gathering.spots.length : "?"}곳, 사냥터 ${hunting.ok ? hunting.hunting.grounds.length : "?"}곳, 레시피 ${crafting.ok ? crafting.crafting.recipes.length : "?"}개, 훈련장 ${training.ok ? training.training.grounds.length : "?"}곳, 투기장 ${arena.ok ? arena.arena.arenas.length : "?"}곳`);
   } else {
     issues.push(...result.issues);
   }

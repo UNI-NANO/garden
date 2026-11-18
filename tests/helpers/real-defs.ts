@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { checkDefs, checkDungeons, checkFishing, checkGathering, checkHunting, checkCrafting, checkEnhance, checkTraining } from "../../src/rules/validate-defs";
+import { checkDefs, checkDungeons, checkFishing, checkGathering, checkHunting, checkCrafting, checkEnhance, checkTraining, checkArena } from "../../src/rules/validate-defs";
 
 /** 실제 정의 데이터(data/defs)를 검사해 읽는다. 시험 여러 곳이 같이 쓴다 */
 const root = join(import.meta.dirname, "..", "..", "data", "defs");
@@ -35,6 +35,8 @@ export function realDefs() {
   if (!enhance.ok) throw new Error(JSON.stringify(enhance.issues));
   const training = checkTraining(read("training.json"), result.defs);
   if (!training.ok) throw new Error(JSON.stringify(training.issues));
+  const arena = checkArena(read("arena.json"));
+  if (!arena.ok) throw new Error(JSON.stringify(arena.issues));
   return {
     ...result.defs,
     dungeons: dungeons.dungeons.dungeons,
@@ -44,5 +46,6 @@ export function realDefs() {
     crafting: crafting.crafting,
     enhance: enhance.enhance,
     training: training.training,
+    arena: arena.arena,
     itemMap: new Map(result.defs.items.items.map((i) => [i.id, i])) };
 }
