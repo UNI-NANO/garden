@@ -282,7 +282,7 @@ export type BattleKind = "일반" | "정예" | "보스" | "레이드" | "결투"
 export type Outcome = "승리" | "패배" | "도망";
 
 export type BattleEvent =
-  | { turn: number; type: "피해"; from: string; to: string; amount: number; judgement?: Judgement }
+  | { turn: number; type: "피해"; from: string; to: string; amount: number; judgement?: Judgement; /** 적에게 준 흐트러짐 (기여 점수용) */ stagger?: number }
   | { turn: number; type: "합"; ally: string; enemy: string; allyPower: number; enemyPower: number; result: "이김" | "짐" | "비김" }
   | { turn: number; type: "취소"; unit: string; reason: string }
   | { turn: number; type: "흐트러짐"; enemy: string }
@@ -297,7 +297,7 @@ export type BattleEvent =
   | { turn: number; type: "이어짐"; unit: string; skillId: string }
   | { turn: number; type: "밀어냄"; pushed: string; pulled?: string }
   | { turn: number; type: "쓰러짐"; unit: string; injury?: Injury }
-  | { turn: number; type: "반응"; ally: string; enemy: string; result: DefenseInput }
+  | { turn: number; type: "반응"; ally: string; enemy: string; result: DefenseInput; /** 막기로 줄인 피해 (기여 점수용) */ prevented?: number }
   | { turn: number; type: "자리 옮김"; unit: string; slot: number }
   | { turn: number; type: "도망"; unit: string }
   | { turn: number; type: "끝"; outcome: Outcome };
@@ -538,8 +538,12 @@ function strikeEnemy(
     decayEffects(ctx.effects, enemy.effects, "맞을 때 −1");
   }
   enemy.hp = Math.max(0, enemy.hp - amount);
-  state.events.push({ turn: state.turn, type: "피해", from: fromId, to: enemy.id, amount, ...(judgement ? { judgement } : {}) });
-  if (power > 0) reduceStagger(state, enemy, staggerDamageOf(ctx.rules, power, damageType) * staggerShare);
+  const hit: Extract<BattleEvent, { type: "피해" }> = { turn: state.turn, type: "피해", from: fromId, to: enemy.id, amount, ...(judgement ? { judgement } : {}) };
+  state.events.push(hit);
+  if (power > 0) {
+    const dealt = reduceStagger(state, enemy, staggerDamageOf(ctx.rules, power, damageType) * staggerShare);
+    if (dealt > 0) hit.stagger = Math.round(dealt * 100) / 100;
+  }
   if (enemy.hp === 0) downEnemy(state, enemy);
 }
 
@@ -567,8 +571,10 @@ function giveEffect(
   if (added > 0 && from?.holdEffects?.includes(id) && !unit.held?.includes(id)) unit.held = [...(unit.held ?? []), id];
 }
 
-function reduceStagger(state: BattleState, enemy: EnemyUnit, amount: number): void {
-  if (enemy.down || isStaggered(enemy) || amount <= 0) return;
+/** 흐트러짐을 깎고, 실제로 깎은 양을 돌려준다 */
+function reduceStagger(state: BattleState, enemy: EnemyUnit, amount: number): number {
+  if (enemy.down || isStaggered(enemy) || amount <= 0) return 0;
+  const dealt = Math.min(enemy.stagger, amount);
   enemy.stagger = Math.max(0, enemy.stagger - amount);
   if (enemy.stagger === 0) {
     enemy.brokenOnTurn = state.turn;
@@ -576,6 +582,7 @@ function reduceStagger(state: BattleState, enemy: EnemyUnit, amount: number): vo
     // 무너지는 순간 이번 턴에 하려던 공격도 끊긴다
     cancelIntents(state, enemy.id);
   }
+  return dealt;
 }
 
 function findSkill(ally: AllyUnit, skillId: string): BattleSkill | undefined {
@@ -1166,7 +1173,9 @@ function strikeAlly(state: BattleState, ctx: BattleContext, enemy: EnemyUnit, in
   // 피하기는 큰 공격에만 통하고, 묶여 있으면 피할 수 없다
   const dodgeable = intent.big && canMove(ctx.effects, ally.effects);
   const defense: DefenseInput = input === "피하기 성공" && !dodgeable ? "없음" : input;
-  if (defense !== "없음") state.events.push({ turn: state.turn, type: "반응", ally: ally.id, enemy: enemy.id, result: defense });
+  const reaction: Extract<BattleEvent, { type: "반응" }> | undefined =
+    defense !== "없음" ? { turn: state.turn, type: "반응", ally: ally.id, enemy: enemy.id, result: defense } : undefined;
+  if (reaction) state.events.push(reaction);
   const maxEnergy = ctx.table.energy.max;
 
   if (defense === "받아치기 성공") {
@@ -1194,6 +1203,7 @@ function strikeAlly(state: BattleState, ctx: BattleContext, enemy: EnemyUnit, in
 
   const guarded = defense === "막기 성공";
   let amount = damageOf(guarded ? power * ctx.rules.guard.damageMultiplier : power, 1, ally.defense);
+  if (guarded && reaction) reaction.prevented = Math.max(0, damageOf(power, 1, ally.defense) - amount);
   if (guarded) ally.energy = Math.min(maxEnergy, ally.energy + ctx.rules.guard.energy);
   if (amount > 0) {
     amount = Math.max(1, amount + damageTakenBonus(ctx.effects, ally.effects));

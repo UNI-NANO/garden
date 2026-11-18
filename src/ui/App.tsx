@@ -70,6 +70,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
   const [craftingView, setCrafting] = useState<DungeonView | "loading">();
   const [training, setTraining] = useState<DungeonView | "loading">();
   const [arenaView, setArena] = useState<DungeonView | "loading">();
+  const [raidView, setRaid] = useState<DungeonView | "loading">();
   useEffect(
     () => watchSession(props.fb, props.limits, setSession),
     [props.fb, props.limits],
@@ -185,6 +186,18 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       });
   };
 
+  // 반복 레이드도 지도(9단계)가 생기기 전까지 시험 환경에서만
+  const openRaid = () => {
+    if (!PRACTICE) return;
+    setRaid("loading");
+    import("./raid/RaidScreen")
+      .then((module) => setRaid(() => module.RaidScreen))
+      .catch((error: unknown) => {
+        reportError(props.fb, error, "반복 레이드 열기");
+        setRaid(undefined);
+      });
+  };
+
   const closePractice = () => {
     setPractice(undefined);
     if (window.location.hash === "#practice")
@@ -208,6 +221,15 @@ export function App(props: { fb: Firebase; limits: Limits }) {
           fb: props.fb,
           session: session.status === "signedIn" ? session : undefined,
           onExit: () => setScenes(undefined),
+        })
+      ) : PRACTICE && raidView === "loading" ? (
+        <Notice title="반복 레이드">레이드 집결지로 가는 중…</Notice>
+      ) : PRACTICE && raidView && session.status === "signedIn" ? (
+        h(raidView, {
+          fb: props.fb,
+          limits: props.limits,
+          session,
+          onExit: () => setRaid(undefined),
         })
       ) : PRACTICE && arenaView === "loading" ? (
         <Notice title="투기장">투기장으로 가는 중…</Notice>
@@ -292,6 +314,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
                 onCrafting: openCrafting,
                 onTraining: openTraining,
                 onArena: openArena,
+                onRaid: openRaid,
               }
             : {})}
         />

@@ -238,6 +238,22 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
     losses: { ".validate": int(0, Number.MAX_SAFE_INTEGER) },
     $other: { ".validate": false },
   };
+  // 반복 레이드 기여 기록: 모두 읽고, 주인이 자기 칸을 「레이드」 요청과 같은 쓰기에서, 점수는 커질 때만 (/raids/$week/records/$cid)
+  const raidRecord: Rules = {
+    ".write": `${OWNER} && newData.exists() && ${arenaRequestNow} && ${arenaKind} === '레이드'`,
+    ".validate":
+      "newData.hasChildren(['name', 'bossId', 'score', 'damage', 'stagger', 'prevented', 'reactions', 'at'])" +
+      ` && (!data.exists() || ${field("score")} > ${was("score")})`,
+    name: { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+    bossId: { ".validate": "newData.isString()" },
+    score: { ".validate": int(0, Number.MAX_SAFE_INTEGER) },
+    damage: { ".validate": "newData.isNumber() && newData.val() >= 0" },
+    stagger: { ".validate": "newData.isNumber() && newData.val() >= 0" },
+    prevented: { ".validate": "newData.isNumber() && newData.val() >= 0" },
+    reactions: { ".validate": int(0, Number.MAX_SAFE_INTEGER) },
+    at: { ".validate": "newData.isNumber() && newData.val() <= now + 300000" },
+    $other: { ".validate": false },
+  };
   const logRoot = up(5); // /arena/$season/log/$cid/$rid
   const arenaLogLine: Rules = {
     // 도전한 사람이 자기 「결투」 요청과 같은 쓰기에서 상대의 기록에 한 줄 덧붙인다
@@ -300,6 +316,7 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
           log: { $cid: { ".read": `${OWNER} || ${GM}`, $rid: arenaLogLine } },
         },
       },
+      raids: { $week: { records: { ".read": AUTH, $cid: raidRecord } } },
       gm: { ".read": AUTH },
       defs: { ".read": AUTH, ".write": GM },
       world: { ".read": AUTH, ".write": GM },

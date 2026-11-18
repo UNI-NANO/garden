@@ -1,0 +1,84 @@
+{
+  "id": "raids",
+  "name": "반복 레이드",
+  "version": 1,
+  "rotation": {
+    "epoch": "2026-11-16",
+    "days": 7,
+    "order": ["wolf-king", "bandit-king", "mine-golem", "poacher-chief"]
+  },
+  "bosses": [
+    {
+      "id": "wolf-king",
+      "name": "굶주린 늑대왕",
+      "region": "북쪽 팔 · 국경 숲길 깊은 곳",
+      "enemies": [
+        { "enemy": "wolf.king.raid", "slot": 0 },
+        { "enemy": "wolf", "slot": 2 }
+      ],
+      "weekly": [
+        { "kind": "잎전", "quantity": 120 },
+        { "kind": "물건", "item": "wolf-king-mane", "quantity": 2 },
+        { "kind": "물건", "item": "chief-sinew", "quantity": 1 }
+      ],
+      "repeat": [
+        { "kind": "물건", "item": "wolf-king-mane", "quantity": 1 },
+        { "kind": "물건", "item": "wolf-pelt", "quantity": 3 }
+      ]
+    },
+    {
+      "id": "bandit-king",
+      "name": "산적왕",
+      "region": "북쪽 팔 · 고갯길 산채",
+      "enemies": [
+        { "enemy": "bandit-king", "slot": 0 },
+        { "enemy": "bandit", "slot": 2 }
+      ],
+      "weekly": [
+        { "kind": "잎전", "quantity": 150 },
+        { "kind": "물건", "item": "bandit-king-seal", "quantity": 2 },
+        { "kind": "물건", "item": "iron-scrap", "quantity": 3 }
+      ],
+      "repeat": [
+        { "kind": "물건", "item": "bandit-king-seal", "quantity": 1 },
+        { "kind": "물건", "item": "iron-scrap", "quantity": 2 }
+      ]
+    },
+    {
+      "id": "mine-golem",
+      "name": "갱도 골렘",
+      "region": "카른브룸 · 무너진 갱도",
+      "enemies": [{ "enemy": "mine-golem.raid", "slot": 0 }],
+      "weekly": [
+        { "kind": "잎전", "quantity": 120 },
+        { "kind": "물건", "item": "golem-core-shard", "quantity": 2 },
+        { "kind": "물건", "item": "starlight-ore", "quantity": 1 }
+      ],
+      "repeat": [
+        { "kind": "물건", "item": "golem-core-shard", "quantity": 1 },
+        { "kind": "물건", "item": "iron-scrap", "quantity": 2 }
+      ]
+    },
+    {
+      "id": "poacher-chief",
+      "name": "늪의 밀렵꾼 두목",
+      "region": "뮈르가스트 · 동쪽 늪 가장자리",
+      "enemies": [{ "enemy": "poacher-chief.raid", "slot": 0 }],
+      "weekly": [
+        { "kind": "잎전", "quantity": 130 },
+        { "kind": "물건", "item": "poacher-harpoon-tip", "quantity": 2 },
+        { "kind": "물건", "item": "marsh-catfish", "quantity": 2 }
+      ],
+      "repeat": [
+        { "kind": "물건", "item": "poacher-harpoon-tip", "quantity": 1 },
+        { "kind": "물건", "item": "marsh-catfish", "quantity": 1 }
+      ]
+    }
+  ],
+  "contribution": {
+    "stagger": 1.5,
+    "prevented": 1,
+    "reaction": 10,
+    "grades": { "금": 300, "은": 180, "동": 80 }
+  }
+}

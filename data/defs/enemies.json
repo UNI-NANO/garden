@@ -1,7 +1,7 @@
 {
   "id": "enemies",
   "name": "적",
-  "version": 6,
+  "version": 7,
   "enemies": [
     {
       "id": "wolf",
@@ -346,6 +346,232 @@
               "amount": 1
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "bandit",
+      "name": "산적 졸개",
+      "archetype": "도적",
+      "tier": 1,
+      "rank": "일반",
+      "row": "앞줄",
+      "resist": {
+        "자상": "보통",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 0,
+      "targeting": "체력이 가장 낮은 쪽",
+      "actions": [
+        {
+          "name": "휘두르기",
+          "damageType": "자상",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2
+        },
+        {
+          "name": "발 걸기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "bind",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bandit-king",
+      "name": "산적왕",
+      "archetype": "도적",
+      "tier": 2,
+      "rank": "보스",
+      "row": "앞줄",
+      "resist": {
+        "자상": "약함",
+        "관통": "약함",
+        "파열": "보통"
+      },
+      "defense": 0,
+      "targeting": "앞줄",
+      "actions": [
+        {
+          "name": "도끼 내려찍기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2
+        },
+        {
+          "name": "피 묻은 칼질",
+          "damageType": "자상",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "bleed",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "name": "두목의 호령",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "전체",
+          "weight": 1,
+          "big": true,
+          "powerMultiplier": 0.7,
+          "effects": [
+            {
+              "id": "fear",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wolf.king.raid",
+      "name": "굶주린 늑대왕 (강화판)",
+      "archetype": "짐승",
+      "tier": 2,
+      "rank": "보스",
+      "row": "앞줄",
+      "resist": {
+        "자상": "약함",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 0,
+      "targeting": "체력이 가장 낮은 쪽",
+      "actions": [
+        {
+          "name": "물어뜯기",
+          "damageType": "자상",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2,
+          "effects": [
+            {
+              "id": "bleed",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "덮치기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "bind",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "포효",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "전체",
+          "weight": 1,
+          "big": true,
+          "powerMultiplier": 0.6
+        }
+      ]
+    },
+    {
+      "id": "mine-golem.raid",
+      "name": "갱도 골렘 (강화판)",
+      "archetype": "유물 기계",
+      "tier": 1,
+      "rank": "보스",
+      "row": "앞줄",
+      "resist": {
+        "자상": "강함",
+        "관통": "보통",
+        "파열": "약함"
+      },
+      "defense": 3,
+      "targeting": "앞줄",
+      "actions": [
+        {
+          "name": "돌주먹",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2
+        },
+        {
+          "name": "짓누르기",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "big": true,
+          "powerMultiplier": 1.6
+        }
+      ]
+    },
+    {
+      "id": "poacher-chief.raid",
+      "name": "늪의 밀렵꾼 두목 (강화판)",
+      "archetype": "도적",
+      "tier": 2,
+      "rank": "보스",
+      "row": "앞줄",
+      "resist": {
+        "자상": "보통",
+        "관통": "보통",
+        "파열": "보통"
+      },
+      "defense": 1,
+      "targeting": "체력이 가장 낮은 쪽",
+      "actions": [
+        {
+          "name": "독 바른 작살",
+          "damageType": "관통",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 2,
+          "effects": [
+            {
+              "id": "poison",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "올가미",
+          "damageType": "파열",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "effects": [
+            {
+              "id": "bind",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "name": "작살 연타",
+          "damageType": "관통",
+          "reach": "근접",
+          "range": "단일",
+          "weight": 1,
+          "big": true,
+          "powerMultiplier": 1.3
         }
       ]
     }

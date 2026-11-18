@@ -81,6 +81,44 @@
         }
       }
     },
+    "raids": {
+      "$week": {
+        "records": {
+          ".read": "auth != null",
+          "$cid": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.exists() && newData.parent().parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').val()).exists() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().parent().parent().child('characters').child($cid).child('meta/lastRequestId').val()).child('kind').val() === '레이드'",
+            ".validate": "newData.hasChildren(['name', 'bossId', 'score', 'damage', 'stagger', 'prevented', 'reactions', 'at']) && (!data.exists() || newData.child('score').val() > data.child('score').val())",
+            "name": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
+            },
+            "bossId": {
+              ".validate": "newData.isString()"
+            },
+            "score": {
+              ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 9007199254740991"
+            },
+            "damage": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "stagger": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "prevented": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "reactions": {
+              ".validate": "newData.isNumber() && newData.val() % 1 === 0 && newData.val() >= 0 && newData.val() <= 9007199254740991"
+            },
+            "at": {
+              ".validate": "newData.isNumber() && newData.val() <= now + 300000"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    },
     "gm": {
       ".read": "auth != null"
     },

@@ -1,7 +1,7 @@
 {
   "id": "items",
   "name": "물건",
-  "version": 8,
+  "version": 9,
   "items": [
     {
       "id": "sea-eel",
@@ -261,6 +261,34 @@
       "kind": "묶음",
       "weight": 0.05,
       "value": 500
+    },
+    {
+      "id": "bandit-king-seal",
+      "name": "산적왕의 인장",
+      "kind": "묶음",
+      "weight": 0.1,
+      "value": 80
+    },
+    {
+      "id": "wolf-king-mane",
+      "name": "늑대왕의 갈기",
+      "kind": "묶음",
+      "weight": 0.2,
+      "value": 80
+    },
+    {
+      "id": "golem-core-shard",
+      "name": "골렘 핵 조각",
+      "kind": "묶음",
+      "weight": 0.5,
+      "value": 80
+    },
+    {
+      "id": "poacher-harpoon-tip",
+      "name": "밀렵꾼의 작살촉",
+      "kind": "묶음",
+      "weight": 0.2,
+      "value": 80
     }
   ]
 }

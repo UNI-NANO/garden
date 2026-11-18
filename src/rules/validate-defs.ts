@@ -7,6 +7,7 @@ import { HuntingDefsSchema, type HuntingDefs } from "../schema/defs/hunting";
 import { CraftingDefsSchema, type CraftingDefs } from "../schema/defs/crafting";
 import { EnhanceDefsSchema, type EnhanceDefs } from "../schema/defs/enhance";
 import { TrainingDefsSchema, type TrainingDefs } from "../schema/defs/training";
+import { RaidDefsSchema, type RaidDefs } from "../schema/defs/raid";
 import { ArenaDefsSchema, type ArenaDefs } from "../schema/defs/arena";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
@@ -728,4 +729,31 @@ export function checkArena(raw: unknown): { ok: true; arena: ArenaDefs } | { ok:
     if (r.rank !== i + 1) issues.push({ file: ARENA_FILE, where: `seasonRewards.${i}`, message: "순위는 1부터 차례로" });
   });
   return issues.length > 0 ? { ok: false, issues } : { ok: true, arena: parsed.data };
+}
+
+const RAIDS_FILE = "raids.json";
+
+/** 반복 레이드 검사: 모양, 차례의 보스가 있음, 적·물건 연결(보상은 묶음), 등급 기준이 금 ≥ 은 ≥ 동 */
+export function checkRaids(raw: unknown, defs: { items: ItemList; enemies: EnemyList }): { ok: true; raids: RaidDefs } | { ok: false; issues: DefIssue[] } {
+  const parsed = RaidDefsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(RAIDS_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  const add = (where: string, message: string) => issues.push({ file: RAIDS_FILE, where, message });
+  const items = new Map(defs.items.items.map((i) => [i.id, i]));
+  const enemies = new Set(defs.enemies.enemies.map((e) => e.id));
+  const bosses = new Set(parsed.data.bosses.map((b) => b.id));
+  if (Number.isNaN(Date.parse(`${parsed.data.rotation.epoch}T00:00:00Z`))) add("rotation.epoch", "날짜가 아니다");
+  for (const id of parsed.data.rotation.order) if (!bosses.has(id)) add("rotation.order", `없는 보스: ${id}`);
+  for (const boss of parsed.data.bosses) {
+    for (const m of boss.enemies) if (!enemies.has(m.enemy)) add(boss.id, `없는 적: ${m.enemy}`);
+    for (const r of [...boss.weekly, ...boss.repeat]) {
+      if (r.kind !== "물건") continue;
+      const item = items.get(r.item);
+      if (!item) add(boss.id, `없는 물건: ${r.item}`);
+      else if (item.kind !== "묶음") add(boss.id, `보상은 묶음 물건이어야 한다: ${r.item}`);
+    }
+  }
+  const g = parsed.data.contribution.grades;
+  if (!(g.금 >= g.은 && g.은 >= g.동)) add("contribution.grades", "금 ≥ 은 ≥ 동 이어야 한다");
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, raids: parsed.data };
 }
