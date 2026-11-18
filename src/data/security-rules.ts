@@ -140,6 +140,15 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
     recipes: {
       $recipe: { ".write": ownerWrite(2, " && !data.exists() && newData.exists()"), ".validate": `$recipe.matches(${KEY}) && newData.val() === true` },
     },
+    // 도감: 주인은 수정 번호와 함께. 적의 이긴 수는 줄지 않고, 물건을 처음 얻은 때는 한 번만 쓴다
+    codex: {
+      enemies: {
+        $enemy: { ".write": ownerWrite(3, " && newData.exists()"), ".validate": `$enemy.matches(${KEY}) && ${int(0, 1_000_000)} && (!data.exists() || newData.val() >= data.val())` },
+      },
+      items: {
+        $item: { ".write": ownerWrite(3, " && !data.exists() && newData.exists()"), ".validate": `$item.matches(${KEY}) && newData.isNumber() && newData.val() <= now + 300000` },
+      },
+    },
     // 내 기록 (가장 큰 물고기 등): 주인은 수정 번호와 함께, 커지기만
     records: {
       fish: {

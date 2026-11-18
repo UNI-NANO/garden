@@ -68,6 +68,8 @@ export function BattleScreen(props: {
   onExit: () => void;
   /** 실제 전투(던전): 그만두기·도망·다시 없이, 끝나면 결과를 넘긴다 */
   onFinish?: (battle: BattleState) => void;
+  /** 적 도감 1단계 전이라 위력을 「???」로 가릴 적인가 (적 정의 ID). 없으면 다 보인다(연습 전투) */
+  hidePower?: (defId: string) => boolean;
 }) {
   const { ctx } = props.defs;
   const [battle, setBattle] = useState<BattleState>(() =>
@@ -80,6 +82,10 @@ export function BattleScreen(props: {
   const [problem, setProblem] = useState<string>();
 
   const player = battle.allies.find((a) => a.kind === "플레이어");
+  const powerText = (intent: Intent) => {
+    const defId = battle.enemies.find((e) => e.id === intent.enemyId)?.defId;
+    return defId !== undefined && props.hidePower?.(defId) ? "???" : String(Math.round(intent.power * 10) / 10);
+  };
   const names = {
     unit: (id: string) =>
       [...battle.allies, ...battle.enemies].find((x) => x.id === id)?.name ??
@@ -353,7 +359,7 @@ export function BattleScreen(props: {
               : undefined
           }
         />
-        <Intents battle={battle} names={names.unit} />
+        <Intents battle={battle} names={names.unit} powerText={powerText} />
         <Formation
           side="적"
           units={battle.enemies}
@@ -366,6 +372,7 @@ export function BattleScreen(props: {
                 enemy={e}
                 intent={intent}
                 targetName={intent ? names.unit(intent.targetId) : undefined}
+                powerText={powerText}
                 names={props.defs.effectNames}
                 selectable={targets.some((t) => t.id === e.id)}
                 onPick={() => pickedSkill && strikeWith(pickedSkill, e)}
@@ -627,6 +634,7 @@ function EnemyCard(props: {
   enemy: EnemyUnit;
   intent: Intent | undefined;
   targetName: string | undefined;
+  powerText: (intent: Intent) => string;
   names: ReadonlyMap<string, string>;
   selectable: boolean;
   onPick: () => void;
@@ -671,7 +679,7 @@ function EnemyCard(props: {
       {/* 모바일에서는 의도를 적 칸 아래 꼬리표로 붙인다 (PC는 가운데 줄) */}
       {intent && (
         <p class="unit__intent">
-          {intent.actionName} · {Math.round(intent.power * 10) / 10} →{" "}
+          {intent.actionName} · {props.powerText(intent)} →{" "}
           {props.targetName}
         </p>
       )}
@@ -706,6 +714,7 @@ function Effects(props: {
 function Intents(props: {
   battle: BattleState;
   names: (id: string) => string;
+  powerText: (intent: Intent) => string;
 }) {
   const intents = props.battle.intents.filter((i) => !i.cancelled);
   return (
@@ -737,7 +746,7 @@ function Intents(props: {
             />
           </svg>
           <span class="intent__what">
-            {intent.actionName} · {Math.round(intent.power * 10) / 10}
+            {intent.actionName} · {props.powerText(intent)}
           </span>
           <span class="intent__who">{props.names(intent.enemyId)}</span>
         </p>

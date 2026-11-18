@@ -276,6 +276,7 @@ export function convertCharacter(bundle: OldBundle, ctx: ConvertContext): Conver
     pendingResults: [],
     mailbox: {},
     records: { fish: {} },
+    codex: { enemies: {}, items: {} },
     recipes: {},
     people,
     growth,

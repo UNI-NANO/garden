@@ -3,6 +3,7 @@ import type { ExchangeContext, ExchangeResult, ExchangeState, ExchangeFailure, L
 import { characterSchema } from "../schema/character";
 import { LedgerLineSchema, RequestRecordSchema } from "../schema/ledger";
 import { KEY_PATTERN } from "../schema/keys";
+import { itemCodexWrites } from "./codex";
 import { paths } from "./paths";
 
 /**
@@ -107,6 +108,7 @@ export async function commitExchange(
   updates[paths.request(characterId, requestId)] = RequestRecordSchema.parse({ at: ctx.now, kind: "주고받기" });
   updates[paths.ledger(characterId, requestId)] = ledger.data;
 
+  Object.assign(updates, await itemCodexWrites(db, characterId, requestId, updates, ctx.now));
   const written = await db.update(updates);
   if (written === "ok") return { status: "ok", ledger: ledger.data, mailed: result.mailed };
 

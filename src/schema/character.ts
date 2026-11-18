@@ -200,6 +200,10 @@ export function characterSchema(limits: Limits) {
     recipes: keySet,
     /** 내 기록: 물고기 → 가장 큰 크기(cm) */
     records: z.strictObject({ fish: z.record(KeySchema, z.number().positive()).default({}) }).default({ fish: {} }),
+    /** 도감: 적 → 이긴 수(있으면 만난 것), 물건 → 처음 얻은 때 */
+    codex: z
+      .strictObject({ enemies: z.record(KeySchema, count).default({}), items: z.record(KeySchema, timestamp).default({}) })
+      .default({ enemies: {}, items: {} }),
     /** 진행 중인 던전 탐험 (하나만) */
     expedition: ExpeditionSchema.optional(),
     /** 인물과 친밀도 */

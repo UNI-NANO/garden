@@ -6,6 +6,7 @@ import { characterSchema } from "../schema/character";
 import { KEY_PATTERN } from "../schema/keys";
 import { LedgerLineSchema, RequestRecordSchema } from "../schema/ledger";
 import { CommitError, diff, type DbPort } from "./commit";
+import { itemCodexWrites } from "./codex";
 import { paths } from "./paths";
 
 export type SceneCommitResult =
@@ -102,6 +103,7 @@ export async function commitScene(
   }
   updates[paths.request(characterId, requestId)] = RequestRecordSchema.parse({ at: ctx.now, kind: "장면" });
 
+  Object.assign(updates, await itemCodexWrites(db, characterId, requestId, updates, ctx.now));
   const written = await db.update(updates);
   if (written === "ok") return { status: "ok", summary: out.summary };
   if ((await db.get(paths.request(characterId, requestId))) != null) return { status: "duplicate" };

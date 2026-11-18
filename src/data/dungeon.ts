@@ -9,6 +9,7 @@ import { ExpeditionSchema, fromStored, toStored } from "../schema/expedition";
 import { KEY_PATTERN } from "../schema/keys";
 import { LedgerLineSchema, RequestRecordSchema } from "../schema/ledger";
 import { CommitError, diff, type DbPort } from "./commit";
+import { itemCodexWrites, planEnemyCodex } from "./codex";
 import { paths } from "./paths";
 
 /**
@@ -159,7 +160,9 @@ export async function finishExpedition(
   const settlement = settle({ status, gains: state.gains }, ctx.items);
   const rewardId = firstClearRewardId(dungeon.id);
   const firstClear = status === "보스" && before.claimedRewards[rewardId] !== true;
-  const kept = [...settlement.kept, ...(firstClear ? firstClearGains(dungeon, ctx.items) : [])];
+  // 싸운 적을 도감에 (전멸해도 만남·이긴 수는 남는다). 완성 보상 잎전은 정산에 더한다
+  const codex = await planEnemyCodex(db, characterId, state.battles ?? {}, ctx.limits);
+  const kept = [...settlement.kept, ...(firstClear ? firstClearGains(dungeon, ctx.items) : []), ...(codex.money > 0 ? [{ kind: "잎전" as const, quantity: codex.money }] : [])];
   const { walletDelta, items } = gainsToExchange(kept, `${requestId}`);
 
   const updates: Record<string, unknown> = {};
@@ -169,6 +172,7 @@ export async function finishExpedition(
   set("meta/rev", before.rev + 1);
   set("meta/lastRequestId", requestId);
   set("expedition", null);
+  Object.assign(updates, codex.writes);
   const ending = { 귀환: auto ? "하루가 지나 자동 귀환" : "쉼터에서 귀환", 보스: "보스를 쓰러뜨리고 귀환", 전멸: "쓰러져 쫓겨남", 탐험: "" }[status];
   const line = shape.life.parse([
     {
@@ -196,6 +200,7 @@ export async function finishExpedition(
     updates[paths.ledger(characterId, requestId)] = LedgerLineSchema.parse(exchange.ledger);
   }
   updates[paths.request(characterId, requestId)] = RequestRecordSchema.parse({ at: ctx.now, kind: "던전" });
+  Object.assign(updates, await itemCodexWrites(db, characterId, requestId, updates, ctx.now));
 
   const written = await db.update(updates);
   if (written === "ok") return { status: "ok", settlement, firstClear, mailed };

@@ -21,6 +21,7 @@ import type { Limits } from "../../schema/defs/limits";
 import { RaidDefsSchema, type RaidDefs } from "../../schema/defs/raid";
 import { idToKey } from "../../schema/keys";
 import { RaidRecordSchema, type RaidRecord } from "../../schema/raid";
+import { hidePowerFor } from "../../rules/codex";
 import { BattleScreen } from "../battle/BattleScreen";
 import { loadBattleDefs, type BattleDefs } from "../battle/defs";
 import "../battle/battle.css";
@@ -213,6 +214,7 @@ function Raid(props: {
         title={`반복 레이드 · ${boss.name}`}
         onRetry={() => undefined}
         onExit={() => undefined}
+        hidePower={hidePowerFor(character, defs.battle.practice.enemies, limits)}
         onFinish={(battle) => void finish(battle)}
       />
     );

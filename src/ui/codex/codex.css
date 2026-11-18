@@ -1,0 +1,142 @@
+/* 도감 (docs/ui/Codex.dc.html) */
+.cx .bar__button {
+  white-space: nowrap;
+}
+
+.cx__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 1180px;
+  margin: 14px auto 0;
+  padding: 0 32px;
+}
+
+.cx__tabs .button {
+  background: var(--paper);
+}
+
+.cx__tabs [aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.cx__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  gap: 24px;
+  align-items: start;
+  max-width: 1180px;
+  margin: 14px auto 0;
+  padding: 0 32px 32px;
+}
+
+.cx__title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 20px;
+}
+
+.cx__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cx__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 10px 6px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+}
+
+button.cx__cell {
+  cursor: pointer;
+}
+
+button.cx__cell:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.cx__cell--picked {
+  outline: 2px solid var(--gold);
+}
+
+.cx__pic {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px dashed var(--line);
+  font-family: var(--serif);
+  font-size: 22px;
+}
+
+.cx__name {
+  font-weight: bold;
+}
+
+.cx__stage,
+.cx__note {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.cx__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 10px 0;
+}
+
+.cx__facts dt {
+  color: var(--ink-soft);
+}
+
+.cx__facts dd {
+  margin: 0;
+}
+
+.cx__text {
+  font-family: var(--serif);
+  font-style: italic;
+}
+
+@media (max-width: 767px) {
+  .cx__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 0 4px 24px;
+  }
+
+  .cx__tabs {
+    padding: 0 8px;
+  }
+
+  .cx__grid {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+  }
+
+  .cx__cell {
+    padding: 6px 4px;
+  }
+
+  .cx__pic {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+}

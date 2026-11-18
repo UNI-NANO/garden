@@ -20,7 +20,9 @@ import type { HuntingDefs } from "../schema/defs/hunting";
 import { KEY_PATTERN } from "../schema/keys";
 import { LedgerLineSchema, RequestRecordSchema } from "../schema/ledger";
 import { CommitError, diff, type DbPort } from "./commit";
+import { itemCodexWrites, planEnemyCodex } from "./codex";
 import { paths } from "./paths";
+import { battleTally } from "../rules/codex";
 
 /**
  * 사냥 한 번의 저장 (8단계 ② 다). 흔적·다가가기·쏘기는 행동 기록을 다시 돌려 계산한다(판정은 눌린 자리로).
@@ -136,8 +138,15 @@ export async function commitHunting(
   set("meta/lastRequestId", requestId);
   set(`month/fatigue/${HUNTING_FATIGUE}`, fatigueIndex);
 
+  // 달려든 짐승과 싸웠으면 적 도감에 (만남·이긴 수, 완성 보상)
+  const codex =
+    input.battleWon !== undefined && hunt.prey.danger
+      ? await planEnemyCodex(db, characterId, battleTally(hunt.prey.danger.enemies.map((m) => m.enemy), input.battleWon), ctx.limits)
+      : { writes: {}, money: 0, completed: [] };
+  Object.assign(updates, codex.writes);
+
   let mailed: string[] = [];
-  if (gains.length > 0) {
+  if (gains.length > 0 || codex.money > 0) {
     const items: ItemGain[] = gains.map((g) => ({
       kind: "묶음",
       itemId: g.item,
@@ -155,7 +164,7 @@ export async function commitHunting(
       {
         requestId,
         reason: `사냥 ${ground.name} · ${hunt.prey.name}`,
-        walletDelta: 0,
+        walletDelta: codex.money,
         gains: items,
         losses: [],
         overflow: "우편함",
@@ -168,6 +177,7 @@ export async function commitHunting(
         detail: `${exchange.reason}: ${exchange.detail}`,
       };
     mailed = exchange.mailed;
+    if (exchange.next.wallet !== before.wallet) set("wallet", exchange.next.wallet);
     diff(before.bag.stacks, exchange.next.bag.stacks, (key, v) =>
       set(`bag/stacks/${key}`, v),
     );
@@ -186,6 +196,7 @@ export async function commitHunting(
     kind: "사냥",
   });
 
+  Object.assign(updates, await itemCodexWrites(db, characterId, requestId, updates, ctx.now));
   const written = await db.update(updates);
   if (written === "ok") return { status: "ok", state, gains, mailed };
   return (await db.get(paths.request(characterId, requestId))) != null

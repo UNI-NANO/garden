@@ -29,6 +29,7 @@ import {
 import { HuntingDefsSchema, type HuntingDefs } from "../../schema/defs/hunting";
 import { ItemListSchema, type Item } from "../../schema/defs/item";
 import type { Limits } from "../../schema/defs/limits";
+import { hidePowerFor } from "../../rules/codex";
 import { BattleScreen } from "../battle/BattleScreen";
 import { loadBattleDefs, type BattleDefs } from "../battle/defs";
 import { Bar, useSweep } from "../battle/JudgeBar";
@@ -234,6 +235,7 @@ function Hunting(props: {
         title={`사냥 · ${hunt.prey.name}`}
         onRetry={() => undefined}
         onExit={() => undefined}
+        hidePower={hidePowerFor(character, defs.battle.practice.enemies, limits)}
         onFinish={(b: BattleState) => {
           setBattle(undefined);
           void save(b.outcome === "승리");

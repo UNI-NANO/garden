@@ -52,6 +52,11 @@ export const LimitsSchema = z.strictObject({
     /** 보상 곡선: 그날 그 분야 n번째(1부터)의 전리품 배율. 끝 값이 이후에도 이어진다 */
     fatigueCurve: z.array(z.number().min(0).max(1)).min(1),
   }),
+  /** 도감 (명세서 「도감과 칭호」): 단계가 열리는 이긴 수(1·2·3단계), 한 단계씩 빨리 여는 재능 */
+  codex: z.strictObject({
+    stages: z.tuple([count.min(1), count.min(1), count.min(1)]).refine(([a, b, c]) => a < b && b < c, "단계 기준은 커져야 한다"),
+    fastTalents: z.array(z.string().min(1)),
+  }),
   /** 투기장 점수 (엘로식, 도전한 사람만 바뀐다). 보안 규칙이 한 번의 변화 폭을 k로 막는다. 숫자는 모두 임시 */
   arena: z.strictObject({
     startScore: count,

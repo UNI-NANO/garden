@@ -45,6 +45,8 @@ export const ExpeditionSchema = z.strictObject({
   maxEnergy: count,
   fight: count.optional(),
   gains: z.array(GainSchema).default([]),
+  /** 싸운 적 (적 ID에 점이 있어 키로 쓰지 않고 목록으로) */
+  battles: z.array(z.strictObject({ enemy: DefIdSchema, wins: count })).default([]),
   status: z.enum(["탐험", "귀환", "전멸", "보스"]),
 });
 export type StoredExpedition = z.infer<typeof ExpeditionSchema>;
@@ -52,12 +54,18 @@ export type StoredExpedition = z.infer<typeof ExpeditionSchema>;
 export function toStored(id: string, state: Expedition): StoredExpedition {
   const rooms: StoredExpedition["rooms"] = {};
   for (const [index, room] of Object.entries(state.rooms)) rooms[`r${index}`] = { ...room, ...(room.taken ? { taken: [...room.taken] } : {}) };
-  return ExpeditionSchema.parse({ ...structuredClone(state), id, rooms });
+  const { battles, ...rest } = structuredClone(state);
+  return ExpeditionSchema.parse({ ...rest, id, rooms, battles: Object.entries(battles ?? {}).map(([enemy, wins]) => ({ enemy, wins })) });
 }
 
 export function fromStored(stored: StoredExpedition): { id: string; state: Expedition } {
-  const { id, rooms, fight, ...rest } = stored;
-  const state: Expedition = { ...structuredClone(rest), rooms: {}, ...(fight !== undefined ? { fight } : {}) };
+  const { id, rooms, fight, battles, ...rest } = stored;
+  const state: Expedition = {
+    ...structuredClone(rest),
+    rooms: {},
+    ...(fight !== undefined ? { fight } : {}),
+    ...(battles.length > 0 ? { battles: Object.fromEntries(battles.map((b) => [b.enemy, b.wins])) } : {}),
+  };
   for (const [key, room] of Object.entries(rooms)) {
     state.rooms[key.slice(1)] = {
       ...(room.seen ? { seen: true as const } : {}),

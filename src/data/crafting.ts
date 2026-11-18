@@ -22,6 +22,7 @@ import type { Judgement } from "../schema/defs/skill-table";
 import { idToKey, KEY_PATTERN } from "../schema/keys";
 import { LedgerLineSchema, RequestRecordSchema } from "../schema/ledger";
 import { CommitError, diff, type DbPort } from "./commit";
+import { itemCodexWrites } from "./codex";
 import { paths } from "./paths";
 
 /**
@@ -141,6 +142,7 @@ async function finish(
     at: now,
     kind: "제작",
   });
+  Object.assign(updates, await itemCodexWrites(db, characterId, requestId, updates, now));
   if ((await db.update(updates)) === "ok") return "ok";
   return (await db.get(paths.request(characterId, requestId))) != null
     ? "duplicate"

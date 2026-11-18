@@ -117,6 +117,15 @@ export const EnemySchema = z.strictObject({
   immune: z.array(DefIdSchema).optional(),
   /** 기술이 알아보는 특징 (방패: 방패를 든 적) */
   traits: z.array(EnemyTraitSchema).optional(),
+  /** 도감 (명세서 「도감과 칭호」). hidden이면 도감에 없다(허수아비 등). 서식지·설명문은 3단계, 완성 보상은 3단계가 열릴 때 한 번 */
+  codex: z
+    .strictObject({
+      hidden: z.boolean().optional(),
+      habitat: z.string().min(1).optional(),
+      text: z.string().min(1).optional(),
+      completionMoney: count.optional(),
+    })
+    .optional(),
   /** 등급 공식 대신 직접 정한 값 (튀어야 하는 적만) */
   overrides: z.strictObject({ hp: z.number().positive().optional(), stagger: z.number().positive().optional(), power: z.number().min(0).optional() }).optional(),
 });

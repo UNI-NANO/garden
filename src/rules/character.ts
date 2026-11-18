@@ -58,6 +58,7 @@ export function newCharacter(limits: Limits, input: NewCharacterInput): Characte
     pendingResults: [],
     mailbox: {},
     records: { fish: {} },
+    codex: { enemies: {}, items: {} },
     recipes: {},
     people: {},
     growth: [],

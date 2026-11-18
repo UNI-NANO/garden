@@ -1,11 +1,13 @@
 import { z } from "zod";
+import { battleTally } from "../rules/codex";
+import type { ExchangeContext } from "../rules/exchange";
 import { isBlocked } from "../rules/training";
 import { characterSchema } from "../schema/character";
-import type { Limits } from "../schema/defs/limits";
 import type { TrainingDefs } from "../schema/defs/training";
 import { KEY_PATTERN, idToKey } from "../schema/keys";
 import { RequestRecordSchema } from "../schema/ledger";
 import { CommitError, type DbPort } from "./commit";
+import { codexMoneyWrites, planEnemyCodex } from "./codex";
 import { paths } from "./paths";
 
 /**
@@ -34,7 +36,7 @@ export async function commitWallTest(
     won: boolean;
   },
   training: TrainingDefs,
-  ctx: { limits: Limits; now: number },
+  ctx: ExchangeContext,
 ): Promise<WallTestResult> {
   if (!KEY_PATTERN.test(characterId) || !KEY_PATTERN.test(requestId))
     return { status: "rejected", detail: "캐릭터·요청 ID의 모양이 틀리다" };
@@ -102,6 +104,20 @@ export async function commitWallTest(
     ])[0];
     set(`life/${before.life.length}`, line);
   }
+  // 교관도 적 도감에 (만남·이긴 수). 3단계가 열리면 완성 보상 잎전
+  const codex = await planEnemyCodex(
+    db,
+    characterId,
+    battleTally(
+      wall.enemies.map((m) => m.enemy),
+      input.won,
+    ),
+    ctx.limits,
+  );
+  Object.assign(updates, codex.writes);
+  const money = await codexMoneyWrites(db, characterId, requestId, codex.money, `도감 완성 ${codex.completed.map((e) => e.name).join(", ")}`, ctx);
+  if (!money.ok) return { status: "rejected", detail: money.detail };
+  Object.assign(updates, money.writes);
   updates[paths.request(characterId, requestId)] = RequestRecordSchema.parse({
     at: ctx.now,
     kind: "훈련",

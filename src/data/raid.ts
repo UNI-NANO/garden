@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { fatigueMultiplier } from "../rules/dungeon/end";
 import { applyExchange, type ExchangeContext } from "../rules/exchange";
+import { battleTally } from "../rules/codex";
 import { raidGains, raidWeek, type Contribution } from "../rules/raid";
 import { characterSchema } from "../schema/character";
 import type { RaidDefs } from "../schema/defs/raid";
@@ -9,6 +10,7 @@ import { LedgerLineSchema, RequestRecordSchema } from "../schema/ledger";
 import { RaidRecordSchema, type RaidRecord } from "../schema/raid";
 import { CommitError, diff, type DbPort } from "./commit";
 import { gainsToExchange } from "./dungeon";
+import { itemCodexWrites, planEnemyCodex } from "./codex";
 import { paths } from "./paths";
 
 /**
@@ -141,6 +143,18 @@ export async function commitRaid(
       at: ctx.now,
     });
 
+  // 보스 무리도 적 도감에 (만남·이긴 수). 완성 보상은 이길 때만 생긴다
+  const codex = await planEnemyCodex(
+    db,
+    characterId,
+    battleTally(
+      week.boss.enemies.map((m) => m.enemy),
+      input.won,
+    ),
+    ctx.limits,
+  );
+  Object.assign(updates, codex.writes);
+
   let weekly = false;
   let gains: ReturnType<typeof raidGains> = [];
   let mailed: string[] = [];
@@ -152,7 +166,8 @@ export async function commitRaid(
       weekly,
       fatigueMultiplier(fatigueIndex, ctx.limits),
     );
-    const { walletDelta, items } = gainsToExchange(gains, requestId);
+    const { walletDelta: rewardMoney, items } = gainsToExchange(gains, requestId);
+    const walletDelta = rewardMoney + codex.money;
     const exchange = applyExchange(
       {
         wallet: before.wallet,
@@ -210,6 +225,7 @@ export async function commitRaid(
     kind: "레이드",
   });
 
+  Object.assign(updates, await itemCodexWrites(db, characterId, requestId, updates, ctx.now));
   const written = await db.update(updates);
   if (written === "ok")
     return { status: "ok", weekly, gains, mailed, record, score: c.score };

@@ -37,6 +37,7 @@ import {
 import type { Dungeon } from "../../schema/defs/dungeon";
 import type { Limits } from "../../schema/defs/limits";
 import { fromStored } from "../../schema/expedition";
+import { hidePowerFor } from "../../rules/codex";
 import { BattleScreen } from "../battle/BattleScreen";
 import { Notice, Paper } from "../parts";
 import { loadDungeonDefs, type DungeonDefs } from "./defs";
@@ -290,6 +291,7 @@ function DungeonRun(props: {
         title={`${dungeon.name} · ${floorName(run.state.floor)}`}
         onRetry={() => undefined}
         onExit={() => undefined}
+        hidePower={hidePowerFor(character, defs.battle.practice.enemies, limits)}
         onFinish={endFight}
       />
     );

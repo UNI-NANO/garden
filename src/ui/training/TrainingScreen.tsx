@@ -1,5 +1,6 @@
 import { push, ref } from "firebase/database";
 import { useMemo, useState } from "preact/hooks";
+import rawItems from "../../../data/defs/items.json";
 import rawTraining from "../../../data/defs/training.json";
 import type { Firebase } from "../../data/firebase-app";
 import { firebasePort } from "../../data/firebase-port";
@@ -13,11 +14,13 @@ import {
   wallStatus,
   type BlockedWall,
 } from "../../rules/training";
+import { ItemListSchema } from "../../schema/defs/item";
 import type { Limits } from "../../schema/defs/limits";
 import {
   TrainingDefsSchema,
   type TrainingDefs,
 } from "../../schema/defs/training";
+import { hidePowerFor } from "../../rules/codex";
 import { BattleScreen } from "../battle/BattleScreen";
 import { loadBattleDefs, type BattleDefs } from "../battle/defs";
 import "../battle/battle.css";
@@ -26,6 +29,7 @@ import "./training.css";
 
 type SignedIn = Extract<Session, { status: "signedIn" }>;
 const GROUND_ID = "reinfeld-yard";
+const ITEMS = new Map(ItemListSchema.parse(rawItems).items.map((i) => [i.id, i]));
 
 /**
  * 훈련장 (docs/ui/Training, 8단계 ④ 가). 허수아비 치기(보상·피로 없음, 저장 안 함)와
@@ -137,7 +141,7 @@ function Training(props: {
           won,
         },
         defs.training,
-        { limits, now: Date.now() },
+        { limits, items: ITEMS, now: Date.now(), carryLimit: 100 },
       );
       if (saved.status === "ok") setResult({ blocked: b, won });
       else {
@@ -184,6 +188,7 @@ function Training(props: {
         title={`교관 대련 · ${fight.blocked.wall.instructor}`}
         onRetry={() => undefined}
         onExit={() => undefined}
+        hidePower={hidePowerFor(character, defs.battle.practice.enemies, limits)}
         onFinish={(battle) => void finish(fight.blocked, battle)}
       />
     );

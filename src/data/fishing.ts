@@ -8,6 +8,7 @@ import type { FishingDefs } from "../schema/defs/fishing";
 import { KEY_PATTERN, idToKey } from "../schema/keys";
 import { LedgerLineSchema, RequestRecordSchema } from "../schema/ledger";
 import { CommitError, diff, type DbPort } from "./commit";
+import { itemCodexWrites } from "./codex";
 import { paths } from "./paths";
 
 /**
@@ -179,6 +180,7 @@ export async function commitFishing(
     kind: "낚시",
   });
 
+  Object.assign(updates, await itemCodexWrites(db, characterId, requestId, updates, ctx.now));
   const written = await db.update(updates);
   if (written === "ok")
     return { status: "ok", ...(caught ? { caught } : {}), mailed };

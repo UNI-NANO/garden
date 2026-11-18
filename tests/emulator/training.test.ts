@@ -29,7 +29,7 @@ const attempt = (requestId: string, wall: 60 | 80, won: boolean) =>
     requestId,
     { groundId: ground.id, skill: "sword", skillName: "검술", wall, won },
     defs.training,
-    { limits, now: Date.now() },
+    { limits, items: defs.itemMap, now: Date.now(), carryLimit: 1000 },
   );
 const character = async () =>
   characterSchema(limits).parse(await readAll(testEnv, `characters/${CID}`));

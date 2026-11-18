@@ -1,3 +1,4 @@
+import { battleTally, mergeTally } from "../codex";
 import type { Item } from "../../schema/defs/item";
 import type { Limits } from "../../schema/defs/limits";
 import type { Floor, Pickup } from "./floor";
@@ -53,6 +54,8 @@ export interface Expedition {
   /** 싸우는 중인 방 (문이 닫힘) */
   fight?: number;
   gains: Gain[];
+  /** 이번 탐험에서 싸운 적: 적 ID → 이긴 수 (적 도감, 정산 때 반영) */
+  battles?: Record<string, number>;
   status: ExpeditionStatus;
 }
 
@@ -190,6 +193,7 @@ export function finishFight(before: Expedition, floor: Floor, result: { outcome:
   const state = structuredClone(before);
   const room = roomOf(floor, state.fight!);
   delete state.fight;
+  if (room.group) state.battles = mergeTally(state.battles ?? {}, battleTally(room.group.enemies.map((m) => m.enemy), result.outcome === "승리"));
   if (result.outcome === "패배") {
     state.hp = 0;
     state.status = "전멸";

@@ -71,6 +71,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
   const [training, setTraining] = useState<DungeonView | "loading">();
   const [arenaView, setArena] = useState<DungeonView | "loading">();
   const [raidView, setRaid] = useState<DungeonView | "loading">();
+  const [codexView, setCodex] = useState<DungeonView | "loading">();
   useEffect(
     () => watchSession(props.fb, props.limits, setSession),
     [props.fb, props.limits],
@@ -198,6 +199,17 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       });
   };
 
+  // 도감은 실제 기능 (시험 환경 전용이 아님)
+  const openCodex = () => {
+    setCodex("loading");
+    import("./codex/CodexScreen")
+      .then((module) => setCodex(() => module.CodexScreen))
+      .catch((error: unknown) => {
+        reportError(props.fb, error, "도감 열기");
+        setCodex(undefined);
+      });
+  };
+
   const closePractice = () => {
     setPractice(undefined);
     if (window.location.hash === "#practice")
@@ -221,6 +233,15 @@ export function App(props: { fb: Firebase; limits: Limits }) {
           fb: props.fb,
           session: session.status === "signedIn" ? session : undefined,
           onExit: () => setScenes(undefined),
+        })
+      ) : codexView === "loading" ? (
+        <Notice title="도감">도감을 펼치는 중…</Notice>
+      ) : codexView && session.status === "signedIn" ? (
+        h(codexView, {
+          fb: props.fb,
+          limits: props.limits,
+          session,
+          onExit: () => setCodex(undefined),
         })
       ) : PRACTICE && raidView === "loading" ? (
         <Notice title="반복 레이드">레이드 집결지로 가는 중…</Notice>
@@ -303,6 +324,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
           fb={props.fb}
           limits={props.limits}
           session={session}
+          onCodex={openCodex}
           {...(PRACTICE
             ? {
                 onPractice: openPractice,

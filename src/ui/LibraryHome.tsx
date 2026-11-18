@@ -15,6 +15,8 @@ export function LibraryHome(props: {
   fb: Firebase;
   limits: Limits;
   session: SignedIn;
+  /** 도감 열기 (실제 기능) */
+  onCodex?: () => void;
   onPractice?: () => void;
   onScenes?: () => void;
   onDungeon?: () => void;
@@ -74,6 +76,14 @@ export function LibraryHome(props: {
               onClick={() => setTab(tab === "life" ? "card" : "life")}
             >
               <span>내 일생</span>
+            </button>
+            <button
+              class="book"
+              type="button"
+              disabled={!view || !props.onCodex}
+              onClick={props.onCodex}
+            >
+              <span>도감</span>
             </button>
             <button
               class="book book--soon"

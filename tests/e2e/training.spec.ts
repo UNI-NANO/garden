@@ -135,6 +135,8 @@ test("교관 대련: 59.99에 막힌 검술로 늙은 교관을 이기면 60 벽
 
   await expect(page.getByText("제1턴 · 아군 차례")).toBeVisible();
   await expect(page.getByRole("button", { name: "도망" })).toHaveCount(0);
+  // 처음 만난 교관이라 도감 1단계 전: 의도의 위력은 ???
+  await expect(page.getByText(/· \?\?\?/).filter({ visible: true }).first()).toBeVisible();
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   await page.getByRole("button", { name: "자동" }).click();
   const result = page.getByRole("region", { name: "전투 결과" });

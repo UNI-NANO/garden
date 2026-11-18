@@ -19,6 +19,7 @@ import type { GatheringDefs } from "../schema/defs/gathering";
 import { KEY_PATTERN } from "../schema/keys";
 import { LedgerLineSchema, RequestRecordSchema } from "../schema/ledger";
 import { CommitError, diff, type DbPort } from "./commit";
+import { itemCodexWrites } from "./codex";
 import { paths } from "./paths";
 
 /**
@@ -176,6 +177,7 @@ export async function commitGathering(
     kind: "채집",
   });
 
+  Object.assign(updates, await itemCodexWrites(db, characterId, requestId, updates, ctx.now));
   const written = await db.update(updates);
   if (written === "ok") return { status: "ok", result, mailed };
   return (await db.get(paths.request(characterId, requestId))) != null
