@@ -135,6 +135,10 @@ export function buildSecurityRules(limits: Limits): { rules: Rules } {
         ` && newData.child('id').isString() && newData.child('id').val().matches(${KEY})` +
         " && newData.child('startedAt').isNumber() && newData.child('startedAt').val() <= now + 300000",
     },
+    // 배운 레시피: 주인은 수정 번호와 함께 더하기만
+    recipes: {
+      $recipe: { ".write": ownerWrite(2, " && !data.exists() && newData.exists()"), ".validate": `$recipe.matches(${KEY}) && newData.val() === true` },
+    },
     // 내 기록 (가장 큰 물고기 등): 주인은 수정 번호와 함께, 커지기만
     records: {
       fish: {

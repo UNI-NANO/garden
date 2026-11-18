@@ -1,7 +1,7 @@
 {
   "id": "items",
   "name": "물건",
-  "version": 6,
+  "version": 7,
   "items": [
     {
       "id": "sea-eel",
@@ -194,6 +194,41 @@
       "kind": "묶음",
       "weight": 4,
       "value": 40
+    },
+    {
+      "id": "hemostatic-salve",
+      "name": "지혈 연고",
+      "kind": "묶음",
+      "weight": 0.2,
+      "value": 25
+    },
+    {
+      "id": "detox-poultice",
+      "name": "해독 찜질",
+      "kind": "묶음",
+      "weight": 0.3,
+      "value": 30
+    },
+    {
+      "id": "grilled-fish",
+      "name": "구운 생선",
+      "kind": "묶음",
+      "weight": 0.4,
+      "value": 10
+    },
+    {
+      "id": "meat-skewer",
+      "name": "고기 꼬치",
+      "kind": "묶음",
+      "weight": 0.3,
+      "value": 9
+    },
+    {
+      "id": "leather-bracer",
+      "name": "가죽 손목 보호대",
+      "kind": "낱개",
+      "weight": 0.6,
+      "value": 55
     }
   ]
 }

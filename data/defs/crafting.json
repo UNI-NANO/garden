@@ -1,0 +1,24 @@
+{
+  "id": "crafting",
+  "name": "제작",
+  "version": 1,
+  "rules": {
+    "score": { "완벽": 1, "좋음": 0.7, "보통": 0.4, "빗나감": 0 },
+    "weights": { "game": 0.5, "material": 0.3, "mastery": 0.2 },
+    "quality": { "최상": 0.8, "상": 0.6, "중": 0.35 },
+    "combineLoss": 0.5
+  },
+  "stations": [
+    { "id": "forge", "name": "대장간", "game": { "name": "망치질", "hits": 3, "widths": { "good": 18, "perfect": 6, "normalEachSide": 14 }, "sweepMs": 1100 } },
+    { "id": "apothecary", "name": "약방", "mastery": "medicine", "game": { "name": "빻기", "hits": 3, "widths": { "good": 22, "perfect": 8, "normalEachSide": 14 }, "sweepMs": 1300 } },
+    { "id": "kitchen", "name": "부엌", "game": { "name": "불 조절", "hits": 2, "widths": { "good": 24, "perfect": 8, "normalEachSide": 16 }, "sweepMs": 1500 } }
+  ],
+  "recipes": [
+    { "id": "hemostatic-salve", "name": "지혈 연고", "station": "apothecary", "inputs": [{ "item": "bloodstop-herb", "quantity": 2 }, { "item": "hill-mugwort", "quantity": 1 }], "output": { "item": "hemostatic-salve", "quantity": 1 }, "known": true },
+    { "id": "detox-poultice", "name": "해독 찜질", "station": "apothecary", "inputs": [{ "item": "silver-willow-leaf", "quantity": 2 }, { "item": "hill-mugwort", "quantity": 2 }], "output": { "item": "detox-poultice", "quantity": 1 }, "known": false },
+    { "id": "grilled-fish", "name": "구운 생선", "station": "kitchen", "inputs": [{ "item": "marsh-crucian", "quantity": 1 }], "output": { "item": "grilled-fish", "quantity": 1 }, "known": true },
+    { "id": "meat-skewer", "name": "고기 꼬치", "station": "kitchen", "inputs": [{ "item": "antelope-meat", "quantity": 2 }, { "item": "hill-mugwort", "quantity": 1 }], "output": { "item": "meat-skewer", "quantity": 2 }, "known": false },
+    { "id": "hunters-knife", "name": "사냥꾼의 손칼", "station": "forge", "inputs": [{ "item": "timber", "quantity": 1 }, { "item": "boar-tusk", "quantity": 2 }], "output": { "item": "hunters-knife", "quantity": 1 }, "known": true },
+    { "id": "leather-bracer", "name": "가죽 손목 보호대", "station": "forge", "inputs": [{ "item": "antelope-hide", "quantity": 1 }, { "item": "wolf-pelt", "quantity": 2 }], "output": { "item": "leather-bracer", "quantity": 1 }, "known": false }
+  ]
+}

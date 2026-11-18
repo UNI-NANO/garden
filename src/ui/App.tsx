@@ -67,6 +67,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
   const [fishing, setFishing] = useState<DungeonView | "loading">();
   const [gathering, setGathering] = useState<DungeonView | "loading">();
   const [hunting, setHunting] = useState<DungeonView | "loading">();
+  const [craftingView, setCrafting] = useState<DungeonView | "loading">();
   useEffect(
     () => watchSession(props.fb, props.limits, setSession),
     [props.fb, props.limits],
@@ -146,6 +147,18 @@ export function App(props: { fb: Firebase; limits: Limits }) {
       });
   };
 
+  // 제작도 지도(9단계)가 생기기 전까지 시험 환경에서만 (작업장이 있는 장소에서 열 수 있게 된다)
+  const openCrafting = () => {
+    if (!PRACTICE) return;
+    setCrafting("loading");
+    import("./crafting/CraftingScreen")
+      .then((module) => setCrafting(() => module.CraftingScreen))
+      .catch((error: unknown) => {
+        reportError(props.fb, error, "제작 열기");
+        setCrafting(undefined);
+      });
+  };
+
   const closePractice = () => {
     setPractice(undefined);
     if (window.location.hash === "#practice")
@@ -169,6 +182,15 @@ export function App(props: { fb: Firebase; limits: Limits }) {
           fb: props.fb,
           session: session.status === "signedIn" ? session : undefined,
           onExit: () => setScenes(undefined),
+        })
+      ) : PRACTICE && craftingView === "loading" ? (
+        <Notice title="제작">작업장으로 가는 중…</Notice>
+      ) : PRACTICE && craftingView && session.status === "signedIn" ? (
+        h(craftingView, {
+          fb: props.fb,
+          limits: props.limits,
+          session,
+          onExit: () => setCrafting(undefined),
         })
       ) : PRACTICE && hunting === "loading" ? (
         <Notice title="사냥">초원으로 가는 중…</Notice>
@@ -223,6 +245,7 @@ export function App(props: { fb: Firebase; limits: Limits }) {
                 onFishing: openFishing,
                 onGathering: openGathering,
                 onHunting: openHunting,
+                onCrafting: openCrafting,
               }
             : {})}
         />

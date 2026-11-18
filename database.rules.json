@@ -213,6 +213,12 @@
           ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && ((newData.parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().child('meta/lastRequestId').val()).exists() && (!data.exists() || !newData.exists())) || (data.exists() && newData.exists() && newData.child('id').val() === data.child('id').val() && newData.child('seed').val() === data.child('seed').val() && newData.child('startedAt').val() === data.child('startedAt').val()))",
           ".validate": "newData.hasChildren(['id', 'dungeonId', 'seed', 'startedAt', 'floor', 'at', 'hp', 'maxHp', 'status']) && newData.child('id').isString() && newData.child('id').val().matches(/^[A-Za-z0-9_-]+$/) && newData.child('startedAt').isNumber() && newData.child('startedAt').val() <= now + 300000"
         },
+        "recipes": {
+          "$recipe": {
+            ".write": "(auth != null && root.child('characters').child($cid).child('meta/owner').val() === auth.uid) && newData.parent().parent().child('meta/rev').val() === root.child('characters').child($cid).child('meta/rev').val() + 1 && newData.parent().parent().child('meta/lastRequestId').isString() && newData.parent().parent().parent().parent().child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !root.child('requests').child($cid).child(newData.parent().parent().child('meta/lastRequestId').val()).exists() && !data.exists() && newData.exists()",
+            ".validate": "$recipe.matches(/^[A-Za-z0-9_-]+$/) && newData.val() === true"
+          }
+        },
         "records": {
           "fish": {
             "$item": {

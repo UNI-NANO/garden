@@ -1,0 +1,131 @@
+/* 제작 (docs/ui/Craft.dc.html, Forge.dc.html) */
+.cf .bar__button {
+  white-space: nowrap;
+}
+
+.cf__stations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 1180px;
+  margin: 14px auto 0;
+  padding: 0 32px;
+}
+
+.cf__stations .button {
+  background: var(--paper);
+}
+
+.cf__stations [aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* 판정 바: 종이 위에 띄운다 (전투에서는 어두운 장면 위라 뒷배경이 없다) */
+.cf .judge {
+  z-index: 20;
+  background: rgba(11, 12, 15, 0.8);
+}
+
+.cf .judge__inner {
+  padding: 20px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.cf__message {
+  max-width: 1180px;
+  margin: 10px auto 0;
+  padding: 0 32px;
+  color: var(--light);
+  font-family: var(--serif);
+  font-size: 17px;
+}
+
+.cf__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
+  gap: 24px;
+  align-items: start;
+  max-width: 1180px;
+  margin: 14px auto 0;
+  padding: 0 32px 32px;
+}
+
+.cf__title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 20px;
+}
+
+.cf__list {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.cf__recipe {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.cf__output {
+  color: var(--ink-soft);
+}
+
+.cf__inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.cf__short {
+  color: #9b2a1f;
+}
+
+.cf__note,
+.cf__have {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.cf__pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.cf__qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 767px) {
+  .cf__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 0 4px 24px;
+  }
+
+  .cf__stations,
+  .cf__message {
+    padding: 0 8px;
+  }
+}
+
+.cf .judge__count,
+.cf .judge__help,
+.cf .judge__done {
+  color: var(--ink-soft);
+}

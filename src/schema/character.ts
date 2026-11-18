@@ -194,6 +194,8 @@ export function characterSchema(limits: Limits) {
     /** 받을 자리가 아직 없어 보류된 장면 결과 (그 시스템이 생기면 적용) */
     pendingResults: z.array(z.strictObject({ scene: z.string().min(1), cmd: z.string().min(1), args: z.array(z.string()) })).default([]),
     mailbox: z.record(KeySchema, MailSchema).default({}),
+    /** 배운 레시피 (처음부터 아는 레시피는 정의에 있어 여기 적지 않는다) */
+    recipes: keySet,
     /** 내 기록: 물고기 → 가장 큰 크기(cm) */
     records: z.strictObject({ fish: z.record(KeySchema, z.number().positive()).default({}) }).default({ fish: {} }),
     /** 진행 중인 던전 탐험 (하나만) */

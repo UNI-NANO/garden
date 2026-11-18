@@ -4,6 +4,7 @@ import { DungeonListSchema, type DungeonList } from "../schema/defs/dungeon";
 import { CAST_ZONES, FishingDefsSchema, SeasonSchema, type FishingDefs } from "../schema/defs/fishing";
 import { GatheringDefsSchema, type GatheringDefs } from "../schema/defs/gathering";
 import { HuntingDefsSchema, type HuntingDefs } from "../schema/defs/hunting";
+import { CraftingDefsSchema, type CraftingDefs } from "../schema/defs/crafting";
 import { EffectListSchema, type EffectList } from "../schema/defs/effect";
 import { ItemListSchema, type ItemList } from "../schema/defs/item";
 import { LimitsSchema, type Limits } from "../schema/defs/limits";
@@ -626,4 +627,41 @@ export function checkHunting(raw: unknown, defs: { items: ItemList; enemies: Ene
     for (const season of SeasonSchema.options) if (!ground.prey.some((p) => p.seasons.includes(season))) add("prey", `${season}에 나올 짐승이 없다`);
   }
   return issues.length > 0 ? { ok: false, issues } : { ok: true, hunting: parsed.data };
+}
+
+const CRAFTING_FILE = "crafting.json";
+
+/**
+ * 제작 검사: 모양, 레시피의 작업장·물건 연결, 재료는 묶음 물건, 작업장마다 처음부터 아는 레시피가 하나 이상,
+ * 같은 작업장에 재료 종류가 똑같은 레시피가 둘이면 조합 시도가 어느 것인지 모르므로 막는다.
+ */
+export function checkCrafting(raw: unknown, defs: { items: ItemList }): { ok: true; crafting: CraftingDefs } | { ok: false; issues: DefIssue[] } {
+  const parsed = CraftingDefsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, issues: schemaIssues(CRAFTING_FILE, parsed.error) };
+  const issues: DefIssue[] = [];
+  const add = (where: string, message: string) => issues.push({ file: CRAFTING_FILE, where, message });
+  const items = new Map(defs.items.items.map((i) => [i.id, i]));
+  const stations = new Set(parsed.data.stations.map((s) => s.id));
+  const ids = new Set<string>();
+  const sets = new Map<string, string>();
+  for (const recipe of parsed.data.recipes) {
+    if (ids.has(recipe.id)) add(recipe.id, "ID가 겹친다");
+    ids.add(recipe.id);
+    if (!stations.has(recipe.station)) add(recipe.id, `없는 작업장: ${recipe.station}`);
+    for (const input of recipe.inputs) {
+      const item = items.get(input.item);
+      if (!item) add(recipe.id, `없는 물건: ${input.item}`);
+      else if (item.kind !== "묶음") add(recipe.id, `재료는 묶음 물건이어야 한다: ${input.item}`);
+    }
+    if (new Set(recipe.inputs.map((i) => i.item)).size !== recipe.inputs.length) add(recipe.id, "같은 재료가 두 번 적혀 있다");
+    if (!items.has(recipe.output.item)) add(recipe.id, `없는 결과 물건: ${recipe.output.item}`);
+    const key = `${recipe.station}|${recipe.inputs.map((i) => i.item).sort().join(",")}`;
+    const other = sets.get(key);
+    if (other) add(recipe.id, `${other}와 재료 종류가 같다 (조합 시도로 가릴 수 없다)`);
+    sets.set(key, recipe.id);
+  }
+  for (const station of parsed.data.stations) {
+    if (!parsed.data.recipes.some((r) => r.station === station.id && r.known)) add(station.id, "처음부터 아는 레시피가 없다");
+  }
+  return issues.length > 0 ? { ok: false, issues } : { ok: true, crafting: parsed.data };
 }

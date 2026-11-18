@@ -173,3 +173,19 @@
     display: none;
   }
 }
+
+/* 판정 바: 종이 위에 띄운다 */
+.ht .judge {
+  z-index: 20;
+  background: rgba(11, 12, 15, 0.8);
+}
+
+.ht .judge__inner {
+  padding: 20px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.ht .judge__help {
+  color: var(--ink-soft);
+}
